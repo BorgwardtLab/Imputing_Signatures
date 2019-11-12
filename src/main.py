@@ -46,39 +46,6 @@ def main():
     embed()
 
 
-#    #select sample
-#    i = 4
-#    T_max = len(X_train[i,:])
-#    T_grid = np.arange(T_max)
-#    T = T_grid.reshape(-1,1) #np.atleast_2d(T_grid).T
-#    embed()
-#    X = X_train[i,:]
-#    T_old, X_old = T, X
-#    T,X = subsample(T,X,thres)
-#
-#
-#    ## Apply GP interpolation to current sample:
-#    X_pred, T_pred, sigma = gp_interpolation(X, T, T_max)
-#    embed()
-#
-#    # Plot the function, the prediction and the 95% confidence interval based on
-#    # the MSE
-#    plt.figure()
-#    plt.plot(T,X, 'o', label='Subsampled and observed')
-#    plt.plot(T_old,X_old, '.', label='Original training points')
-#    plt.plot(T_pred, X_pred, 'b-', label='Prediction')
-#    plt.fill(np.concatenate([T_pred, T_pred[::-1]]),
-#             np.concatenate([X_pred - 1.9600 * sigma,
-#                            (X_pred + 1.9600 * sigma)[::-1]]),
-#             alpha=.5, fc='b', ec='None', label='95% confidence interval')
-#    plt.xlabel('$x$')
-#    plt.ylabel('$f(x)$')
-#    #plt.ylim(-10, 20)
-#    plt.legend(loc='upper left')
-#
-#    plt.show()
-#
-
 if __name__ in "__main__":
     main()
 
