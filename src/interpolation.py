@@ -2,17 +2,17 @@ import numpy as np
 
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
-
+from preprocessing import subsample
 
 class Interpolation:
     """
     Class for interpolation object of an instance, gathering various processing stages of the input data
     """
-    def __init__(X, thres, interpolation_fn):
+    def __init__(self, X, thres, interpolation_fn):
         self.X = X
-        self.T_max = len(X_instance) #determine length of time series
-        self.T_grid = np.arange(T_max) #create array of input time steps
-        self.T = T_grid.reshape(-1,1) #reshape it to shape (t,1) for sklearn gp compatibility 
+        self.T_max = len(self.X) #determine length of time series
+        self.T_grid = np.arange(self.T_max) #create array of input time steps
+        self.T = self.T_grid.reshape(-1,1) #reshape it to shape (t,1) for sklearn gp compatibility 
         self.T_sub, self.X_sub = subsample(self.T,self.X, thres) #subsample time series for irregular sampling
         ## Apply interpolation to current sample:
         self.X_pred, self.T_pred, self.sigma = interpolation_fn(self.X_sub, self.T_sub, self.T_max)
@@ -49,7 +49,7 @@ def interpolate_dataset(X, thres, interpolation_type, plot_sample=4):
             # plot the interpolation of sample f{plot_sample}
             plot_interpolation(ip)
     
-        instances.append(X_pred.reshape(1,-1)) #gather time series as row vecs (for easier concatenation)
+        instances.append(ip.X_pred.reshape(1,-1)) #gather time series as row vecs (for easier concatenation)
     X_int =  np.concatenate(instances, axis=0)    
 
     return X_int
