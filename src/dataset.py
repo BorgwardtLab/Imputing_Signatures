@@ -1,4 +1,6 @@
 '''
+Author: Christian  Bock
+(modified by Michael Moor)
 Dataset utilities for UCR Archive 2018 (tsv format)
 '''
 
