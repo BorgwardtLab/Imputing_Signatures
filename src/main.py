@@ -1,3 +1,4 @@
+import argparse 
 import numpy as np
 import os
 from IPython import embed
@@ -5,15 +6,16 @@ import matplotlib.pyplot as plt
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
 
-from utils import get_ucr_dataset, subsample
-import argparse 
+from dataset import get_ucr_dataset
+from preprocessing import subsample
+from interpolation import gp_interpolation
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--path', 
+parser.add_argument('--input_path', 
                     default='../data/UCRArchive_2018',
                     help='Path to data directory')
 parser.add_argument('--dataset', 
-                    default=33,
+                    default=10,
                     help='Dataset index pointing to one of 128 UCR datasets')
 parser.add_argument('--thres', 
                     default=0.2,
@@ -25,11 +27,10 @@ parser.add_argument('--interpol',
 
 # Parse Arguments and unpack the args:
 args = parser.parse_args()
-path = args.path # path to UCR datasets 
+path = args.input_path # path to UCR datasets 
 dataset_index = args.dataset # index, to currently used UCR dataset
 thres = args.thres # threshold for subsampling
 interpol = args.interpol # interpolation scheme
-
 
 datasets = os.listdir(path) #list of all available UCR datasets
 
@@ -40,29 +41,18 @@ np.random.seed(42)
 
 #select sample
 i = 4
-prob = 0.8
-X_max = len(X_train[i,:])
-T_grid = np.arange(X_max)
-T = np.atleast_2d(T_grid).T
+T_max = len(X_train[i,:])
+T_grid = np.arange(T_max)
+T = T_grid.reshape(-1,1) #np.atleast_2d(T_grid).T
+embed()
 X = X_train[i,:]
 T_old, X_old = T, X
 T,X = subsample(T,X,thres)
 
+
+## Apply GP interpolation to current sample:
+X_pred, T_pred, sigma = gp_interpolation(X, T, T_max)
 embed()
-
-# Instantiate a Gaussian Process model
-kernel = C(1.0, (1e-3, 1e3)) * RBF(10, (1e-2, 1e2))
-gp = GaussianProcessRegressor(kernel=kernel,
-                              n_restarts_optimizer=10)
-# Fit to data using Maximum Likelihood Estimation of the parameters
-gp.fit(T, X)
-
-# Make the prediction on the meshed x-axis (ask for MSE as well)
-
-T_pred = np.atleast_2d( 
-            np.linspace(0,X_max,50) 
-         ).T
-X_pred, sigma = gp.predict(T_pred, return_std=True)
 
 # Plot the function, the prediction and the 95% confidence interval based on
 # the MSE
