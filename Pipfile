@@ -14,6 +14,7 @@ sklearn = "*"
 requests = "*"
 sktime = "*"
 cython = "*"
+uea-ucr-datasets = "*"
 
 [requires]
 python_version = "3.6"
