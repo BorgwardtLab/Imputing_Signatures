@@ -2,7 +2,6 @@ import argparse
 import numpy as np
 import os
 from IPython import embed
-import matplotlib.pyplot as plt
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
 from tempfile import TemporaryFile
