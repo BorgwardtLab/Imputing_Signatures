@@ -47,7 +47,7 @@ def main():
     X_int = interpolate_dataset(X_train, thres, interpolation_type=interpol, plot_sample=4)
 
     
-    file_path = os.path.join(output_path, dataset, interpol) 
+    file_path = os.path.join(output_path, dataset, interpol, 'dropped_'+str(thres) ) 
     os.makedirs(file_path)
     file_name = os.path.join(file_path, 'X_interpolated.npy') 
     with open(file_name, 'wb') as f:
