@@ -12,6 +12,8 @@ pandas = "*"
 numpy = "*"
 sklearn = "*"
 requests = "*"
+sktime = "*"
+cython = "*"
 
 [requires]
 python_version = "3.6"
