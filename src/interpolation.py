@@ -117,7 +117,7 @@ def plot_interpolation(ip):
     #plt.ylim(-10, 20)
     plt.legend(loc='upper left')
 
-    plt.show()
-
+    #plt.show()
+    plt.savefig('interpolation_sample.pdf')
 
  
