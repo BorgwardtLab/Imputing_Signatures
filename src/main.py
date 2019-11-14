@@ -48,10 +48,17 @@ def main():
 
     
     file_path = os.path.join(output_path, dataset, interpol, 'dropped_'+str(thres) ) 
-    os.makedirs(file_path)
-    file_name = os.path.join(file_path, 'X_interpolated.npy') 
-    with open(file_name, 'wb') as f:
-        np.save(f, X_int)
+    if os.path.exists(file_path):
+        print('Output file already exists. Overwritting..')
+    else:
+        os.makedirs(file_path)
+    
+    file_name = os.path.join(file_path, 'X_interpolated.npz') 
+    np.savez_compressed(file_name, a=X_int)
+    
+    #loading:
+    #loaded = np.load(file_name)
+    #X_int = loaded['a']
 
 if __name__ in "__main__":
     main()
