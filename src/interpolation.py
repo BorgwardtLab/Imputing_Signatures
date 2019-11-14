@@ -102,8 +102,10 @@ def plot_interpolation(ip):
     Inputs:
         - Interpolation object 
     """
+    import matplotlib 
+    matplotlib.use('Agg')
     import matplotlib.pyplot as plt
-
+    
     plt.figure()
     plt.plot(ip.T_sub,ip.X_sub, 'o', label='Subsampled and observed')
     plt.plot(ip.T,ip.X, '.', label='Original training points')
@@ -118,6 +120,6 @@ def plot_interpolation(ip):
     plt.legend(loc='upper left')
 
     #plt.show()
-    plt.savefig('interpolation_sample.pdf')
+    plt.savefig('../plots/sample_visualization.pdf')
 
  
