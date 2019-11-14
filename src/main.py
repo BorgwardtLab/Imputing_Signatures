@@ -2,9 +2,8 @@ import argparse
 import numpy as np
 import os
 from IPython import embed
-from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
 from tempfile import TemporaryFile
+from time import time
 
 from dataset import get_ucr_dataset
 from preprocessing import subsample
@@ -42,9 +41,9 @@ def main():
     X_train, y_train, X_test, y_test = get_ucr_dataset(input_path, dataset) #'ItalyPowerDemand')
 
     np.random.seed(42)
-    
+    start = time() 
     X_int = interpolate_dataset(X_train, thres, interpolation_type=interpol, plot_sample=4)
-
+    print(f'Took {time() - start} seconds.')
     
     file_path = os.path.join(output_path, dataset, interpol, 'dropped_'+str(thres) ) 
     if os.path.exists(file_path):
