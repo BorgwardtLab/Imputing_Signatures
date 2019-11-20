@@ -18,7 +18,6 @@ class Interpolation:
         self.X_pred, self.T_pred, self.sigma = interpolation_fn(self.X_sub, self.T_sub, self.T_max)
 
 
-
 def interpolate_dataset(X, thres, interpolation_type, plot_sample=4):
     """
     Apply instance-wise interpolation on entire dataset.
@@ -27,7 +26,7 @@ def interpolate_dataset(X, thres, interpolation_type, plot_sample=4):
         - X: Time series values (n x t array, n instances, t time steps (non-consecutive)) 
         - interpolation_type: (e.g. GP)
     Outputs:
-        - X_int : interpolated Time series data set (n x t') with t' > t 
+        - X_int : interpolated Time series data set (n x t') with t' > t (as we perform imputation of irregularly observed time series) 
     """
     if interpolation_type == "GP":
         interpolation_fn = gp_interpolation
@@ -120,6 +119,6 @@ def plot_interpolation(ip):
     plt.legend(loc='upper left')
 
     #plt.show()
-    plt.savefig('../plots/sample_visualization.pdf')
+    plt.savefig('plots/sample_visualization.pdf')
 
  
