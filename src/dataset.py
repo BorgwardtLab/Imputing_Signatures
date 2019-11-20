@@ -27,7 +27,6 @@ def gather_iterator_in_arrays(iterator):
             raise Exception('Current Data set of variable length, currently not implemented..')
         time_series.append(x)
         labels.append(y)
-    #TODO:  concatenate  
     X = np.concatenate(time_series, axis=1).T    
     y = np.array(labels)
     return X,y 
