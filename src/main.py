@@ -6,7 +6,7 @@ import sys
 from tempfile import TemporaryFile
 from time import time
 
-from dataset import get_ucr_dataset
+from dataset import get_ucr_dataset, check_equal_length, equal_length_datasets
 from preprocessing import standardize, impute
 from interpolation import gp_interpolation, interpolate_dataset
 
@@ -19,12 +19,21 @@ def main(parser):
     output_path = args.output_path # path to processed dataset 
     dataset_index = int(args.dataset) # index, to currently used UCR dataset
     used_format = args.used_format
-    thres = args.thres # threshold for subsampling
+    thres = float(args.thres/100) # threshold for subsampling
     interpol = args.interpol # interpolation scheme
     overwrite = args.overwrite
 
-    datasets = os.listdir(input_path) #list of all available UCR datasets
+    #datasets = os.listdir(input_path) #list of all available UCR datasets
+    datasets = equal_length_datasets()
     dataset = datasets[dataset_index] 
+    
+    print(f'SETUP: Dataset = {dataset}, threshold = {thres}, Interpolation = {interpol}, format = {used_format}')
+
+    #skip variable length datasets:
+    if not check_equal_length(dataset):
+        print('dataset has variable lengths, skipping for now..')
+        sys.exit()
+ 
     #try variable length dataset with setting: dataset = 'PLAID'
     #try dataset with Nans:
     #dataset = 'DodgerLoopDay' 
@@ -80,8 +89,8 @@ if __name__ in "__main__":
                         default='ts',
                         help='Used Data Format [tsv, ts]')
     parser.add_argument('--thres', 
-                        default=0.5, type=float, 
-                        help='Threshold for subsampling. Probability of dropping an observation')
+                        default=50, type=float, 
+                        help='Threshold for subsampling. Percentage observations to drop')
     parser.add_argument('--interpol', 
                         default='GP',
                         help='Interpolation Scheme after subsampling: [GP, linear] ')
