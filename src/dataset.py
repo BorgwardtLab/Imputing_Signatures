@@ -8,8 +8,16 @@ Dataset utilities for UCR Archive 2018 (tsv format)
 import numpy as np
 import os
 from IPython import embed
+import pickle 
 
 import uea_ucr_datasets
+
+def equal_length_datasets():
+    datasets = pickle.load(open('data/equal_lengths.pkl','rb')) 
+    return datasets    
+def check_equal_length(name):
+    datasets = equal_length_datasets() 
+    return True if name in datasets else False    
 
 def gather_iterator_in_arrays(iterator):
     """ takes iterator from uea_ucr package returning tuples (x_i,y_i) 
