@@ -8,7 +8,7 @@ import uea_ucr_datasets
 
 uea_ucr_datasets.list_datasets()
 
-d = uea_ucr_datasets.Dataset('AllGestureWiimoteX', train=True) # AllGestureWiimoteX 'UWaveGestureLibrary'
+d = uea_ucr_datasets.Dataset('PLAID', train=True) # AllGestureWiimoteX 'UWaveGestureLibrary'
 first_instance = d[0]
 instance_x, instance_y = first_instance
 
