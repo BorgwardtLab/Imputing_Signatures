@@ -17,7 +17,7 @@ def main(parser):
     args = parser.parse_args()
     input_path = args.input_path # path to UCR datasets 
     output_path = args.output_path # path to processed dataset 
-    dataset_index = args.dataset # index, to currently used UCR dataset
+    dataset_index = int(args.dataset) # index, to currently used UCR dataset
     used_format = args.used_format
     thres = args.thres # threshold for subsampling
     interpol = args.interpol # interpolation scheme
