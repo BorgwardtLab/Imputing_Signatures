@@ -2,6 +2,7 @@ import argparse
 import numpy as np
 import os
 from IPython import embed
+import sys
 from tempfile import TemporaryFile
 from time import time
 
@@ -20,13 +21,24 @@ def main(parser):
     used_format = args.used_format
     thres = args.thres # threshold for subsampling
     interpol = args.interpol # interpolation scheme
+    overwrite = args.overwrite
 
     datasets = os.listdir(input_path) #list of all available UCR datasets
     dataset = datasets[dataset_index] 
     #try variable length dataset with setting: dataset = 'PLAID'
     #try dataset with Nans:
-    dataset = 'DodgerLoopDay' 
-    
+    #dataset = 'DodgerLoopDay' 
+
+    #Determine if output already exists, if yes skip..
+    file_path = os.path.join(output_path, dataset, interpol, 'dropped_'+str(thres) ) 
+    output_file = os.path.join(file_path, 'X_train.npz') 
+    if os.path.exists(output_file):
+        if overwrite:
+            pass
+        else:
+            print('Skipping current dataset as output file already exists and overwriting mode is deactivated!')
+            sys.exit()
+
     #Load current UCR dataset
     X_train, y_train, X_test, y_test = get_ucr_dataset(input_path, dataset, used_format) #'ItalyPowerDemand')
     
@@ -43,7 +55,7 @@ def main(parser):
         start = time() # take time as this step takes the longest.. 
         X_int = interpolate_dataset(data.values, thres, interpolation_type=interpol, plot_sample=None)
         print(f'Interpolating the {dataset} {name} dataset took {time() - start} seconds.')
-        file_path = os.path.join(output_path, dataset, interpol, 'dropped_'+str(thres) ) 
+        
         if not os.path.exists(file_path):
             os.makedirs(file_path)
         file_name = os.path.join(file_path, name + '.npz') 
@@ -73,6 +85,9 @@ if __name__ in "__main__":
     parser.add_argument('--interpol', 
                         default='GP',
                         help='Interpolation Scheme after subsampling: [GP, linear] ')
+    parser.add_argument('--overwrite', 
+                        action='store_true', default=False,
+                        help='To overwrite existing npz output files')
 
     main(parser)
 
