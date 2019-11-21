@@ -12,7 +12,7 @@ for i in $(seq 0 $index); do
         #bsub "./test_script.sh $i $j" -n 5 -R "rusage[mem=4096]"; 
         #if [ ! -e outfiles/total_dtw_distances_channel_${j}_horizon_${i}_vs_horizon_0.npz ]; then
         echo submitting job $i, $j 
-        bsub -n 1 -W 1:00 -R "rusage[mem=1024]" -e "jobs/" -o "jobs/" "python src/main.py --dataset $i --thres $j";  
+        bsub -n 2 -W 8:00 -R "rusage[mem=2048]" -e "jobs/" -o "jobs/" "python src/main.py --dataset $i --thres $j";  
         #fi
     done;
 done
