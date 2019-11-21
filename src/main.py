@@ -18,6 +18,7 @@ def main(parser):
     input_path = args.input_path # path to UCR datasets 
     output_path = args.output_path # path to processed dataset 
     dataset_index = int(args.dataset) # index, to currently used UCR dataset
+    dataset_name = args.dataset_name
     used_format = args.used_format
     thres = float(args.thres/100) # threshold for subsampling
     interpol = args.interpol # interpolation scheme
@@ -25,8 +26,12 @@ def main(parser):
 
     #datasets = os.listdir(input_path) #list of all available UCR datasets
     datasets = equal_length_datasets()
-    dataset = datasets[dataset_index] 
-    
+    if dataset_name:
+        print('Using dataset as provided by string argument')
+        dataset = dataset_name
+    else:
+        print('Using dataset as provided by index argument')
+        dataset = datasets[dataset_index] 
     print(f'SETUP: Dataset = {dataset}, threshold = {thres}, Interpolation = {interpol}, format = {used_format}')
 
     #skip variable length datasets:
@@ -41,12 +46,16 @@ def main(parser):
     #Determine if output already exists, if yes skip..
     file_path = os.path.join(output_path, dataset, interpol, 'dropped_'+str(thres) ) 
     output_file = os.path.join(file_path, 'X_train.npz') 
+    output_file2 = os.path.join(file_path, 'X_test.npz') 
+    only_test = False #bool whether only test split has to processed (e.g. large dataset which did not fit into job time)
     if os.path.exists(output_file):
         if overwrite:
             pass
-        else:
+        elif os.path.exists(output_file2):
             print('Skipping current dataset as output file already exists and overwriting mode is deactivated!')
             sys.exit()
+        else:
+            only_test = True
 
     #Load current UCR dataset
     X_train, y_train, X_test, y_test = get_ucr_dataset(input_path, dataset, used_format) #'ItalyPowerDemand')
@@ -57,6 +66,9 @@ def main(parser):
     X_train, X_test = standardize(X_train, X_test) #now we have dfs
  
     for data, name in zip([X_train, X_test], ['X_train', 'X_test']):
+        if (only_test == True and name == 'X_train'):
+            print('Skipping train split, only test split needs to be processed..')
+            continue
         #2. Impute the few Nans (carry forward, then 0):
         data = impute(data)
         
@@ -85,6 +97,9 @@ if __name__ in "__main__":
     parser.add_argument('--dataset', 
                         default=10,
                         help='Dataset index pointing to one of 128 UCR datasets')
+    parser.add_argument('--dataset_name', 
+                        default=None,
+                        help='Dataset Name (instead of going via index of list of datasets)')
     parser.add_argument('--used_format', 
                         default='ts',
                         help='Used Data Format [tsv, ts]')
