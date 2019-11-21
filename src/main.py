@@ -5,7 +5,9 @@ from IPython import embed
 import sys
 from tempfile import TemporaryFile
 from time import time
-
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 from dataset import get_ucr_dataset, check_equal_length, equal_length_datasets
 from preprocessing import standardize, impute
 from interpolation import gp_interpolation, interpolate_dataset
@@ -23,6 +25,9 @@ def main(parser):
     thres = float(args.thres/100) # threshold for subsampling
     interpol = args.interpol # interpolation scheme
     overwrite = args.overwrite
+    show_sample = args.show_sample
+    if show_sample is not None:
+        show_sample = int(show_sample)
 
     #datasets = os.listdir(input_path) #list of all available UCR datasets
     datasets = equal_length_datasets()
@@ -74,18 +79,15 @@ def main(parser):
         
         #3. Subsample and interpolate again in np array format
         start = time() # take time as this step takes the longest.. 
-        X_int = interpolate_dataset(data.values, thres, interpolation_type=interpol, plot_sample=None)
+        X_int, fig = interpolate_dataset(data.values, thres, interpolation_type=interpol, plot_sample=show_sample)
         print(f'Interpolating the {dataset} {name} dataset took {time() - start} seconds.')
-        
+        if fig is not None:
+            plt.savefig(f'plots/{interpol}_interpolation_{dataset}_sample_{show_sample}.pdf') 
         if not os.path.exists(file_path):
             os.makedirs(file_path)
         file_name = os.path.join(file_path, name + '.npz') 
         np.savez_compressed(file_name, X=X_int)
         
-    #loading:
-    #loaded = np.load(file_name)
-    #X_int = loaded['X']
-
 if __name__ in "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_path', 
@@ -112,6 +114,9 @@ if __name__ in "__main__":
     parser.add_argument('--overwrite', 
                         action='store_true', default=False,
                         help='To overwrite existing npz output files')
+    parser.add_argument('--show_sample', 
+                        default=None, 
+                        help='If specificed, display the interpolation of this sample (by index) [e.g. 3] ')
 
     main(parser)
 
