@@ -56,7 +56,7 @@ def interpolate_dataset(X, thres, interpolation_type, plot_sample=4):
         instances.append(ip.X_pred.reshape(1,-1)) #gather time series as row vecs (for easier concatenation)
     X_int =  np.concatenate(instances, axis=0)    
 
-    return X_int, (fig is None)
+    return X_int, (plot_sample is not None)
          
 
 def gp_interpolation(X,T,T_max): 

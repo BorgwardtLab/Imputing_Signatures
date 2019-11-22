@@ -79,9 +79,9 @@ def main(parser):
         
         #3. Subsample and interpolate again in np array format
         start = time() # take time as this step takes the longest.. 
-        X_int, fig = interpolate_dataset(data.values, thres, interpolation_type=interpol, plot_sample=show_sample)
+        X_int, plot_indicator = interpolate_dataset(data.values, thres, interpolation_type=interpol, plot_sample=show_sample)
         print(f'Interpolating the {dataset} {name} dataset took {time() - start} seconds.')
-        if fig is not None:
+        if plot_indicator is not None:
             plt.savefig(f'plots/{interpol}_interpolation_{dataset}_sample_{show_sample}.pdf') 
         if not os.path.exists(file_path):
             os.makedirs(file_path)
