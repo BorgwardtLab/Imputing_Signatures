@@ -12,9 +12,10 @@ import pickle
 
 import uea_ucr_datasets
 
-def equal_length_datasets():
+def equal_length_datasets(min_length=100):
     datasets = pickle.load(open('data/equal_lengths.pkl','rb')) 
-    return datasets    
+    used_datasets = [i for i,j in datasets.items() if j >= min_length]
+    return used_datasets    
 def check_equal_length(name):
     datasets = equal_length_datasets() 
     return True if name in datasets else False    
