@@ -32,6 +32,8 @@ def main(parser):
 
     #datasets = os.listdir(input_path) #list of all available UCR datasets
     datasets = equal_length_datasets(min_length)
+    print(f'Number of datasets fulfilling min_length of {min_length}: {len(datasets)}')
+
     if dataset_name:
         print('Using dataset as provided by string argument')
         dataset = dataset_name
