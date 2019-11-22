@@ -23,6 +23,7 @@ def main(parser):
     dataset_name = args.dataset_name
     used_format = args.used_format
     thres = float(args.thres/100) # threshold for subsampling
+    min_length = int(args.min_length) # minimal length of time series for dataset to use
     interpol = args.interpol # interpolation scheme
     overwrite = args.overwrite
     show_sample = args.show_sample
@@ -30,7 +31,7 @@ def main(parser):
         show_sample = int(show_sample)
 
     #datasets = os.listdir(input_path) #list of all available UCR datasets
-    datasets = equal_length_datasets()
+    datasets = equal_length_datasets(min_length)
     if dataset_name:
         print('Using dataset as provided by string argument')
         dataset = dataset_name
@@ -41,7 +42,7 @@ def main(parser):
 
     #skip variable length datasets:
     if not check_equal_length(dataset):
-        print('dataset has variable lengths, skipping for now..')
+        print('dataset not contained in list of equal length time series datasets, skipping for now..')
         sys.exit()
  
     #try variable length dataset with setting: dataset = 'PLAID'
@@ -107,7 +108,10 @@ if __name__ in "__main__":
                         help='Used Data Format [tsv, ts]')
     parser.add_argument('--thres', 
                         default=50, type=float, 
-                        help='Threshold for subsampling. Percentage observations to drop')
+                        help='Threshold for subsampling. Percentage observations to KEEP')
+    parser.add_argument('--min_length',
+                        default=100, type=int, 
+                        help='minimal length of time series for using the dataset (as subsampling very short time series is meaningless')
     parser.add_argument('--interpol', 
                         default='GP',
                         help='Interpolation Scheme after subsampling: [GP, linear] ')
