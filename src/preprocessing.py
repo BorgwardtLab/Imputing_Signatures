@@ -8,8 +8,8 @@ def subsample(X,y,prob=0.5):
     """
     Function to subsample time series (times X and values y) according to sampling probability prob
     """
-    mask_ind = np.random.choice(2,len(X), p=[prob, 1-prob])
-    mask = mask_ind.astype(bool)
+    mask_indices = np.random.choice(len(X), int(np.ceil(len(X)*prob)), replace=False)
+    mask = sorted(mask_indices) #sorted from min to max
     return X[mask], y[mask]
 
 
