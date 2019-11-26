@@ -16,6 +16,7 @@ sktime = "*"
 cython = "*"
 uea-ucr-datasets = "*"
 iisignature = "*"
+lightgbm = "*"
 
 [requires]
-python_version = "3.6"
+python_version = "*"
