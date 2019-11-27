@@ -9,7 +9,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from dataset import get_ucr_dataset, check_equal_length, equal_length_datasets
-from preprocessing import standardize, impute
+from prepro_utils import standardize, impute
 from interpolation import gp_interpolation, interpolate_dataset
 
 def main(parser):
