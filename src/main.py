@@ -3,14 +3,13 @@ import numpy as np
 import os
 from IPython import embed
 import sys
-from tempfile import TemporaryFile
 from time import time
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from dataset import get_ucr_dataset, check_equal_length, equal_length_datasets
-from preprocessing import standardize, impute
 from interpolation import gp_interpolation, interpolate_dataset
+from preprocessing import main as main_preprocessing
 
 def main(parser):
     np.random.seed(42)
@@ -30,7 +29,6 @@ def main(parser):
     if show_sample is not None:
         show_sample = int(show_sample)
 
-    #datasets = os.listdir(input_path) #list of all available UCR datasets
     datasets = equal_length_datasets(min_length)
     print(f'Number of datasets fulfilling min_length of {min_length}: {len(datasets)}')
 
@@ -47,24 +45,19 @@ def main(parser):
         print('dataset not contained in list of equal length time series datasets, skipping for now..')
         sys.exit()
  
-    #try variable length dataset with setting: dataset = 'PLAID'
-    #try dataset with Nans:
-    #dataset = 'DodgerLoopDay' 
 
     #Determine if output already exists, if yes skip..
     file_path = os.path.join(output_path, dataset, interpol, 'dropped_'+str(thres) ) 
     output_file = os.path.join(file_path, 'X_train.npz') 
     output_file2 = os.path.join(file_path, 'X_test.npz') 
     only_test = False #bool whether only test split has to processed (e.g. large dataset which did not fit into job time)
-    if os.path.exists(output_file):
-        if overwrite:
-            pass
-        elif os.path.exists(output_file2):
-            print('Skipping current dataset as output file already exists and overwriting mode is deactivated!')
-            sys.exit()
-        else:
-            only_test = True
-
+    if os.path.exists(output_file) and os.path.exists(output_file2):
+        pass
+    else:
+        #Run preprocessing script and feed it the current parser
+        main_preprocessing(parser)
+    ### CONTINUE HERE
+    
     #Load current UCR dataset
     X_train, y_train, X_test, y_test = get_ucr_dataset(input_path, dataset, used_format) #'ItalyPowerDemand')
     
@@ -90,6 +83,7 @@ def main(parser):
             os.makedirs(file_path)
         file_name = os.path.join(file_path, name + '.npz') 
         np.savez_compressed(file_name, X=X_int)
+
         
 if __name__ in "__main__":
     parser = argparse.ArgumentParser()
@@ -107,7 +101,7 @@ if __name__ in "__main__":
                         help='Dataset Name (instead of going via index of list of datasets)')
     parser.add_argument('--used_format', 
                         default='ts',
-                        help='Used Data Format [tsv, ts]')
+                        help='Used Format: [ts] currently only ts imlemented!')
     parser.add_argument('--thres', 
                         default=50, type=float, 
                         help='Threshold for subsampling. Percentage observations to KEEP')
