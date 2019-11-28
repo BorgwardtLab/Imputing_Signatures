@@ -122,10 +122,10 @@ def main(parser):
         param_dist = {
         'est__n_neighbors': sp_randint(1, 10) }
     else:
-        raise ValueError(f'Provied Method {method} not implemented! Choose from [Sig_kNN, Sig_LR, Sig_LGBM, DTW_kNN]')
+        raise ValueError(f'Provided Method {method} not implemented! Choose from [Sig_kNN, Sig_LR, Sig_LGBM, DTW_kNN]')
     #Use defined pipeline and param_dist for randomized search:
     n_iter_search = args.n_iter_search
-    rs = RandomizedSearchCV(pipe, param_distributions=param_dist,
+    rs = RandomizedSearchCV(pipe, param_distributions=param_dist, scoring='accuracy',
                                    n_iter=n_iter_search, cv=3, iid=False)
     start = time()
     rs.fit(X_train, y_train)
@@ -175,7 +175,7 @@ if __name__ in "__main__":
                         default='ts',
                         help='Used Format: [ts] currently only ts imlemented!')
     parser.add_argument('--thres', 
-                        default=50, 
+                        default=50, type=int, 
                         help='Threshold for subsampling. Percentage observations to KEEP')
     parser.add_argument("--use_subsampling", action='store_true') 
     parser.add_argument('--min_length',
@@ -191,7 +191,7 @@ if __name__ in "__main__":
                         default=None, 
                         help='If specificed, display the interpolation of this sample (by index) [e.g. 3] ')
     parser.add_argument('--method', 
-                        default='Sig_kNN', 
+                        default='Sig_kNN', type=str, 
                         help='Method to use for classification [Sig_kNN, Sig_LR, Sig_LGBM, DTW_kNN]')
     parser.add_argument('--n_iter_search', 
                         type=int, 
