@@ -12,6 +12,14 @@ from dataset import get_ucr_dataset, check_equal_length, equal_length_datasets
 from prepro_utils import standardize, impute
 from interpolation import gp_interpolation, interpolate_dataset
 
+def prepro_without_subsampling(X_train, X_test):
+    #1. Apply standardization here (still with NaNs!), CAVE: conversion to pd DataFrame!
+    X_train, X_test = standardize(X_train, X_test) #now we have dfs
+    
+    X_train = impute(X_train).values
+    X_test = impute(X_test).values
+    return X_train, X_test
+
 def main(parser):
     np.random.seed(42)
 
