@@ -36,6 +36,8 @@ def main(parser):
     min_length = int(args.min_length) # minimal length of time series for dataset to use
     interpol = args.interpol if use_subsampling else None #interpolation scheme
     overwrite = args.overwrite
+    n_iter_search = args.n_iter_search
+    method = args.method
     show_sample = args.show_sample
     if show_sample is not None:
         show_sample = int(show_sample)
@@ -55,7 +57,16 @@ def main(parser):
     if not check_equal_length(dataset):
         print('dataset not contained in list of equal length time series datasets, skipping for now..')
         sys.exit()
- 
+
+    #Check if the classification ran before succesfully (result file exists)
+    result_file = os.path.join(args.result_path, method + '_' + dataset +'_'+ 'subsampling' 
+        + str(use_subsampling) +  '_' + str(interpol) +'_interpolation_' + 'dropped_'+str(thres) 
+        + '_n_iters_' + str(n_iter_search) + '.csv') 
+    
+    if os.path.exists(result_file):
+        print('Classification Result already exists. Skip this job..')
+        sys.exit()
+    
     #Load raw data (with labels) 
     X_train_raw, y_train, X_test_raw, y_test = get_ucr_dataset(input_path, dataset, used_format)
     if thres is not None:
@@ -80,7 +91,7 @@ def main(parser):
         #Preprocess raw data as we do not work with the subsampled data:
         X_train, X_test = prepro_without_subsampling(X_train_raw, X_test_raw) 
 
-    method = args.method 
+    
     if method == 'Sig_LGBM': 
         import lightgbm as lgb
 
@@ -124,7 +135,7 @@ def main(parser):
     else:
         raise ValueError(f'Provided Method {method} not implemented! Choose from [Sig_kNN, Sig_LR, Sig_LGBM, DTW_kNN]')
     #Use defined pipeline and param_dist for randomized search:
-    n_iter_search = args.n_iter_search
+    
     rs = RandomizedSearchCV(pipe, param_distributions=param_dist, scoring='accuracy',
                                    n_iter=n_iter_search, cv=3, iid=False)
     start = time()
