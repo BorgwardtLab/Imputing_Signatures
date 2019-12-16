@@ -10,6 +10,6 @@ ipykernel = "*"
 torch = "*"
 gpytorch = "*"
 matplotlib = "*"
-
+signatory = "*"
 [requires]
 python_version = "3.7"
