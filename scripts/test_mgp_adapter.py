@@ -14,7 +14,7 @@ from src.utils.train_utils import augment_labels
 # ----------------------------------------------
 
 # Generate Data:
-n_samples=10
+n_samples=20
 n_tasks=3
 n_query=51
 noise=3
@@ -28,15 +28,19 @@ n_mc_smps = 10
 n_input_dims = test_inputs.shape[1]
 num_tasks=n_tasks+1 #augment tasks with dummy task for imputed 0s for tensor format
 likelihood = gpytorch.likelihoods.GaussianLikelihood()
-#likelihood.eval()
 
 # Initializing GP adapter model (for now assuming imputing to equal length time series)
-model = GPAdapter(DeepSignatureModel, n_input_dims, n_mc_smps, likelihood, num_tasks)
+clf = DeepSignatureModel(in_channels=n_tasks, sig_depth=3)
+model = GPAdapter(  clf, 
+                    n_input_dims, 
+                    n_mc_smps, 
+                    likelihood, 
+                    num_tasks)
 
 # Use the adam optimizer
 optimizer = torch.optim.Adam([
     {'params': model.parameters()}, 
-], lr=0.1)
+], lr=0.01)
 
 # Loss function:
 loss_fn = nn.CrossEntropyLoss(reduction='mean')

@@ -43,7 +43,7 @@ class GPAdapter(nn.Module):
         self.n_mc_smps = n_mc_smps
         self.n_tasks = [*gp_params][-1] -1 #num_tasks includes dummy task for padedd zeros
         self.mgp = MGP_Layer(*gp_params)
-        self.clf = clf(self.n_tasks)
+        self.clf = clf #(self.n_tasks)
         #more generic would be something like: self.clf = clf(n_input_dims) #e.g. SimpleDeepModel(n_input_dims)
 
     def forward(self, *data):
