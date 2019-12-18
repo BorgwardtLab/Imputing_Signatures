@@ -44,34 +44,6 @@ def to_gpytorch_format(d):
     return d
 
 
-def variable_length_collate(batch):
-
-    diagrams = []
-    labels = []
-
-    # TODO: better `itertools` expression for this?
-    for diagram, label in batch:
-        diagrams.append(diagram)
-        labels.append(label - 1)
-
-    lengths = list(map(len, diagrams))
-    max_len = max(lengths)
-
-    extended_diagrams = []
-    for diagram, length in zip(diagrams, lengths):
-        padding = max_len - length
-        extended_diagrams.append(
-            np.pad(
-                diagram, ((0, padding), (0, 0)),
-                mode='constant'
-            )
-        )
-
-    return tensor(extended_diagrams, dtype=torch.float), \
-           tensor(labels, dtype=torch.long),             \
-           tensor(lengths, dtype=torch.long)
-
-
 def get_max_shape(l):
     """Get maximum shape for all numpy arrays in list.
 
@@ -85,11 +57,14 @@ def get_max_shape(l):
     return np.max(shapes, axis=0)
 
 
-def dict_collate_fn(instances):
+def dict_collate_fn(instances, padding_values=None):
     """Collate function for a list of dictionaries.
 
     Args:
         instances: List of dictionaries with same keys.
+        padding_values: Dict with a subset of keys from instances, mapping them
+            to the values that should be used for padding. If not defined 0 is
+            used.
 
     Returns:
         Dictionary with instances padded and combined into tensors.
@@ -98,7 +73,7 @@ def dict_collate_fn(instances):
     # Convert list of dicts to dict of lists
     dict_of_lists = {
         key: [d[key] for d in instances]
-        for key in instances[0]
+        for key in instances[0].keys()
     }
 
     # Pad instances to max shape
@@ -106,6 +81,9 @@ def dict_collate_fn(instances):
         key: get_max_shape(value) for key, value in dict_of_lists.items()
     }
     padded_output = defaultdict(list)
+    # Pad with 0 in case not otherwise defined
+    padding_values = padding_values if padding_values else {}
+    padding_values = defaultdict(lambda: 0., padding_values.items())
     for key, max_shape in max_shapes.items():
         for instance in dict_of_lists[key]:
             instance_shape = np.array(instance.shape)
@@ -115,7 +93,11 @@ def dict_collate_fn(instances):
             padding = np.stack(
                 [np.zeros_like(padding_shape), padding_shape], axis=1)
             padded = np.pad(
-                instance, padding, mode='constant', constant_values=0.)
+                instance,
+                padding,
+                mode='constant',
+                constant_values=padding_values[key]
+            )
             padded_output[key].append(padded)
 
     # Combine instances into individual arrays
