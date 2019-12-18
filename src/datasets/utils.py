@@ -3,6 +3,8 @@ import os
 from typing import List
 import pandas as pd
 import numpy as np
+import torch
+from collections import defaultdict
 
 # import tensorflow as tf
 # from tensorflow.python.framework import tensor_shape
@@ -40,6 +42,89 @@ def to_gpytorch_format(d):
     d['values'] = values_compact
     d['indexes'] = indexes
     return d
+
+
+def variable_length_collate(batch):
+
+    diagrams = []
+    labels = []
+
+    # TODO: better `itertools` expression for this?
+    for diagram, label in batch:
+        diagrams.append(diagram)
+        labels.append(label - 1)
+
+    lengths = list(map(len, diagrams))
+    max_len = max(lengths)
+
+    extended_diagrams = []
+    for diagram, length in zip(diagrams, lengths):
+        padding = max_len - length
+        extended_diagrams.append(
+            np.pad(
+                diagram, ((0, padding), (0, 0)),
+                mode='constant'
+            )
+        )
+
+    return tensor(extended_diagrams, dtype=torch.float), \
+           tensor(labels, dtype=torch.long),             \
+           tensor(lengths, dtype=torch.long)
+
+
+def get_max_shape(l):
+    """Get maximum shape for all numpy arrays in list.
+
+    Args:
+        l: List of numpy arrays.
+
+    Returns:
+        Shape containing the max shape along each axis.
+    """
+    shapes = np.array([el.shape for el in l])
+    return np.max(shapes, axis=0)
+
+
+def dict_collate_fn(instances):
+    """Collate function for a list of dictionaries.
+
+    Args:
+        instances: List of dictionaries with same keys.
+
+    Returns:
+        Dictionary with instances padded and combined into tensors.
+
+    """
+    # Convert list of dicts to dict of lists
+    dict_of_lists = {
+        key: [d[key] for d in instances]
+        for key in instances[0]
+    }
+
+    # Pad instances to max shape
+    max_shapes = {
+        key: get_max_shape(value) for key, value in dict_of_lists.items()
+    }
+    padded_output = defaultdict(list)
+    for key, max_shape in max_shapes.items():
+        for instance in dict_of_lists[key]:
+            instance_shape = np.array(instance.shape)
+            padding_shape = max_shape - instance_shape
+            # Numpy wants the padding in the form before, after so we need to
+            # prepend zeros
+            padding = np.stack(
+                [np.zeros_like(padding_shape), padding_shape], axis=1)
+            padded = np.pad(
+                instance, padding, mode='constant', constant_values=0.)
+            padded_output[key].append(padded)
+
+    # Combine instances into individual arrays
+    combined = {
+        key: torch.tensor(np.stack(values, axis=0))
+        for key, values in padded_output.items()
+    }
+
+    return combined
 
 
 def add_measurement_masking(measurements):
