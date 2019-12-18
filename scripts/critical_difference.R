@@ -7,12 +7,15 @@ setwd('/Users/mimoor/Desktop/localwork/signatures/GP_Signatures/scripts/')
 #plotCD(data.gh.2008, alpha=0.01)
 
 data <- read.table(
-  '../results/full_tabular_results.csv',
+  # '../results/full_tabular_results.csv',
+  '../results/pivoted_results_subsampled.csv',
   sep=',',
   header=TRUE,
-  #row.names=1
+  row.names=1
 )
 row_names <- rownames(data)
 rownames(data) <- c()
 
 plotCD(data, alpha=0.01)
+
+

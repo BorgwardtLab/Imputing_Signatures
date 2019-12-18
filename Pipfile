@@ -7,17 +7,11 @@ verify_ssl = true
 
 [packages]
 ipykernel = "*"
+torch = "*"
+gpytorch = "*"
 matplotlib = "*"
-pandas = "*"
-numpy = "*"
-sklearn = "*"
-requests = "*"
-sktime = "*"
-cython = "*"
+signatory = "==1.1.5.1.3.0"
 uea-ucr-datasets = "*"
-iisignature = "*"
-lightgbm = "*"
-tslearn = "*"
 
 [requires]
-python_version = "*"
+python_version = "3.7"
