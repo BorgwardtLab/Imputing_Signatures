@@ -1,11 +1,12 @@
 import gpytorch
 import numpy as np
+from sklearn.metrics import roc_auc_score as auc
 import torch
 import torch.nn as nn
 
 from src.dataset.synthetic_dataset import create_synthetic_dataset
 from src.models.mgp import GPAdapter
-from src.models.deep_models import SimpleDeepModel
+from src.models.deep_models import DeepSignatureModel
 from src.utils.train_utils import augment_labels
  
 # ----------------------------------------------
@@ -30,7 +31,7 @@ likelihood = gpytorch.likelihoods.GaussianLikelihood()
 #likelihood.eval()
 
 # Initializing GP adapter model (for now assuming imputing to equal length time series)
-model = GPAdapter(SimpleDeepModel, n_input_dims, n_mc_smps, likelihood, num_tasks)
+model = GPAdapter(DeepSignatureModel, n_input_dims, n_mc_smps, likelihood, num_tasks)
 
 # Use the adam optimizer
 optimizer = torch.optim.Adam([
@@ -53,13 +54,14 @@ for i in np.arange(n_epochs): #for test trial, overfit same batch of samples
         logits = model(inputs, indices, values, test_inputs, test_indices) 
     
     #evaluate loss
-    loss = loss_fn(logits.flatten(0,1), y_true.long().flatten())
+    loss = loss_fn(logits, y_true.long().flatten())
     
     #Optimize:
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
     with torch.no_grad():
-        print(f'Epoch {i}, Train Loss: ', loss.item())
+        AUROC = auc(y_true.long().flatten().detach().numpy(),logits[:,1].flatten().detach().numpy()) #logits[:,:,1]
+        print(f'Epoch {i}, Train Loss: {loss.item():03f}  Train AUC: {AUROC:03f}')
 
 

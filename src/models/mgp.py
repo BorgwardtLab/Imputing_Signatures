@@ -41,9 +41,11 @@ class GPAdapter(nn.Module):
     def __init__(self, clf, n_input_dims, n_mc_smps, *gp_params):
         super(GPAdapter, self).__init__()
         self.n_mc_smps = n_mc_smps
+        self.n_tasks = [*gp_params][-1] -1 #num_tasks includes dummy task for padedd zeros
         self.mgp = MGP_Layer(*gp_params)
-        self.clf = clf(n_input_dims) #e.g. SimpleDeepModel(n_input_dims)
-        
+        self.clf = clf(self.n_tasks)
+        #more generic would be something like: self.clf = clf(n_input_dims) #e.g. SimpleDeepModel(n_input_dims)
+
     def forward(self, *data):
         """
         The GP Adapter takes input data as a list of 5 torch tensors (3 for train points, 2 for prediction points)
@@ -53,9 +55,14 @@ class GPAdapter(nn.Module):
             - test_inputs: query points in time (batch, timesteps, 1)
             - test_indices: query tasks for given point in time (batch, timesteps, 1)
         """
-        
         self.posterior = self.gp_forward(*data)
+        
+        #draw sample in MGP format (all tasks in same dimension)
         Z = self.draw_samples(self.posterior, self.n_mc_smps)
+        
+        #reshape such that tensor has timesteps and tasks/channels in independent dimensions for Signature network:
+        Z = self.channel_reshape(Z)
+        
         return self.clf(Z)
                 
     def gp_forward(self, *data):
@@ -91,4 +98,15 @@ class GPAdapter(nn.Module):
         """
         super().eval()
 
-
+    def channel_reshape(self, X):
+        """
+        reshaping function required as hadamard MGP's output format is not directly compatible with subsequent network
+        """
+        X_reshaped = X.view(X.shape[:-1] 
+                            + torch.Size([self.n_tasks]) 
+                            + torch.Size([int(X.shape[-1] / self.n_tasks)]) 
+                           )
+        # finally, swap last two dims: timestep and channel dim for Signature Augmentations
+        X_reshaped = X_reshaped.transpose(-2,-1)
+        X_reshaped = X_reshaped.flatten(0,1) #SigNet requires 3 dim setup, so we flatten out the mc dimension with batch
+        return X_reshaped
