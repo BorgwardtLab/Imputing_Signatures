@@ -27,7 +27,7 @@ def to_gpytorch_format(d):
 
     Returns:
         Dictionary where time and values are replaced with inputs, values and
-        indexes.
+        indices.
 
     """
     time = d['time']
@@ -40,7 +40,7 @@ def to_gpytorch_format(d):
     indexes = valid_indices[1]
     d['inputs'] = inputs
     d['values'] = values_compact
-    d['indexes'] = indexes
+    d['indices'] = indexes[..., np.newaxis]
     return d
 
 
