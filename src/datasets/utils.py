@@ -52,6 +52,7 @@ def get_max_shape(l):
 
     Returns:
         Shape containing the max shape along each axis.
+
     """
     shapes = np.array([el.shape for el in l])
     return np.max(shapes, axis=0)
