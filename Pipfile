@@ -13,6 +13,7 @@ matplotlib = "*"
 signatory = "==1.1.5.1.3.0"
 uea-ucr-datasets = "*"
 sklearn = "*"
+tqdm = "*"
 
 [requires]
 python_version = "3.7"

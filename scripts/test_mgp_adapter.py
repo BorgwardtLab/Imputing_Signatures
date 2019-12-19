@@ -4,7 +4,7 @@ from sklearn.metrics import roc_auc_score as auc
 import torch
 import torch.nn as nn
 
-from src.dataset.synthetic_dataset import create_synthetic_dataset
+from src.datasets.synthetic_dataset import create_synthetic_dataset
 from src.models.mgp import GPAdapter
 from src.models.deep_models import DeepSignatureModel
 from src.utils.train_utils import augment_labels

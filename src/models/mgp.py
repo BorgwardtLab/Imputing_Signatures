@@ -41,7 +41,8 @@ class GPAdapter(nn.Module):
     def __init__(self, clf, n_input_dims, n_mc_smps, *gp_params):
         super(GPAdapter, self).__init__()
         self.n_mc_smps = n_mc_smps
-        self.n_tasks = [*gp_params][-1] -1 #num_tasks includes dummy task for padedd zeros
+        # num_tasks includes dummy task for padedd zeros
+        self.n_tasks = [*gp_params][-1] - 1 
         self.mgp = MGP_Layer(*gp_params)
         self.clf = clf #(self.n_tasks)
         #more generic would be something like: self.clf = clf(n_input_dims) #e.g. SimpleDeepModel(n_input_dims)
@@ -56,19 +57,19 @@ class GPAdapter(nn.Module):
             - test_indices: query tasks for given point in time (batch, timesteps, 1)
         """
         self.posterior = self.gp_forward(*data)
-        
+
         #draw sample in MGP format (all tasks in same dimension)
         Z = self.draw_samples(self.posterior, self.n_mc_smps)
-        
+
         #reshape such that tensor has timesteps and tasks/channels in independent dimensions for Signature network:
         Z = self.channel_reshape(Z)
-        
+
         return self.clf(Z)
-                
+
     def gp_forward(self, *data):
         #Unpack data:
         inputs, indices, values, test_inputs, test_indices = [*data]
-        
+
         #Condition MGP on training data:
         self.mgp.condition_on_train_data(inputs, indices, values)
 
@@ -78,10 +79,10 @@ class GPAdapter(nn.Module):
     def draw_samples(self, posterior, n_mc_smps):
         #Draw monte carlo samples (with gradient) from posterior:
         return posterior.rsample(torch.Size([n_mc_smps])) #mc_samples form a new (outermost) dimension
-        
+
     def parameters(self):
         return list(self.mgp.parameters()) + list(self.clf.parameters())
-        
+
     def train(self, mode=True):
         """
         only set classifier to train mode, MGP always in eval mode for posterior draws
@@ -89,9 +90,9 @@ class GPAdapter(nn.Module):
         if mode:
             super().train()
             self.mgp.eval()
-        else: 
+        else:
             super().train(False)
-            
+
     def eval(self):
         """
         eval simply calls eval of super class (which in turn activates train with False)
