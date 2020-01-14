@@ -30,36 +30,44 @@ def augment_labels(labels, n_samples):
     return labels.expand(labels.shape[0], n_samples).transpose(1, 0)
 
 
+input_transform = partial(to_gpytorch_format, grid_spacing=1.)
+
 # Setup training data
-d = Physionet2012Dataset(split='training', transform=to_gpytorch_format)
+d = Physionet2012Dataset(split='training', transform=input_transform)
 n_tasks = d.measurement_dims
 # Should use the index of the auxillary task for padding
-collate_fn = partial(dict_collate_fn, padding_values={'indices': n_tasks})
-data_loader = DataLoader(d, batch_size=32, collate_fn=collate_fn)
+collate_fn = partial(
+    dict_collate_fn,
+    padding_values={
+        'indices': n_tasks,
+        'test_indices': n_tasks
+    }
+)
+data_loader = DataLoader(d, batch_size=16, collate_fn=collate_fn)
 
 
 # Setup validation data
-d = Physionet2012Dataset(split='validation', transform=to_gpytorch_format)
-data_loader = DataLoader(d, batch_size=32, collate_fn=collate_fn)
+d = Physionet2012Dataset(split='validation', transform=input_transform)
+data_loader = DataLoader(d, batch_size=16, collate_fn=collate_fn)
 
 # Training Parameters:
 n_epochs = 50
 
 # Setting up parameters of GP:
-n_mc_smps = 10
+n_mc_smps = 5
 # augment tasks with dummy task for imputed 0s for tensor format
 num_tasks = n_tasks + 1
 likelihood = gpytorch.likelihoods.GaussianLikelihood()
 
 # Initializing GP adapter model (for now assuming imputing to equal length time
 # series)
-clf = DeepSignatureModel(in_channels=n_tasks, sig_depth=3)
+clf = DeepSignatureModel(in_channels=n_tasks, sig_depth=2)
 model = GPAdapter(clf, None, n_mc_smps, likelihood, num_tasks)
 
 # Use the adam optimizer
 optimizer = torch.optim.Adam([
     {'params': model.parameters()},
-], lr=0.01)
+], lr=0.001)
 
 # Loss function:
 loss_fn = nn.CrossEntropyLoss(reduction='mean')
@@ -75,7 +83,7 @@ for epoch in range(n_epochs):
         # with gpytorch.settings.fast_pred_samples(): 
         with gpytorch.settings.fast_pred_var():
             logits = model(
-                d['inputs'], d['indices'], d['values'], d['inputs'], d['indices'])
+                d['inputs'], d['indices'], d['values'], d['test_inputs'], d['test_indices'])
 
         # evaluate loss
         loss = loss_fn(logits, y_true.long().flatten())
@@ -87,6 +95,4 @@ for epoch in range(n_epochs):
         model.eval()
         with torch.no_grad():
             AUROC = auc(y_true.long().flatten().detach().numpy(),logits[:,1].flatten().detach().numpy()) #logits[:,:,1]
-            print(f'Epoch {i}, Train Loss: {loss.item():03f}  Train AUC: {AUROC:03f}')
-
-
+            print(f'Epoch {epoch}, Train Loss: {loss.item():03f}  Train AUC: {AUROC:03f}')

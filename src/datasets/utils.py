@@ -19,7 +19,7 @@ DEFAULT_DATA_DIR = os.path.abspath(
 DATA_DIR = os.environ.get('DATA_DIR', DEFAULT_DATA_DIR)
 
 
-def to_gpytorch_format(d):
+def to_gpytorch_format(d, grid_spacing=1.0):
     """Convert dictionary with data into the gpytorch format.
 
     Args:
@@ -41,6 +41,18 @@ def to_gpytorch_format(d):
     d['inputs'] = inputs
     d['values'] = values_compact
     d['indices'] = indexes[..., np.newaxis]
+
+    # Compute test points
+    max_input = np.max(inputs[:, 0])
+    min_input = np.min(inputs[:, 0])
+
+    n_tasks = values.shape[-1]
+    test_inputs = np.arange(min_input, max_input + grid_spacing, grid_spacing)
+    len_test_grid = len(test_inputs)
+    test_inputs = np.tile(test_inputs, n_tasks)
+    test_indices = np.repeat(np.arange(n_tasks), len_test_grid)
+    d['test_inputs'] = test_inputs[:, np.newaxis].astype(np.float32)
+    d['test_indices'] = test_indices[:, np.newaxis].astype(np.int64)
     return d
 
 

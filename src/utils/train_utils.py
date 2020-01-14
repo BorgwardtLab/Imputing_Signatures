@@ -43,7 +43,7 @@ def build_regularly_spaced_grid(inputs, indices, n_samples, n_tasks, grid_spacin
         # Build array of structure: [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2] (this
         # is in the case of 3 tasks)
         cur_inputs = torch.arange(
-            min_val, max_val + grid_spacing, grid_spacing)
+            min_val.item(), (max_val + grid_spacing).item(), grid_spacing)
         n_inputs = cur_inputs.size()[0]
         cur_inputs = torch.flatten(
             cur_inputs.unsqueeze(-1).repeat([1, n_tasks]))

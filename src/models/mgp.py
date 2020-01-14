@@ -42,7 +42,7 @@ class GPAdapter(nn.Module):
         super(GPAdapter, self).__init__()
         self.n_mc_smps = n_mc_smps
         # num_tasks includes dummy task for padedd zeros
-        self.n_tasks = [*gp_params][-1] - 1 
+        self.n_tasks = gp_params[-1] - 1
         self.mgp = MGP_Layer(*gp_params)
         self.clf = clf #(self.n_tasks)
         #more generic would be something like: self.clf = clf(n_input_dims) #e.g. SimpleDeepModel(n_input_dims)
