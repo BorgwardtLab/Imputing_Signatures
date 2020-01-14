@@ -57,10 +57,12 @@ class PhysionetDataReader():
 
 
 class PhysionetFeatureTransform():
+    ignore_columns = ['Time', 'Age', 'Gender', 'Height', 'ICUType', 'Weight']
+
     def __call__(self, dataframe):
         times = dataframe['Time'].values
         values = dataframe[[
-            col for col in dataframe.columns if col != 'Time']].values
+            col for col in dataframe.columns if col not in self.ignore_columns]].values
         return times, values
 
 
