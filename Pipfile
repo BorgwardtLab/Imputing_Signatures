@@ -7,7 +7,7 @@ verify_ssl = true
 
 [packages]
 ipykernel = "*"
-torch = "*"
+torch = "==1.2.0"
 gpytorch = "*"
 matplotlib = "*"
 signatory = {path = "./bin/signatory-1.1.6-cp37-cp37m-linux_x86_64.whl"}
