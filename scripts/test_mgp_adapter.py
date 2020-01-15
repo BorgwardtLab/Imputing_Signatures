@@ -4,6 +4,9 @@ from sklearn.metrics import roc_auc_score as auc
 import torch
 import torch.nn as nn
 
+import sys,os
+sys.path.append(os.getcwd())
+
 from src.datasets.synthetic_dataset import create_synthetic_dataset
 from src.models.mgp import GPAdapter
 from src.models.deep_models import DeepSignatureModel
@@ -12,6 +15,9 @@ from src.utils.train_utils import augment_labels
 # ----------------------------------------------
 # Training a simple MGP adapter (synthetic data)
 # ----------------------------------------------
+
+# Setup Parameters:
+device = 'cuda'
 
 # Generate Data:
 n_samples=20
@@ -36,6 +42,7 @@ model = GPAdapter(  clf,
                     n_mc_smps, 
                     likelihood, 
                     num_tasks)
+model.to(device)
 
 # Use the adam optimizer
 optimizer = torch.optim.Adam([
@@ -51,21 +58,33 @@ for i in np.arange(n_epochs): #for test trial, overfit same batch of samples
     
     #activate training mode of deep model:
     model.train()
-    
+   
+    #input data to device if cuda:
+    if device == 'cuda':
+        inputs = inputs.cuda(non_blocking = True)
+        indices = indices.cuda(non_blocking = True)
+        values = values.cuda(non_blocking = True)
+        test_inputs = test_inputs.cuda(non_blocking = True)
+        test_indices = test_indices.cuda(non_blocking = True)
+
     #forward pass:
     #with gpytorch.settings.fast_pred_samples(): 
     with gpytorch.settings.fast_pred_var():
         logits = model(inputs, indices, values, test_inputs, test_indices) 
     
     #evaluate loss
-    loss = loss_fn(logits, y_true.long().flatten())
+    if device == 'cuda':
+        y_true = y_true.long().flatten().cuda()
+    else: 
+        y_true = y_true.long().flatten()
+    loss = loss_fn(logits, y_true)
     
     #Optimize:
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
     with torch.no_grad():
-        AUROC = auc(y_true.long().flatten().detach().numpy(),logits[:,1].flatten().detach().numpy()) #logits[:,:,1]
+        AUROC = auc(y_true.detach().cpu().numpy(),logits[:,1].flatten().detach().cpu().numpy()) #logits[:,:,1]
         print(f'Epoch {i}, Train Loss: {loss.item():03f}  Train AUC: {AUROC:03f}')
 
 
