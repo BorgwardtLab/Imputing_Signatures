@@ -30,7 +30,10 @@ class PhysionetDataReader():
     # only statics (which we dont support).
     blacklisted_records = [
         140501, 150649, 140936, 143656, 141264, 145611, 142998, 147514, 142731,
-        150309, 155655, 156254
+        150309, 155655, 156254,
+
+        #outlier sample with much more observations:
+        135365
     ]
 
     def __init__(self, data_path, endpoint_file):
