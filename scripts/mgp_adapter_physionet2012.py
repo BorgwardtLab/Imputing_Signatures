@@ -1,6 +1,8 @@
+import gc
 import gpytorch
 import numpy as np
 from sklearn.metrics import roc_auc_score as auc
+import time
 import torch
 import torch.nn as nn
 from functools import partial
@@ -47,17 +49,21 @@ collate_fn = partial(
         'test_indices': n_tasks
     }
 )
-batch_size = 25
-data_loader = DataLoader(d, batch_size, collate_fn=collate_fn)
 
+#Hyperparameters:
+batch_size = 32
+lr = 0.0005 #0.001
+
+training_loader = DataLoader(d, batch_size, collate_fn=collate_fn)
 
 # Setup validation data
 d = Physionet2012Dataset(split='validation', transform=input_transform)
-data_loader = DataLoader(d, batch_size, collate_fn=collate_fn)
+validation_loader = DataLoader(d, batch_size, collate_fn=collate_fn)
 
 # Training Parameters:
 n_epochs = 50
 device = 'cuda'
+output_device = torch.device('cuda:0')
 
 # Setting up parameters of GP:
 n_mc_smps = 5
@@ -74,13 +80,24 @@ model.to(device)
 # Use the adam optimizer
 optimizer = torch.optim.Adam([
     {'params': model.parameters()},
-], lr=0.001)
+], lr=lr)
 
 # Loss function:
 loss_fn = nn.CrossEntropyLoss(reduction='mean')
 
+n_devices = torch.cuda.device_count()
+print('Planning to run on {} GPUs.'.format(n_devices))
+
 for epoch in range(n_epochs):
-    for d in data_loader:  # for test trial, overfit same batch of samples
+
+    y_true_total = []
+    y_score_total = []
+    loss_total = []
+    start = time.time()
+
+    for iteration, d in enumerate(training_loader):  # for test trial, overfit same batch of samples
+
+        iter_start = time.time() 
         y_true = augment_labels(d['label'], n_mc_smps)
 
         # activate training mode of deep model:
@@ -102,8 +119,8 @@ for epoch in range(n_epochs):
             test_inputs = test_inputs.cuda(non_blocking = True)
             test_indices = test_indices.cuda(non_blocking = True)
         
-        with gpytorch.settings.fast_pred_samples():
-        #with gpytorch.settings.fast_pred_var():
+        #with gpytorch.settings.fast_pred_samples():
+        with gpytorch.settings.fast_pred_var(), gpytorch.settings.max_root_decomposition_size(40):
             logits = model( inputs, 
                             indices, 
                             values, 
@@ -123,7 +140,21 @@ for epoch in range(n_epochs):
         optimizer.step()
         model.eval()
         with torch.no_grad():
-            AUROC = auc(y_true.detach().cpu().numpy(),logits[:,1].flatten().detach().cpu().numpy()) #logits[:,:,1]
-            print(f'Epoch {epoch}, Train Loss: {loss.item():03f}  Train AUC: {AUROC:03f}')
+            y_true = y_true.detach().cpu().numpy()
+            y_score = logits[:,1].flatten().detach().cpu().numpy()  
+            #AUROC = auc(y_true, y_score) #logits[:,:,1]
+            #print(f'Epoch {epoch}, (MB) Train Loss: {loss.item():03f}, (MB) Train AUC: {AUROC:03f}, Iteration of batch-size {batch_size} took: {time.time() - iter_start:02f} seconds')
+            print(f'Epoch {epoch}, (MB) Train Loss: {loss.item():03f}, Iteration of batch-size {batch_size} took: {time.time() - iter_start:02f} seconds')
 
+        y_true_total.append(y_true)
+        y_score_total.append(y_score)
+        loss_total.append(loss.item())
         torch.cuda.empty_cache()
+        gc.collect()
+    
+    y_true_total = np.concatenate(y_true_total)
+    y_score_total = np.concatenate(y_score_total)
+    mean_loss = np.mean(loss_total)
+    AUROC = auc(y_true_total, y_score_total) #logits[:,:,1]
+    print(f'>>> Epoch {epoch}, Mean Train Loss: {mean_loss:03f}, Overall Train AUROC: {AUROC:03f}. Epoch took {time.time() - start } seconds.')
+ 
