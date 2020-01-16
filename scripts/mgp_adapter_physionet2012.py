@@ -6,6 +6,10 @@ import torch.nn as nn
 from functools import partial
 
 from torch.utils.data import DataLoader
+
+import sys,os
+sys.path.append(os.getcwd())
+
 from src.datasets import Physionet2012Dataset
 from src.datasets import dict_collate_fn, to_gpytorch_format
 from src.models.mgp import GPAdapter
@@ -13,7 +17,7 @@ from src.models.deep_models import DeepSignatureModel
 # from src.utils.train_utils import augment_labels
 
 # ----------------------------------------------
-# Training a simple MGP adapter (synthetic data)
+# Training a GP-Sig adapter on physionet 2012
 # ----------------------------------------------
 
 
@@ -43,15 +47,17 @@ collate_fn = partial(
         'test_indices': n_tasks
     }
 )
-data_loader = DataLoader(d, batch_size=16, collate_fn=collate_fn)
+batch_size = 25
+data_loader = DataLoader(d, batch_size, collate_fn=collate_fn)
 
 
 # Setup validation data
 d = Physionet2012Dataset(split='validation', transform=input_transform)
-data_loader = DataLoader(d, batch_size=16, collate_fn=collate_fn)
+data_loader = DataLoader(d, batch_size, collate_fn=collate_fn)
 
 # Training Parameters:
 n_epochs = 50
+device = 'cuda'
 
 # Setting up parameters of GP:
 n_mc_smps = 5
@@ -63,6 +69,7 @@ likelihood = gpytorch.likelihoods.GaussianLikelihood()
 # series)
 clf = DeepSignatureModel(in_channels=n_tasks, sig_depth=2)
 model = GPAdapter(clf, None, n_mc_smps, likelihood, num_tasks)
+model.to(device)
 
 # Use the adam optimizer
 optimizer = torch.optim.Adam([
@@ -80,13 +87,35 @@ for epoch in range(n_epochs):
         model.train()
 
         # forward pass:
-        # with gpytorch.settings.fast_pred_samples(): 
-        with gpytorch.settings.fast_pred_var():
-            logits = model(
-                d['inputs'], d['indices'], d['values'], d['test_inputs'], d['test_indices'])
+        # with gpytorch.settings.fast_pred_samples():
+        
+        inputs = d['inputs']
+        indices = d['indices'] 
+        values = d['values']
+        test_inputs = d['test_inputs']
+        test_indices = d['test_indices'] 
+        
+        if device == 'cuda':
+            inputs  = inputs.cuda(non_blocking = True)
+            indices = indices.cuda(non_blocking = True)
+            values  = values.cuda(non_blocking = True)
+            test_inputs = test_inputs.cuda(non_blocking = True)
+            test_indices = test_indices.cuda(non_blocking = True)
+        
+        with gpytorch.settings.fast_pred_samples():
+        #with gpytorch.settings.fast_pred_var():
+            logits = model( inputs, 
+                            indices, 
+                            values, 
+                            test_inputs, 
+                            test_indices )
 
-        # evaluate loss
-        loss = loss_fn(logits, y_true.long().flatten())
+        #evaluate loss
+        if device == 'cuda':
+            y_true = y_true.long().flatten().cuda()
+        else: 
+            y_true = y_true.long().flatten()
+        loss = loss_fn(logits, y_true)
 
         # Optimize:
         optimizer.zero_grad()
@@ -94,5 +123,7 @@ for epoch in range(n_epochs):
         optimizer.step()
         model.eval()
         with torch.no_grad():
-            AUROC = auc(y_true.long().flatten().detach().numpy(),logits[:,1].flatten().detach().numpy()) #logits[:,:,1]
+            AUROC = auc(y_true.detach().cpu().numpy(),logits[:,1].flatten().detach().cpu().numpy()) #logits[:,:,1]
             print(f'Epoch {epoch}, Train Loss: {loss.item():03f}  Train AUC: {AUROC:03f}')
+
+        torch.cuda.empty_cache()
