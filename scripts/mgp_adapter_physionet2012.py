@@ -51,7 +51,7 @@ collate_fn = partial(
 )
 
 #Hyperparameters:
-batch_size = 32
+batch_size = 64 #64 #32
 lr = 0.0005 #0.001
 
 training_loader = DataLoader(d, batch_size, collate_fn=collate_fn)
@@ -64,18 +64,20 @@ validation_loader = DataLoader(d, batch_size, collate_fn=collate_fn)
 n_epochs = 50
 device = 'cuda'
 output_device = torch.device('cuda:0')
+n_devices = torch.cuda.device_count()
+print('Planning to run on {} GPUs.'.format(n_devices))
 
 # Setting up parameters of GP:
 n_mc_smps = 5
 # augment tasks with dummy task for imputed 0s for tensor format
 num_tasks = n_tasks + 1
-likelihood = gpytorch.likelihoods.GaussianLikelihood()
+likelihood = gpytorch.likelihoods.GaussianLikelihood().to(output_device, non_blocking=True)
 
 # Initializing GP adapter model (for now assuming imputing to equal length time
 # series)
 clf = DeepSignatureModel(in_channels=n_tasks, sig_depth=2)
-model = GPAdapter(clf, None, n_mc_smps, likelihood, num_tasks)
-model.to(device)
+model = GPAdapter(clf, None, n_mc_smps, likelihood, num_tasks, n_devices, output_device)
+model.to(output_device, non_blocking=True)
 
 # Use the adam optimizer
 optimizer = torch.optim.Adam([
@@ -85,8 +87,6 @@ optimizer = torch.optim.Adam([
 # Loss function:
 loss_fn = nn.CrossEntropyLoss(reduction='mean')
 
-n_devices = torch.cuda.device_count()
-print('Planning to run on {} GPUs.'.format(n_devices))
 
 for epoch in range(n_epochs):
 
@@ -113,42 +113,50 @@ for epoch in range(n_epochs):
         test_indices = d['test_indices'] 
         
         if device == 'cuda':
-            inputs  = inputs.cuda(non_blocking = True)
-            indices = indices.cuda(non_blocking = True)
-            values  = values.cuda(non_blocking = True)
-            test_inputs = test_inputs.cuda(non_blocking = True)
-            test_indices = test_indices.cuda(non_blocking = True)
-        
-        #with gpytorch.settings.fast_pred_samples():
-        with gpytorch.settings.fast_pred_var(), gpytorch.settings.max_root_decomposition_size(40):
-            logits = model( inputs, 
-                            indices, 
-                            values, 
-                            test_inputs, 
-                            test_indices )
+            inputs  = inputs.to(output_device, non_blocking=True) #.cuda(non_blocking = True)
+            indices = indices.to(output_device, non_blocking=True) #.cuda(non_blocking = True)
+            values  = values.to(output_device, non_blocking=True) #.cuda(non_blocking = True)
+            test_inputs = test_inputs.to(output_device, non_blocking=True)  #.cuda(non_blocking = True)
+            test_indices = test_indices.to(output_device, non_blocking=True)  #.cuda(non_blocking = True)
+        try: 
+            #with gpytorch.settings.fast_pred_samples():
+            with gpytorch.settings.fast_pred_var(), gpytorch.settings.max_root_decomposition_size(15):
+            #with gpytorch.settings.fast_pred_var(), gpytorch.settings.max_root_decomposition_size(40),\
+            #    gpytorch.beta_features.checkpoint_kernel(20), gpytorch.settings.max_preconditioner_size(100):
+                logits = model( inputs, 
+                                indices, 
+                                values, 
+                                test_inputs, 
+                                test_indices )
 
-        #evaluate loss
-        if device == 'cuda':
-            y_true = y_true.long().flatten().cuda()
-        else: 
-            y_true = y_true.long().flatten()
-        loss = loss_fn(logits, y_true)
+            #evaluate loss
+            if device == 'cuda':
+                y_true = y_true.long().flatten().to(output_device, non_blocking=True) #.cuda()
+            else: 
+                y_true = y_true.long().flatten()
+            loss = loss_fn(logits, y_true)
 
-        # Optimize:
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-        model.eval()
-        with torch.no_grad():
-            y_true = y_true.detach().cpu().numpy()
-            y_score = logits[:,1].flatten().detach().cpu().numpy()  
-            #AUROC = auc(y_true, y_score) #logits[:,:,1]
-            #print(f'Epoch {epoch}, (MB) Train Loss: {loss.item():03f}, (MB) Train AUC: {AUROC:03f}, Iteration of batch-size {batch_size} took: {time.time() - iter_start:02f} seconds')
-            print(f'Epoch {epoch}, (MB) Train Loss: {loss.item():03f}, Iteration of batch-size {batch_size} took: {time.time() - iter_start:02f} seconds')
+            # Optimize:
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            model.eval()
+            with torch.no_grad():
+                y_true = y_true.detach().cpu().numpy()
+                y_score = logits[:,1].flatten().detach().cpu().numpy()  
+                #AUROC = auc(y_true, y_score) #logits[:,:,1]
+                #print(f'Epoch {epoch}, (MB) Train Loss: {loss.item():03f}, (MB) Train AUC: {AUROC:03f}, Iteration of batch-size {batch_size} took: {time.time() - iter_start:02f} seconds')
+                print(f'Epoch {epoch}, (MB) Train Loss: {loss.item():03f}, Iteration of batch-size {batch_size} took: {time.time() - iter_start:02f} seconds')
 
-        y_true_total.append(y_true)
-        y_score_total.append(y_score)
-        loss_total.append(loss.item())
+            y_true_total.append(y_true)
+            y_score_total.append(y_score)
+            loss_total.append(loss.item())
+        except: 
+            print('Exception occured in during fitting..')
+            torch.cuda.empty_cache()
+            gc.collect()
+            continue 
+
         torch.cuda.empty_cache()
         gc.collect()
     
