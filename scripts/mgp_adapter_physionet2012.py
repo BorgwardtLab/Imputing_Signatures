@@ -14,8 +14,7 @@ sys.path.append(os.getcwd())
 
 from src.datasets import Physionet2012Dataset
 from src.datasets import dict_collate_fn, to_gpytorch_format
-from src.models.mgp import GPAdapter
-from src.models.deep_models import DeepSignatureModel
+from src.models.gp_sig import GP_Sig
 # from src.utils.train_utils import augment_labels
 
 # ----------------------------------------------
@@ -70,13 +69,8 @@ print('Planning to run on {} GPUs.'.format(n_devices))
 # Setting up parameters of GP:
 n_mc_smps = 5
 # augment tasks with dummy task for imputed 0s for tensor format
-num_tasks = n_tasks + 1
-likelihood = gpytorch.likelihoods.GaussianLikelihood().to(output_device, non_blocking=True)
 
-# Initializing GP adapter model (for now assuming imputing to equal length time
-# series)
-clf = DeepSignatureModel(in_channels=n_tasks, sig_depth=2)
-model = GPAdapter(clf, None, n_mc_smps, likelihood, num_tasks, n_devices, output_device)
+model = GP_Sig(n_tasks, n_mc_smps, n_devices, output_device)
 model.to(output_device, non_blocking=True)
 
 # Use the adam optimizer
