@@ -4,11 +4,24 @@ import torch.nn as nn
 
 # Exact Hadamard Multi-task Gaussian Process Model
 class MultitaskGPModel(gpytorch.models.ExactGP):
-    def __init__(self, train_x, train_y, likelihood, num_tasks=2):
+    def __init__(self, train_x, train_y, likelihood, output_device, num_tasks=2, n_devices=1):
         super(MultitaskGPModel, self).__init__(train_x, train_y, likelihood)
+        self.output_device = output_device
         self.mean_module = gpytorch.means.ConstantMean()
-        self.covar_module = gpytorch.kernels.RBFKernel()
-        self.task_covar_module = gpytorch.kernels.IndexKernel(num_tasks=num_tasks, rank=3)
+        
+        if n_devices > 1: #in multi-gpu setting
+            base_covar_module = gpytorch.kernels.RBFKernel()
+            self.covar_module = gpytorch.kernels.MultiDeviceKernel(
+                base_covar_module, device_ids=range(n_devices),
+                output_device=self.output_device)
+            #self.task_covar_module = gpytorch.kernels.IndexKernel(num_tasks=num_tasks, rank=3)
+            base_task_covar_module = gpytorch.kernels.IndexKernel(num_tasks=num_tasks, rank=3)
+            self.task_covar_module = gpytorch.kernels.MultiDeviceKernel(
+                base_task_covar_module, device_ids=range(n_devices),
+                output_device=self.output_device)
+        else:
+            self.covar_module = gpytorch.kernels.RBFKernel()
+            self.task_covar_module = gpytorch.kernels.IndexKernel(num_tasks=num_tasks, rank=3)
 
     def forward(self,x,i):
         mean_x = self.mean_module(x)
@@ -25,8 +38,8 @@ class MultitaskGPModel(gpytorch.models.ExactGP):
 
 # MGP Layer for Neural Network using MultitaskGPModel
 class MGP_Layer(MultitaskGPModel):
-    def __init__(self,likelihood, num_tasks=2):
-        super().__init__(None, None, likelihood, num_tasks) 
+    def __init__(self,likelihood, num_tasks, n_devices, output_device):
+        super().__init__(None, None, likelihood, output_device, num_tasks, n_devices) 
         #we don't intialize with train data for more flexibility
         likelihood.train()
         
@@ -42,7 +55,7 @@ class GPAdapter(nn.Module):
         super(GPAdapter, self).__init__()
         self.n_mc_smps = n_mc_smps
         # num_tasks includes dummy task for padedd zeros
-        self.n_tasks = gp_params[-1] - 1
+        self.n_tasks = gp_params[1] - 1
         self.mgp = MGP_Layer(*gp_params)
         self.clf = clf #(self.n_tasks)
         #more generic would be something like: self.clf = clf(n_input_dims) #e.g. SimpleDeepModel(n_input_dims)
