@@ -8,13 +8,27 @@ import sys,os
 sys.path.append(os.getcwd())
 
 from src.datasets.synthetic_dataset import create_synthetic_dataset
-from src.models.mgp import GPAdapter
-from src.models.deep_models import DeepSignatureModel
-from src.utils.train_utils import augment_labels
+from src.models.gp_sig import GP_Sig
+#from src.models.mgp import GPAdapter
+#from src.models.deep_models import DeepSignatureModel
+#from src.utils.train_utils import augment_labels
  
 # ----------------------------------------------
 # Training a simple MGP adapter (synthetic data)
 # ----------------------------------------------
+
+def augment_labels(labels, n_samples):
+    """Expand labels for multiple MC samples in the GP Adapter.
+
+    Args:
+         Takes tensor of size [n]
+
+    Returns:
+        expanded tensor of size [n_mc_samples, n]
+
+    """
+    return labels.unsqueeze(-1).expand(labels.shape[0], n_samples).transpose(1, 0)
+
 
 # Setup Parameters:
 device = 'cuda'
@@ -32,17 +46,13 @@ n_epochs = 50
 # Setting up parameters of GP:
 n_mc_smps = 10
 n_input_dims = test_inputs.shape[1]
-num_tasks=n_tasks+1 #augment tasks with dummy task for imputed 0s for tensor format
-likelihood = gpytorch.likelihoods.GaussianLikelihood()
 
-# Initializing GP adapter model (for now assuming imputing to equal length time series)
-clf = DeepSignatureModel(in_channels=n_tasks, sig_depth=3)
-model = GPAdapter(  clf, 
-                    n_input_dims, 
-                    n_mc_smps, 
-                    likelihood, 
-                    num_tasks)
-model.to(device)
+output_device = torch.device('cuda:0') #in case we want to use multiple GPUs
+n_devices = torch.cuda.device_count()
+print('Planning to run on {} GPUs.'.format(n_devices))
+
+model = GP_Sig(n_tasks, n_mc_smps, n_devices, output_device)
+model.cuda()
 
 # Use the adam optimizer
 optimizer = torch.optim.Adam([
