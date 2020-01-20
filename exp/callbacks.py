@@ -113,6 +113,7 @@ class LogDatasetLoss(Callback):
         self.run = run
         self.print_progress = print_progress
         self.max_root = max_root
+        self.n_mc_smps = n_mc_smps
         self.early_stopping = early_stopping
         self.save_path = save_path
         self.device = device
@@ -131,11 +132,12 @@ class LogDatasetLoss(Callback):
         for d in self.data_loader:
             
             #Augment labels depending on whether mc sampling is used
-            if self.n_mc_smps > 1:
-                    y_true = augment_labels(d['label'], self.n_mc_smps)
+            #print(self.n_mc_smps)
+            if self.n_mc_smps[0] > 1:
+                    y_true = augment_labels(d['label'], self.n_mc_smps[0])
             else:
                     y_true = d['label']
-            if data_format == 'GP':
+            if self.data_format == 'GP':
                 #Unpack GP format data: 
                 inputs = d['inputs']
                 indices = d['indices'] 
@@ -167,14 +169,14 @@ class LogDatasetLoss(Callback):
             else: 
                 y_true = y_true.long().flatten()
             
-            loss = loss_fn(logits, y_true)
+            loss = self.loss_fn(logits, y_true)
 
             loss = convert_to_base_type(loss)
 
             # Rescale the losses as batch_size might not divide dataset
             # perfectly, e.g. in case drop_last is set to True in
             # the constructor.
-            n_instances = len(data)
+            n_instances = len(d)
             losses['loss'].append(loss*n_instances)
             
             if full_eval:

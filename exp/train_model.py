@@ -5,6 +5,7 @@ import pandas as pd
 from sacred import Experiment
 from sacred.utils import apply_backspaces_and_linefeeds
 import torch
+import torch.nn as nn
 
 import sys
 sys.path.append(os.getcwd())
@@ -19,7 +20,9 @@ from exp.callbacks import LogDatasetLoss, LogTrainingLoss
 from exp.ingredients import model as model_config
 from exp.ingredients import dataset as dataset_config
 
-
+#Test for debugging sacred read-only error
+from sacred import SETTINGS
+SETTINGS.CONFIG.READ_ONLY_CONFIG = False
 
 EXP = Experiment(
     'training',
@@ -42,6 +45,17 @@ def cfg():
     evaluation = {
         'active': False,
         'evaluate_on': 'validation'
+    },
+    n_mc_smps = 5, 
+    model = {
+        'name': 'GP_Sig',
+        'parameters': {
+            'n_devices': 1,
+            'output_device': 'cuda'
+        }
+    }
+    dataset = {
+        'name': 'Physionet2012'
     }
 
 
@@ -74,7 +88,7 @@ class NewlineCallback(Callback):
 
 @EXP.automain
 def train(n_epochs, batch_size, learning_rate, weight_decay,
-          early_stopping, data_format, grid_spacing, max_root, device, quiet, 
+          early_stopping, data_format, grid_spacing, max_root, n_mc_smps, model, dataset, device, quiet, 
             evaluation, _run, _log, _seed, _rnd):
     """Sacred wrapped function to run training of model."""
     torch.manual_seed(_seed)
@@ -102,6 +116,8 @@ def train(n_epochs, batch_size, learning_rate, weight_decay,
     
     # Get model, sacred does some magic here so we need to hush the linter
     # pylint: disable=E1120
+
+    #n_devices = torch.cuda.device_count()
     model = model_config.get_instance(n_input_dims)
     model.to(device)
     
