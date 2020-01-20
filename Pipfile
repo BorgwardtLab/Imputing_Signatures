@@ -15,6 +15,7 @@ uea-ucr-datasets = "*"
 sklearn = "*"
 tqdm = "*"
 pandas = "*"
+sacred = "*"
 
 [requires]
 python_version = "3.7"
