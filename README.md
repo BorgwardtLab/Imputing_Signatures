@@ -11,5 +11,10 @@ Please install the dependencies as indicated in the Pipfile
 ## Hadamard MGP Adapter with off-the-shelf Deep Signature Model on Synthetic Data:
 ```> python scripts/test_mgp_adapter.py```
 
+For quickly testing this on cpu (instead of gpu) use:
+```> python scripts/test_mgp_adapter.py --device cpu```
+
+## First script running on Physionet2012:
+```> python scripts/mgp_adapter_physionet2012.py```
 
 
