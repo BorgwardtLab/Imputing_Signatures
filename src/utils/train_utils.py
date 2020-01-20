@@ -1,14 +1,18 @@
 import torch
 import torch.nn.functional as F
 
-def augment_labels(labels, n_samples):
-    """
-    Function to expand labels for multiple MC samples in the GP Adapter 
-        - takes tensor of size [n]
-        - returns expanded tensor of size [n_mc_samples, n]
-    """
-    return labels.unsqueeze(-1).expand(labels.shape[0],n_samples).transpose(1,0)
 
+def augment_labels(labels, n_samples):
+    """Expand labels for multiple MC samples in the GP Adapter.
+
+    Args:
+         Takes tensor of size [n]
+
+    Returns:
+        expanded tensor of size [n_mc_samples, n]
+
+    """
+    return labels.expand(labels.shape[0], n_samples).transpose(1, 0)
 
 def build_regularly_spaced_grid(inputs, indices, n_samples, n_tasks, grid_spacing):
     """Build a regularly spaced grid based on the GP inputs.
