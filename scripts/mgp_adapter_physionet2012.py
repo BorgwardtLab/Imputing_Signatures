@@ -15,25 +15,11 @@ sys.path.append(os.getcwd())
 from src.datasets import Physionet2012Dataset
 from src.datasets import dict_collate_fn, to_gpytorch_format
 from src.models.gp_sig import GP_Sig
-# from src.utils.train_utils import augment_labels
+from src.utils.train_utils import augment_labels
 
 # ----------------------------------------------
 # Training a GP-Sig adapter on physionet 2012
 # ----------------------------------------------
-
-
-def augment_labels(labels, n_samples):
-    """Expand labels for multiple MC samples in the GP Adapter.
-
-    Args:
-         Takes tensor of size [n]
-
-    Returns:
-        expanded tensor of size [n_mc_samples, n]
-
-    """
-    return labels.expand(labels.shape[0], n_samples).transpose(1, 0)
-
 
 input_transform = partial(to_gpytorch_format, grid_spacing=1.)
 
