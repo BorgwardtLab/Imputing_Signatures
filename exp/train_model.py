@@ -181,7 +181,7 @@ def train(n_epochs, batch_size, learning_rate, weight_decay,
         if evaluate_on == 'validation':
             eval_measures = callbacks[1].eval_measures
         else:
-            eval_measures = callbacks[1].eval_measures
+            eval_measures = callbacks[2].eval_measures
         
         result.update(eval_measures)
 
