@@ -39,14 +39,14 @@ def cfg():
     early_stopping = 10
     data_format = 'GP'
     grid_spacing = 1. #determines n_hours between query points
-    max_root = 25 #max_root_decomposition_size for MGP matrix rank
+    max_root = 15 #max_root_decomposition_size for MGP matrix rank
     device = 'cuda'
     quiet = False
     evaluation = {
         'active': False,
         'evaluate_on': 'validation'
-    },
-    n_mc_smps = 5, 
+    }
+    n_mc_smps = 5 
     model = {
         'name': 'GP_Sig',
         'parameters': {

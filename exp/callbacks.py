@@ -133,8 +133,8 @@ class LogDatasetLoss(Callback):
             
             #Augment labels depending on whether mc sampling is used
             #print(self.n_mc_smps)
-            if self.n_mc_smps[0] > 1:
-                    y_true = augment_labels(d['label'], self.n_mc_smps[0])
+            if self.n_mc_smps > 1:
+                    y_true = augment_labels(d['label'], self.n_mc_smps)
             else:
                     y_true = d['label']
             if self.data_format == 'GP':
