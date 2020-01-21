@@ -187,7 +187,7 @@ class LogDatasetLoss(Callback):
                     y_score_total.append(y_score)
         return_dict = {}
         average_loss = sum(losses['loss']) / len(self.dataset)
-        return_dict['average_loss'] = average_loss  
+        return_dict['loss'] = average_loss  
         if full_eval: 
             y_true_total = np.concatenate(y_true_total)
             y_score_total = np.concatenate(y_score_total)

@@ -30,14 +30,13 @@ class Callback():
 class Progressbar(Callback):
     """Callback to show a progressbar of the training progress."""
 
-    def __init__(self, print_loss_components=False):
+    def __init__(self):
         """Show a progressbar of the training progress.
 
         Args:
             print_loss_components: Print all components of the loss in the
                 progressbar
         """
-        self.print_loss_components = print_loss_components
         self.total_progress = None
         self.epoch_progress = None
 
@@ -49,20 +48,14 @@ class Progressbar(Callback):
         self.epoch_progress = tqdm(
             position=1, total=n_instances, unit='instances')
 
-    def _description(self, loss, loss_components):
+    def _description(self, loss):
         description = f'Loss: {loss:3.3f}'
-        if self.print_loss_components:
-            description += ', '
-            description += ', '.join([
-                f'{name}: {value:4.2f}'
-                for name, value in loss_components.items()
-            ])
         return description
 
-    def on_batch_end(self, batch_size, loss, loss_components, **kwargs):
+    def on_batch_end(self, batch_size, loss, **kwargs):
         """Increment progressbar and update description."""
         self.epoch_progress.update(batch_size)
-        description = self._description(loss, loss_components)
+        description = self._description(loss)
         self.epoch_progress.set_description(description)
 
     def on_epoch_end(self, epoch, n_epochs, **kwargs):

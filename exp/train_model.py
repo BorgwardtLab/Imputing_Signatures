@@ -47,16 +47,6 @@ def cfg():
         'evaluate_on': 'validation'
     }
     n_mc_smps = 5 
-    model = {
-        'name': 'GP_Sig',
-        'parameters': {
-            'n_devices': 1,
-            'output_device': 'cuda'
-        }
-    }
-    dataset = {
-        'name': 'Physionet2012'
-    }
 
 
 @EXP.named_config
@@ -88,7 +78,7 @@ class NewlineCallback(Callback):
 
 @EXP.automain
 def train(n_epochs, batch_size, learning_rate, weight_decay,
-          early_stopping, data_format, grid_spacing, max_root, n_mc_smps, model, dataset, device, quiet, 
+          early_stopping, data_format, grid_spacing, max_root, n_mc_smps, device, quiet, 
             evaluation, _run, _log, _seed, _rnd):
     """Sacred wrapped function to run training of model."""
     torch.manual_seed(_seed)
@@ -140,11 +130,11 @@ def train(n_epochs, batch_size, learning_rate, weight_decay,
         # Add newlines between epochs
         callbacks.append(NewlineCallback())
     else:
-        callbacks.append(Progressbar(print_loss_components=True))
+        callbacks.append(Progressbar())
 
     training_loop = TrainingLoop(
         model, 
-        dataset,
+        train_dataset,
         data_format, 
         loss_fn,
         collate_fn,

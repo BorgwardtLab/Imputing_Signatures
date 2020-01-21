@@ -1,5 +1,6 @@
 """Training classes."""
 import gc
+import gpytorch
 import torch
 from torch.utils.data import DataLoader
 import numpy as np
@@ -76,7 +77,7 @@ class TrainingLoop():
 
         n_instances = len(dataset)
         train_loader = DataLoader(dataset, batch_size=batch_size, collate_fn=collate_fn, 
-                                  shuffle=True, pin_memory=True) #drop_last=True)
+                                  shuffle=True, pin_memory=True, num_workers=16) #drop_last=True)
         n_batches = len(train_loader)
 
         optimizer = torch.optim.Adam(
