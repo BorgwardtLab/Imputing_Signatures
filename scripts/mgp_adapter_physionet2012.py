@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 import sys,os
 sys.path.append(os.getcwd())
 
-from src.datasets import Physionet2012Dataset
+from src.datasets import Physionet2012
 from src.datasets import dict_collate_fn, to_gpytorch_format
 from src.models.gp_sig import GP_Sig
 from src.utils.train_utils import augment_labels
@@ -24,7 +24,7 @@ from src.utils.train_utils import augment_labels
 input_transform = partial(to_gpytorch_format, grid_spacing=1.)
 
 # Setup training data
-d = Physionet2012Dataset(split='training', transform=input_transform)
+d = Physionet2012(split='training', transform=input_transform)
 n_tasks = d.measurement_dims
 # Should use the index of the auxillary task for padding
 collate_fn = partial(
@@ -42,7 +42,7 @@ lr = 0.0005 #0.001
 training_loader = DataLoader(d, batch_size, collate_fn=collate_fn)
 
 # Setup validation data
-d = Physionet2012Dataset(split='validation', transform=input_transform)
+d = Physionet2012(split='validation', transform=input_transform)
 validation_loader = DataLoader(d, batch_size, collate_fn=collate_fn)
 
 # Training Parameters:
