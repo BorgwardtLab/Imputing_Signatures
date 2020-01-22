@@ -10,7 +10,7 @@ from src.utils.train_utils import augment_labels
 class TrainingLoop():
     """Training a model using a dataset."""
 
-    def __init__(self, model, dataset, data_format, loss_fn, collate_fn, n_epochs, batch_size, learning_rate,
+    def __init__(self, model, dataset, data_format, loss_fn, collate_fn, n_epochs, batch_size, virtual_batch_size, learning_rate,
                  n_mc_smps=1, max_root=25, weight_decay=1e-5, device='cuda', callbacks=None):
         """Training of a model using a dataset and the defined callbacks.
 
@@ -29,6 +29,7 @@ class TrainingLoop():
         self.collate_fn = collate_fn
         self.n_epochs = n_epochs
         self.batch_size = batch_size
+        self.virtual_batch_size = virtual_batch_size
         self.learning_rate = learning_rate
         self.n_mc_smps = n_mc_smps
         self.max_root = max_root
@@ -71,6 +72,11 @@ class TrainingLoop():
         dataset = self.dataset
         n_epochs = self.n_epochs
         batch_size = self.batch_size
+        virtual_batch_size = self.virtual_batch_size
+        if virtual_batch_size is not None:
+            virtual_scaling = virtual_batch_size / batch_size
+            if virtual_batch_size == batch_size: #if virtual batch_size is 'inactive' / same as bs, set it to None
+                virtual_batch_size = None
         learning_rate = self.learning_rate
         n_mc_smps = self.n_mc_smps
         collate_fn = self.collate_fn
@@ -88,7 +94,7 @@ class TrainingLoop():
         for epoch in range(1, n_epochs+1):
             if self.on_epoch_begin(remove_self(locals())):
                 break
-
+            optimizer.zero_grad()
             for batch, d in enumerate(train_loader):
                 #if we use mc sampling, expand labels to match multiple predictions
                 if n_mc_smps > 1:
@@ -132,14 +138,25 @@ class TrainingLoop():
                 else: 
                     y_true = y_true.long().flatten()
                 loss = self.loss_fn(logits, y_true)
+                
+                if virtual_batch_size is not None:
+                    if (batch + 1) % virtual_scaling == 0:
+                        # Optimize
+                        optimizer.step()
+                        optimizer.zero_grad()
+                        # Call callbacks
+                        self.on_batch_end(remove_self(locals()))
+                    loss = loss / virtual_scaling
+                    loss.backward()
+                    
+                else:
+                    # Optimize
+                    optimizer.zero_grad()
+                    loss.backward()
+                    optimizer.step()
 
-                # Optimize
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
-
-                # Call callbacks
-                self.on_batch_end(remove_self(locals()))
+                    # Call callbacks
+                    self.on_batch_end(remove_self(locals()))
                 
                 # Clean memory
                 torch.cuda.empty_cache()
