@@ -173,12 +173,8 @@ class LogDatasetLoss(Callback):
 
             loss = convert_to_base_type(loss)
 
-            # Rescale the losses as batch_size might not divide dataset
-            # perfectly, e.g. in case drop_last is set to True in
-            # the constructor.
-            n_instances = len(d)
-            losses['loss'].append(loss*n_instances)
-            
+            losses['loss'].append(loss)
+
             if full_eval:
                 with torch.no_grad():
                     y_true = y_true.detach().cpu().numpy()
@@ -186,7 +182,9 @@ class LogDatasetLoss(Callback):
                     y_true_total.append(y_true)
                     y_score_total.append(y_score)
         return_dict = {}
-        average_loss = sum(losses['loss']) / len(self.dataset)
+        
+        average_loss = np.mean(losses['loss'])
+
         return_dict['loss'] = average_loss  
         if full_eval: 
             y_true_total = np.concatenate(y_true_total)
