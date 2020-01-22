@@ -36,14 +36,14 @@ collate_fn = partial(
 )
 
 #Hyperparameters:
-batch_size = 64 #64 #32
+batch_size = 32 #64
 lr = 0.0005 #0.001
 
-training_loader = DataLoader(d, batch_size, collate_fn=collate_fn)
+training_loader = DataLoader(d, batch_size, collate_fn=collate_fn, num_workers=16)
 
 # Setup validation data
 d = Physionet2012(split='validation', transform=input_transform)
-validation_loader = DataLoader(d, batch_size, collate_fn=collate_fn)
+validation_loader = DataLoader(d, batch_size, collate_fn=collate_fn, num_workers=16)
 
 # Training Parameters:
 n_epochs = 50
@@ -124,9 +124,7 @@ for epoch in range(n_epochs):
             with torch.no_grad():
                 y_true = y_true.detach().cpu().numpy()
                 y_score = logits[:,1].flatten().detach().cpu().numpy()  
-                #AUROC = auc(y_true, y_score) #logits[:,:,1]
-                #print(f'Epoch {epoch}, (MB) Train Loss: {loss.item():03f}, (MB) Train AUC: {AUROC:03f}, Iteration of batch-size {batch_size} took: {time.time() - iter_start:02f} seconds')
-                print(f'Epoch {epoch}, (MB) Train Loss: {loss.item():03f}, Iteration of batch-size {batch_size} took: {time.time() - iter_start:02f} seconds')
+                #print(f'Epoch {epoch}, (MB) Train Loss: {loss.item():03f}, Iteration of batch-size {batch_size} took: {time.time() - iter_start:02f} seconds')
 
             y_true_total.append(y_true)
             y_score_total.append(y_score)
