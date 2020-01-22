@@ -52,8 +52,10 @@ class Progressbar(Callback):
         description = f'Loss: {loss:3.3f}'
         return description
 
-    def on_batch_end(self, batch_size, loss, **kwargs):
+    def on_batch_end(self, batch_size, loss, virtual_batch_size, **kwargs):
         """Increment progressbar and update description."""
+        if virtual_batch_size is not None:
+            batch_size = virtual_batch_size
         self.epoch_progress.update(batch_size)
         description = self._description(loss)
         self.epoch_progress.set_description(description)
