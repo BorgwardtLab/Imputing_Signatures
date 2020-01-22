@@ -32,11 +32,12 @@ EXP.captured_out_filter = apply_backspaces_and_linefeeds
 
 @EXP.config
 def cfg():
-    n_epochs = 10
-    batch_size = 64
-    learning_rate = 1e-3
+    n_epochs = 50
+    batch_size = 32
+    virtual_batch_size = None
+    learning_rate = 5e-4
     weight_decay = 1e-5
-    early_stopping = 10
+    early_stopping = 30
     data_format = 'GP'
     grid_spacing = 1. #determines n_hours between query points
     max_root = 15 #max_root_decomposition_size for MGP matrix rank
@@ -77,7 +78,7 @@ class NewlineCallback(Callback):
 
 
 @EXP.automain
-def train(n_epochs, batch_size, learning_rate, weight_decay,
+def train(n_epochs, batch_size, virtual_batch_size, learning_rate, weight_decay,
           early_stopping, data_format, grid_spacing, max_root, n_mc_smps, device, quiet, 
             evaluation, _run, _log, _seed, _rnd):
     """Sacred wrapped function to run training of model."""
@@ -88,6 +89,11 @@ def train(n_epochs, batch_size, learning_rate, weight_decay,
     except IndexError:
         pass
 
+    #Check if virtual batch size is defined and valid:
+    if virtual_batch_size is not None:
+        if virtual_batch_size % batch_size != 0:
+            raise ValueError(f'Virtual batch size {virtual_batch_size} has to be a multiple of batch size {batch_size}') 
+    
     #Define dataset transform:
     input_transform = get_input_transform(data_format, grid_spacing)
 
@@ -112,7 +118,9 @@ def train(n_epochs, batch_size, learning_rate, weight_decay,
     model.to(device)
     
     # Loss function:
-    loss_fn = nn.CrossEntropyLoss(reduction='mean')
+    weights = [1.0, 6.129]
+    class_weights = torch.FloatTensor(weights).to(device)
+    loss_fn = nn.CrossEntropyLoss(reduction='mean', weight=class_weights )
     
     callbacks = [
         LogTrainingLoss(_run, print_progress=quiet),
@@ -139,7 +147,8 @@ def train(n_epochs, batch_size, learning_rate, weight_decay,
         loss_fn,
         collate_fn,
         n_epochs, 
-        batch_size, 
+        batch_size,
+        virtual_batch_size, 
         learning_rate, 
         n_mc_smps, 
         max_root,
