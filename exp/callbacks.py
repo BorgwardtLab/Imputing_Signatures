@@ -120,7 +120,8 @@ class LogDatasetLoss(Callback):
         self.iterations = 0
         self.patience = 0
         self.best_loss = np.inf
-
+        self.logged_averages = defaultdict(list) #we now add logging of all epoch-wise evaluation metrics (auprc, auroc etc) during training
+    
     def _compute_eval_measures(self, model, full_eval=False):
         losses = defaultdict(list)
         model.eval()
@@ -220,7 +221,10 @@ class LogDatasetLoss(Callback):
 
     def on_epoch_end(self, model, epoch, **kwargs):
         """Score evaluation metrics at end of epoch."""
-        losses = self._compute_eval_measures(model)
+        losses = self._compute_eval_measures(model, full_eval = True)
+        for key, value in losses.items():
+            self.logged_averages[key].append(value)
+    
         print(self._progress_string(epoch, losses))
         for key, value in losses.items():
             self.run.log_scalar(
