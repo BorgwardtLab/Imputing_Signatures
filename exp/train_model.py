@@ -11,7 +11,7 @@ import sys
 sys.path.append(os.getcwd())
 
 from src.callbacks import Callback, Progressbar
-
+from src.utils.train_utils import count_parameters
 from src.datasets import get_input_transform, get_collate_fn
 from src.training import TrainingLoop
 from src.visualization import plot_losses
@@ -115,6 +115,7 @@ def train(n_epochs, batch_size, virtual_batch_size, learning_rate, weight_decay,
 
     #n_devices = torch.cuda.device_count()
     model = model_config.get_instance(n_input_dims)
+    print(f'Number of trainable Parameters: {count_parameters(model)}')
     model.to(device)
     
     # Loss function:

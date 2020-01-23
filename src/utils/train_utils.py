@@ -1,6 +1,8 @@
 import torch
 import torch.nn.functional as F
 
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 def augment_labels(labels, n_samples):
     """Expand labels for multiple MC samples in the GP Adapter.
