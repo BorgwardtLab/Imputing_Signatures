@@ -16,6 +16,7 @@ sklearn = "*"
 tqdm = "*"
 pandas = "*"
 sacred = "*"
+requests = "*"
 
 [requires]
 python_version = "3.7"
