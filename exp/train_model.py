@@ -40,7 +40,7 @@ def cfg():
     early_stopping = 30
     data_format = 'GP'
     grid_spacing = 1. #determines n_hours between query points
-    max_root = 15 #max_root_decomposition_size for MGP matrix rank
+    max_root = 15 #max_root_decomposition_size for MGP lanczos iters
     device = 'cuda'
     quiet = False
     evaluation = {
@@ -118,10 +118,11 @@ def train(n_epochs, batch_size, virtual_batch_size, learning_rate, weight_decay,
     model.to(device)
     
     # Loss function:
-    weights = [1.0, 6.129]
-    class_weights = torch.FloatTensor(weights).to(device)
-    loss_fn = nn.CrossEntropyLoss(reduction='mean', weight=class_weights )
-    
+    #weights = [1.0, 6.129]
+    #class_weights = torch.FloatTensor(weights).to(device)
+    #loss_fn = nn.CrossEntropyLoss(reduction='mean', weight=class_weights )
+    loss_fn = nn.CrossEntropyLoss(reduction='mean')
+
     callbacks = [
         LogTrainingLoss(_run, print_progress=quiet),
         LogDatasetLoss('validation', validation_dataset, data_format, collate_fn,
@@ -178,7 +179,16 @@ def train(n_epochs, batch_size, virtual_batch_size, learning_rate, weight_decay,
         plot_losses(
             loss_averages,
             loss_stds,
-            save_file=os.path.join(rundir, 'loss.png')
+            save_file=os.path.join(rundir, 'batch_monitoring.png')
+        )
+    monitoring_measures =  callbacks[1].logged_averages
+    print(monitoring_measures)
+    monitoring_measures.update(loss_averages)
+    print(monitoring_measures)
+    if rundir:
+        plot_losses(
+            monitoring_measures,
+            save_file=os.path.join(rundir, 'epoch_monitoring.png')
         )
 
     result = {
