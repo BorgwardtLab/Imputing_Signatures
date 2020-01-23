@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from collections import defaultdict
 
-def plot_losses(losses, losses_std=defaultdict(lambda: None), save_file=None):
+def plot_losses(losses, losses_std=None, save_file=None):
     """Plot a dictionary with per epoch losses.
 
     Args:
@@ -12,8 +12,10 @@ def plot_losses(losses, losses_std=defaultdict(lambda: None), save_file=None):
 
     """
     for key, values in losses.items():
-        plt.errorbar(range(len(values)), values, yerr=losses_std[key], label=key)
-
+        if losses_std is not None:
+            plt.errorbar(range(len(values)), values, yerr=losses_std[key], label=key)
+        else: 
+            plt.plot(range(len(values)), values, label=key)
     plt.xlabel('# epochs')
     plt.ylabel('loss')
     plt.legend()
