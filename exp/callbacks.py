@@ -192,7 +192,7 @@ class LogDatasetLoss(Callback):
             y_score_total = np.concatenate(y_score_total)
             for measure in [auc, auprc]:
                 for mode in ['macro', 'micro', 'weighted']:
-                    return_dict[measure.__name__ + '__' + mode] = measure(y_true_total, y_score_total, average=mode)
+                    return_dict[measure.__name__ + '.' + mode] = measure(y_true_total, y_score_total, average=mode)
         return return_dict
  
     def _progress_string(self, epoch, losses):
