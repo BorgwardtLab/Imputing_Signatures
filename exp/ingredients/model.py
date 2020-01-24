@@ -20,7 +20,7 @@ def GP_Sig():
     """MGP Adapter with Deep Signature Model (using Monte-carlo sampling)."""
     name = 'GP_Sig'
     parameters = {
-        'n_mc_smps': 5,
+        'n_mc_smps': 10,
         'n_devices': 1,
         'output_device': 'cuda'
     }
