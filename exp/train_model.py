@@ -36,18 +36,18 @@ def cfg():
     batch_size = 32
     virtual_batch_size = None
     learning_rate = 5e-4
-    weight_decay = 1e-5
-    early_stopping = 30
+    weight_decay = 1e-3
+    early_stopping = 20
     data_format = 'GP'
     grid_spacing = 1. #determines n_hours between query points
-    max_root = 15 #max_root_decomposition_size for MGP lanczos iters
+    max_root = 25 #max_root_decomposition_size for MGP lanczos iters
     device = 'cuda'
     quiet = False
     evaluation = {
         'active': False,
         'evaluate_on': 'validation'
     }
-    n_mc_smps = 5 
+    n_mc_smps = 10 
 
 
 @EXP.named_config
