@@ -6,7 +6,7 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-ipykernel = "*"
+#ipykernel = "*"
 torch = "==1.2.0"
 gpytorch = "*"
 matplotlib = "*"
@@ -17,6 +17,7 @@ tqdm = "*"
 pandas = "*"
 sacred = "*"
 requests = "*"
+scikit-optimize = "*"
 
 [requires]
 python_version = "3.7"
