@@ -138,7 +138,7 @@ def train(n_epochs, batch_size, virtual_batch_size, learning_rate, weight_decay,
                         device=device, print_progress=True),
         LogDatasetLoss('testing', test_dataset, data_format, collate_fn,
                         loss_fn, _run, batch_size, max_root, n_mc_smps, 
-                        early_stopping=early_stopping, save_path=rundir, 
+                        save_path=rundir, 
                         device=device, print_progress=False)
     ]
 
