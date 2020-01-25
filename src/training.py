@@ -134,9 +134,10 @@ class TrainingLoop():
 
                 #Compute Loss:
                 if self.device == 'cuda':
-                    y_true = y_true.long().flatten().cuda(non_blocking=True) 
+                    y_true = y_true.flatten().cuda(non_blocking=True) 
                 else: 
-                    y_true = y_true.long().flatten()
+                    y_true = y_true.flatten()
+
                 loss = self.loss_fn(logits, y_true)
                 
                 if virtual_batch_size is not None:

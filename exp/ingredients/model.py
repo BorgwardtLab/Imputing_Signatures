@@ -27,7 +27,7 @@ def GP_Sig():
 
 
 @ingredient.capture
-def get_instance(n_input_dims, name, parameters, _log, _seed):
+def get_instance(n_input_dims, out_dimension, name, parameters, _log, _seed):
     """Get an instance of a model according to parameters in the configuration.
 
     Also, check if the provided parameters fit to the signature of the model
@@ -70,4 +70,4 @@ def get_instance(n_input_dims, name, parameters, _log, _seed):
                 )
                 parameters['random_state'] = _seed
 
-    return model_cls(n_input_dims, **parameters)
+    return model_cls(n_input_dims, out_dimension, **parameters)

@@ -108,21 +108,20 @@ def train(n_epochs, batch_size, virtual_batch_size, learning_rate, weight_decay,
     
     #Determine number of input dimensions as GP-Sig models requires this parameter for initialisation
     n_input_dims = train_dataset.measurement_dims
+    out_dimension = train_dataset.n_classes
     collate_fn = get_collate_fn(data_format, n_input_dims) 
     
     # Get model, sacred does some magic here so we need to hush the linter
     # pylint: disable=E1120
 
     #n_devices = torch.cuda.device_count()
-    model = model_config.get_instance(n_input_dims)
+    model = model_config.get_instance(n_input_dims, out_dimension)
     print(f'Number of trainable Parameters: {count_parameters(model)}')
     model.to(device)
     
     # Loss function:
-    #weights = [1.0, 6.129]
-    #class_weights = torch.FloatTensor(weights).to(device)
-    #loss_fn = nn.CrossEntropyLoss(reduction='mean', weight=class_weights )
-    loss_fn = nn.CrossEntropyLoss(reduction='mean')
+    #loss_fn = nn.CrossEntropyLoss(reduction='mean')
+    loss_fn = torch.nn.BCELoss() 
 
     callbacks = [
         LogTrainingLoss(_run, print_progress=quiet),

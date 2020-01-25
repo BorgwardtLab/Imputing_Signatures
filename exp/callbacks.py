@@ -166,9 +166,9 @@ class LogDatasetLoss(Callback):
 
             #Compute loss
             if self.device == 'cuda':
-                y_true = y_true.long().flatten().cuda( non_blocking=True )
+                y_true = y_true.flatten().cuda( non_blocking=True )
             else: 
-                y_true = y_true.long().flatten()
+                y_true = y_true.flatten()
             
             loss = self.loss_fn(logits, y_true)
 
@@ -179,7 +179,7 @@ class LogDatasetLoss(Callback):
             if full_eval:
                 with torch.no_grad():
                     y_true = y_true.detach().cpu().numpy()
-                    y_score = logits[:,1].flatten().detach().cpu().numpy()  
+                    y_score = logits.flatten().detach().cpu().numpy() 
                     y_true_total.append(y_true)
                     y_score_total.append(y_score)
         return_dict = {}
