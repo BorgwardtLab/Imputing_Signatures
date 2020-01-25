@@ -11,6 +11,7 @@ def GP_Sig():
     #}
     overrides = {
         'model__name': 'GP_Sig',
+        'model__parameters__sampling_type': 'monte_carlo',
         'model__parameters__n_mc_smps': 10,
         'model__parameters__n_devices': 1,
         'model__parameters__output_device': 'cuda'
