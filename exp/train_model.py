@@ -118,7 +118,14 @@ def train(n_epochs, batch_size, virtual_batch_size, learning_rate, weight_decay,
     model = model_config.get_instance(n_input_dims, out_dimension)
     print(f'Number of trainable Parameters: {count_parameters(model)}')
     model.to(device)
-    
+   
+    #Safety guard, ensure that if mc_sampling is inactive that n_mc_smps are 1 to
+    #prevent unwanted label augmentation 
+    if not hasattr(model, 'sampling_type'):
+        n_mc_smps = 1     
+    elif model.sampling_type != 'monte_carlo':
+        n_mc_smps = 1
+ 
     # Loss function:
     #loss_fn = nn.CrossEntropyLoss(reduction='mean')
     loss_fn = torch.nn.BCELoss() 

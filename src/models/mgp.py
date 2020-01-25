@@ -51,7 +51,7 @@ class MGP_Layer(MultitaskGPModel):
 
 # MGP Adapter
 class GPAdapter(nn.Module):
-    def __init__(self, clf, n_input_dims, n_mc_smps, *gp_params):
+    def __init__(self, clf, n_input_dims, n_mc_smps, sampling_type, *gp_params):
         super(GPAdapter, self).__init__()
         self.n_mc_smps = n_mc_smps
         # num_tasks includes dummy task for padedd zeros
@@ -59,7 +59,8 @@ class GPAdapter(nn.Module):
         self.mgp = MGP_Layer(*gp_params)
         self.clf = clf #(self.n_tasks)
         #more generic would be something like: self.clf = clf(n_input_dims) #e.g. SimpleDeepModel(n_input_dims)
-
+        self.sampling_type = sampling_type # 'monte_carlo', 'moments'
+    
     def forward(self, *data):
         """
         The GP Adapter takes input data as a list of 5 torch tensors (3 for train points, 2 for prediction points)
@@ -70,10 +71,15 @@ class GPAdapter(nn.Module):
             - test_indices: query tasks for given point in time (batch, timesteps, 1)
         """
         self.posterior = self.gp_forward(*data)
-
-        #draw sample in MGP format (all tasks in same dimension)
-        Z = self.draw_samples(self.posterior, self.n_mc_smps)
-
+       
+        #Get regularly-spaced "latent" timee series Z: 
+        if self.sampling_type == 'monte_carlo':
+            #draw sample in MGP format (all tasks in same dimension)
+            Z = self.draw_samples(self.posterior, self.n_mc_smps)
+        elif self.sampling_type == 'moments':
+            #feed moments of GP posterior to classifier (mean, variance)
+            Z = self.feed_moments(self.posterior)  
+        
         #reshape such that tensor has timesteps and tasks/channels in independent dimensions for Signature network:
         Z = self.channel_reshape(Z)
 
@@ -92,6 +98,14 @@ class GPAdapter(nn.Module):
     def draw_samples(self, posterior, n_mc_smps):
         #Draw monte carlo samples (with gradient) from posterior:
         return posterior.rsample(torch.Size([n_mc_smps])) #mc_samples form a new (outermost) dimension
+    
+    def feed_moments(self, posterior):
+        """
+        Get mean and variance of posterior and concatenate them along the channel dimension for feeding them to feed the clf
+        """
+        mean = posterior.mean
+        var = posterior.variance
+        return torch.cat([ mean, var ], axis=-1)     
 
     def parameters(self):
         return list(self.mgp.parameters()) + list(self.clf.parameters())
@@ -116,11 +130,18 @@ class GPAdapter(nn.Module):
         """
         reshaping function required as hadamard MGP's output format is not directly compatible with subsequent network
         """
-        X_reshaped = X.view(X.shape[:-1] 
-                            + torch.Size([self.n_tasks]) 
-                            + torch.Size([int(X.shape[-1] / self.n_tasks)]) 
-                           )
+        #first check if we have to doubele the number of channels 
+        if self.sampling_type == 'moments':
+            channel_dim = 2*self.n_tasks
+        else:
+            channel_dim = self.n_tasks
+
+        X_reshaped = X.view(X.shape[:-1]                    #batch-dim (or mc_smp and batch_dim) 
+            + torch.Size([channel_dim])                     #channel-dim 
+            + torch.Size([int(X.shape[-1] / channel_dim)])  #time steps dim
+        )
         # finally, swap last two dims: timestep and channel dim for Signature Augmentations
         X_reshaped = X_reshaped.transpose(-2,-1)
-        X_reshaped = X_reshaped.flatten(0,1) #SigNet requires 3 dim setup, so we flatten out the mc dimension with batch
+        if self.sampling_type == 'monte_carlo':
+            X_reshaped = X_reshaped.flatten(0,1) #SigNet requires 3 dim setup, so we flatten out the mc dimension with batch
         return X_reshaped
