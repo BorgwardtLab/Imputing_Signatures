@@ -4,13 +4,19 @@ import torch.nn as nn
 
 # Exact Hadamard Multi-task Gaussian Process Model
 class MultitaskGPModel(gpytorch.models.ExactGP):
-    def __init__(self, train_x, train_y, likelihood, output_device, num_tasks=2, n_devices=1):
+    def __init__(self, train_x, train_y, likelihood, output_device, num_tasks=2, n_devices=1, kernel='rbf'):
         super(MultitaskGPModel, self).__init__(train_x, train_y, likelihood)
         self.output_device = output_device
         self.mean_module = gpytorch.means.ConstantMean()
-        
-        if n_devices > 1: #in multi-gpu setting
+        valid_kernels = ['rbf', 'ou']
+        if kernel not in valid_kernels:
+            raise ValueError(f'parsed kernel: {kernel} not among implemented kernels: {valid_kernels}')
+        elif kernel == 'rbf':
             base_covar_module = gpytorch.kernels.RBFKernel()
+        elif kernel == 'ou':
+            base_covar_module = gpytorch.kernels.MaternKernel(nu=0.5)
+            
+        if n_devices > 1: #in multi-gpu setting
             self.covar_module = gpytorch.kernels.MultiDeviceKernel(
                 base_covar_module, device_ids=range(n_devices),
                 output_device=self.output_device)
@@ -20,7 +26,7 @@ class MultitaskGPModel(gpytorch.models.ExactGP):
                 base_task_covar_module, device_ids=range(n_devices),
                 output_device=self.output_device)
         else:
-            self.covar_module = gpytorch.kernels.RBFKernel()
+            self.covar_module = base_covar_module #gpytorch.kernels.RBFKernel()
             self.task_covar_module = gpytorch.kernels.IndexKernel(num_tasks=num_tasks, rank=3)
 
     def forward(self,x,i):
@@ -38,8 +44,8 @@ class MultitaskGPModel(gpytorch.models.ExactGP):
 
 # MGP Layer for Neural Network using MultitaskGPModel
 class MGP_Layer(MultitaskGPModel):
-    def __init__(self,likelihood, num_tasks, n_devices, output_device):
-        super().__init__(None, None, likelihood, output_device, num_tasks, n_devices) 
+    def __init__(self,likelihood, num_tasks, n_devices, output_device, kernel):
+        super().__init__(None, None, likelihood, output_device, num_tasks, n_devices, kernel) 
         #we don't intialize with train data for more flexibility
         likelihood.train()
         
