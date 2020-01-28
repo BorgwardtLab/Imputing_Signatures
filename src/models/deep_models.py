@@ -16,7 +16,7 @@ class SimpleDeepModel(nn.Module):
 
 
 class DeepSignatureModel(nn.Module):
-    def __init__(self, in_channels, out_dimension=2, sig_depth=3):
+    def __init__(self, in_channels, out_dimension=1, sig_depth=3):
         super().__init__()
         self.augment1 = signatory.Augment(in_channels=in_channels,
                                           layer_sizes=(8, 8, 4),
@@ -42,6 +42,7 @@ class DeepSignatureModel(nn.Module):
         sig_channels2 = signatory.signature_channels(channels=4,
                                                      depth=sig_depth)
         self.linear = torch.nn.Linear(sig_channels2, out_dimension)
+        self.sigmoid = torch.nn.Sigmoid()
     
     def forward(self, x):
         # in docu: input is a three dimensional tensor of shape (batch, stream, in_channels)
@@ -61,4 +62,4 @@ class DeepSignatureModel(nn.Module):
         # d is a two dimensional tensor of shape (batch, sig_channels2)
         e = self.linear(d)
         # e is a two dimensional tensor of shape (batch, out_dimension)
-        return e
+        return self.sigmoid(e)

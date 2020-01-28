@@ -26,9 +26,22 @@ class PhysionetDataReader():
         'Urine', 'WBC', 'pH'
     ]
 
+    # Need to drop these samples as they contain no time series information and
+    # only statics (which we dont support).
+    blacklisted_records = [
+        140501, 150649, 140936, 143656, 141264, 145611, 142998, 147514, 142731,
+        150309, 155655, 156254,
+
+        #outlier sample with much more observations:
+        135365
+    ]
+
     def __init__(self, data_path, endpoint_file):
         self.data_path = data_path
-        self.endpoint_data = pd.read_csv(endpoint_file, header=0, sep=',')
+        endpoint_data = pd.read_csv(endpoint_file, header=0, sep=',')
+        # Drop backlisted records
+        self.endpoint_data = endpoint_data[
+            ~endpoint_data['RecordID'].isin(self.blacklisted_records)]
 
     def convert_string_to_decimal_time(self, values):
         return values.str.split(':').apply(
@@ -57,10 +70,12 @@ class PhysionetDataReader():
 
 
 class PhysionetFeatureTransform():
+    ignore_columns = ['Time', 'Age', 'Gender', 'Height', 'ICUType', 'Weight']
+
     def __call__(self, dataframe):
         times = dataframe['Time'].values
         values = dataframe[[
-            col for col in dataframe.columns if col != 'Time']].values
+            col for col in dataframe.columns if col not in self.ignore_columns]].values
         return times, values
 
 

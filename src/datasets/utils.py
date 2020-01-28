@@ -1,4 +1,5 @@
 """Module with util functions."""
+from functools import partial
 import os
 from typing import List
 import pandas as pd
@@ -19,7 +20,7 @@ DEFAULT_DATA_DIR = os.path.abspath(
 DATA_DIR = os.environ.get('DATA_DIR', DEFAULT_DATA_DIR)
 
 
-def to_gpytorch_format(d):
+def to_gpytorch_format(d, grid_spacing=1.0):
     """Convert dictionary with data into the gpytorch format.
 
     Args:
@@ -41,6 +42,18 @@ def to_gpytorch_format(d):
     d['inputs'] = inputs
     d['values'] = values_compact
     d['indices'] = indexes[..., np.newaxis]
+
+    # Compute test points
+    max_input = np.max(inputs[:, 0])
+    min_input = np.min(inputs[:, 0])
+
+    n_tasks = values.shape[-1]
+    test_inputs = np.arange(min_input, max_input + grid_spacing, grid_spacing)
+    len_test_grid = len(test_inputs)
+    test_inputs = np.tile(test_inputs, n_tasks)
+    test_indices = np.repeat(np.arange(n_tasks), len_test_grid)
+    d['test_inputs'] = test_inputs[:, np.newaxis].astype(np.float32)
+    d['test_indices'] = test_indices[:, np.newaxis].astype(np.int64)
     return d
 
 
@@ -109,6 +122,47 @@ def dict_collate_fn(instances, padding_values=None):
 
     return combined
 
+def get_input_transform(data_format, grid_spacing):
+    """
+    Util function to return input transform of dataset, depending on data format 
+    Args:
+        - data_format: which data format to use depends on model
+            'GP' for models using gpytorch
+            'imputed' for imputed baselines
+        - grid_spacing: number of hours between each query point / or imputed point depending on format
+    """
+    if data_format == 'GP':
+        input_transform = partial(to_gpytorch_format, grid_spacing=grid_spacing)
+        return input_transform 
+    elif data_format == 'imputed':
+        raise NotImplementedError('Pre-Imputed dataset not implemented yet!')
+    else:
+        raise ValueError('No valid data format provided!') 
+     
+def get_collate_fn(data_format, n_input_dims):
+    """
+    Util function to retrun collate_fn which might depend on data format / used model
+    Args:
+        - data_format: which data format to use depends on model
+            'GP' for models using gpytorch
+            'imputed' for imputed baselines
+        - n_input_dims: number of input dims, the gpytorch implementation uses a dummy task for padded
+            values in the batch tensor (due to zero indexing it's exactly n_input_dims)
+    """
+    if data_format == 'GP':
+        collate_fn = partial(
+            dict_collate_fn,
+            padding_values={
+                'indices': n_input_dims,
+                'test_indices': n_input_dims 
+            }
+        )
+        return collate_fn
+    elif data_format == 'imputed':
+        raise NotImplementedError('Pre-Imputed dataset not implemented yet!')
+    else:
+        raise ValueError('No valid data format provided!') 
+        
 
 def add_measurement_masking(measurements):
     """Add an additional tensor containing 1s when a value was measured."""

@@ -1,18 +1,20 @@
-
 # GP Signatures
 
-The goal of this project is to test whether GP imputations result in more informative signatures than basic linear interpolations.
-Specifically, we propose a MGP Signature Adapter to classify irregular time series with expressive deep signature models.
+The goal of this project is to extend signature models to the real-world setting of classifying irregularly spaced and incompletely observed time series. 
+Specifically, we propose a GP-Sig, an end-to-end MGP adapter employing a deep signature model.
 
-## Hadamard MGP Adapter on Synthetic Data:
+## Environment
+Please install the dependencies as indicated in the Pipfile
+```> pipenv install --skip-lock```  
+```> pipenv shell```
+
+## Hadamard MGP Adapter with off-the-shelf Deep Signature Model on Synthetic Data:
 ```> python scripts/test_mgp_adapter.py```
 
+For quickly testing this on cpu (instead of gpu) use:
+```> python scripts/test_mgp_adapter.py --device cpu```
 
-
-
-
-
-To download UCR Archive data, run:
-```> python src/download_data.py```
+## First script running on Physionet2012:
+```> python scripts/mgp_adapter_physionet2012.py```
 
 
