@@ -2,6 +2,7 @@ import gpytorch
 import torch
 import torch.nn as nn
 
+
 # Exact Hadamard Multi-task Gaussian Process Model
 class MultitaskGPModel(gpytorch.models.ExactGP):
     def __init__(self, train_x, train_y, likelihood, output_device, num_tasks=2, n_devices=1, kernel='rbf'):
@@ -15,7 +16,7 @@ class MultitaskGPModel(gpytorch.models.ExactGP):
             base_covar_module = gpytorch.kernels.RBFKernel()
         elif kernel == 'ou':
             base_covar_module = gpytorch.kernels.MaternKernel(nu=0.5)
-            
+
         if n_devices > 1: #in multi-gpu setting
             self.covar_module = gpytorch.kernels.MultiDeviceKernel(
                 base_covar_module, device_ids=range(n_devices),
@@ -45,16 +46,17 @@ class MultitaskGPModel(gpytorch.models.ExactGP):
 # MGP Layer for Neural Network using MultitaskGPModel
 class MGP_Layer(MultitaskGPModel):
     def __init__(self,likelihood, num_tasks, n_devices, output_device, kernel):
-        super().__init__(None, None, likelihood, output_device, num_tasks, n_devices, kernel) 
+        super().__init__(None, None, likelihood, output_device, num_tasks, n_devices, kernel)
         #we don't intialize with train data for more flexibility
         likelihood.train()
-        
+
     def forward(self, inputs, indices):
         return super(MGP_Layer, self).forward(inputs, indices)
-    
+
     def condition_on_train_data(self, inputs, indices, values):
         self.set_train_data(inputs=(inputs, indices), targets=values, strict=False)
 
+# Custom GP Adapter:
 # MGP Adapter
 class GPAdapter(nn.Module):
     def __init__(self, clf, n_input_dims, n_mc_smps, sampling_type, *gp_params):
@@ -66,7 +68,8 @@ class GPAdapter(nn.Module):
         self.clf = clf #(self.n_tasks)
         #more generic would be something like: self.clf = clf(n_input_dims) #e.g. SimpleDeepModel(n_input_dims)
         self.sampling_type = sampling_type # 'monte_carlo', 'moments'
-    
+        self.return_gp = False
+
     def forward(self, *data):
         """
         The GP Adapter takes input data as a list of 5 torch tensors (3 for train points, 2 for prediction points)
@@ -77,23 +80,33 @@ class GPAdapter(nn.Module):
             - test_indices: query tasks for given point in time (batch, timesteps, 1)
         """
         self.posterior = self.gp_forward(*data)
-       
-        #Get regularly-spaced "latent" timee series Z: 
+
+        inputs, indices, values, test_inputs, test_indices = data
+
+        #Get regularly-spaced "latent" timee series Z:
         if self.sampling_type == 'monte_carlo':
             #draw sample in MGP format (all tasks in same dimension)
             Z = self.draw_samples(self.posterior, self.n_mc_smps)
         elif self.sampling_type == 'moments':
             #feed moments of GP posterior to classifier (mean, variance)
-            Z = self.feed_moments(self.posterior)  
-        
-        #reshape such that tensor has timesteps and tasks/channels in independent dimensions for Signature network:
-        Z = self.channel_reshape(Z)
+            Z = self.feed_moments(self.posterior)
 
-        return self.clf(Z)
+        #reshape such that tensor has timesteps and tasks/channels in independent dimensions for Signature network:
+        if self.return_gp: #useful for visualizations 
+            Z, Z_raw = self._channel_reshape(Z, test_indices, return_gp=True)
+        else:
+            Z = self._channel_reshape(Z, test_indices)
+
+        Z = self._collapse_tensor(Z)
+
+        if self.return_gp:
+            return self.clf(Z), Z, Z_raw
+        else:
+            return self.clf(Z)
 
     def gp_forward(self, *data):
         #Unpack data:
-        inputs, indices, values, test_inputs, test_indices = [*data]
+        inputs, indices, values, test_inputs, test_indices = data
 
         #Condition MGP on training data:
         self.mgp.condition_on_train_data(inputs, indices, values)
@@ -104,14 +117,15 @@ class GPAdapter(nn.Module):
     def draw_samples(self, posterior, n_mc_smps):
         #Draw monte carlo samples (with gradient) from posterior:
         return posterior.rsample(torch.Size([n_mc_smps])) #mc_samples form a new (outermost) dimension
-    
+
     def feed_moments(self, posterior):
         """
         Get mean and variance of posterior and concatenate them along the channel dimension for feeding them to feed the clf
         """
         mean = posterior.mean
         var = posterior.variance
-        return torch.cat([ mean, var ], axis=-1)     
+        #return torch.cat([ mean, var ], axis=-1) # concat in channel dim
+        return torch.stack([mean, var], axis=0) # stacked in a innermost dim to replace mc_smp dim
 
     def parameters(self):
         return list(self.mgp.parameters()) + list(self.clf.parameters())
@@ -131,23 +145,46 @@ class GPAdapter(nn.Module):
         eval simply calls eval of super class (which in turn activates train with False)
         """
         super().eval()
-
-    def channel_reshape(self, X):
+    
+    def _channel_reshape(self, Z_raw, test_indices, return_gp=False):
         """
         reshaping function required as hadamard MGP's output format is not directly compatible with subsequent network
+        batch-wise reshaping is not super easy due to padding, for now hacky & slow approach with loops. TODO: Fix this
         """
-        #first check if we have to doubele the number of channels 
-        if self.sampling_type == 'moments':
-            channel_dim = 2*self.n_tasks
-        else:
-            channel_dim = self.n_tasks
+        channel_dim = self.n_tasks
+        stats_dim  = Z_raw.shape[0] #either mc samples or [mean/var] dimension depending on sampling type
+        batch_size = Z_raw.shape[1]
+        max_len = int(Z_raw.shape[-1] / channel_dim) # max_len of time series in the batch
 
-        X_reshaped = X.view(X.shape[:-1]                    #batch-dim (or mc_smp and batch_dim) 
-            + torch.Size([channel_dim])                     #channel-dim 
-            + torch.Size([int(X.shape[-1] / channel_dim)])  #time steps dim
-        )
-        # finally, swap last two dims: timestep and channel dim for Signature Augmentations
-        X_reshaped = X_reshaped.transpose(-2,-1)
+        #initialise resulting tensor:
+        Z = torch.zeros([stats_dim, batch_size, max_len, channel_dim])
+        for sample in torch.arange(stats_dim):
+            for i in torch.arange(batch_size):
+                Z_raw_i = Z_raw[sample, i] # GP draw array of instance i, pooling all values in single vector
+                test_indices_i = test_indices[i].flatten() # array pointing to index of each value of raw gp output
+                # Create output channels:
+                for j in torch.arange(channel_dim):
+                    z_j = Z_raw_i[test_indices_i == j] #select all (time-ordered) values that belong to task/channel j
+                    curr_len = z_j.shape[0]
+                    Z[sample, i, :curr_len, j] = z_j
+        if return_gp:
+            return Z, Z_raw
+        else:
+            return Z
+
+    def _collapse_tensor(self, X):
+        """
+        Util function to collapse tensor depending on sampling_type
+            - mc samples are joined in batch dimension
+            - moments are stacked in channel dimension
+        In dimensions:
+            [stats_dim, batch, length, channel]
+        Out dimension:
+            [batch, length, channel]
+        """
         if self.sampling_type == 'monte_carlo':
-            X_reshaped = X_reshaped.flatten(0,1) #SigNet requires 3 dim setup, so we flatten out the mc dimension with batch
-        return X_reshaped
+            return X.flatten(0,1) # merge mc_smp and batch dim
+        elif self.sampling_type == 'moments':
+            #X = X.transpose(0,2).tranpose(0,1)
+            X = X.permute(1,2,0,3)
+            return X.flatten(-2,-1) #merge channel and moments dim
