@@ -93,11 +93,9 @@ class GPAdapter(nn.Module):
 
         #reshape such that tensor has timesteps and tasks/channels in independent dimensions for Signature network:
         if self.return_gp: #useful for visualizations 
-            Z, Z_raw = self._channel_reshape(Z, test_indices, return_gp=True)
+            Z, Z_raw = self._channel_reshape(Z, return_gp=True)
         else:
-            Z = self._channel_reshape(Z, test_indices)
-
-        Z = self._collapse_tensor(Z)
+            Z = self._channel_reshape(Z)
 
         if self.return_gp:
             return self.clf(Z), Z, Z_raw
@@ -124,9 +122,9 @@ class GPAdapter(nn.Module):
         """
         mean = posterior.mean
         var = posterior.variance
-        #return torch.cat([ mean, var ], axis=-1) # concat in channel dim
-        return torch.stack([mean, var], axis=0) # stacked in a innermost dim to replace mc_smp dim
-
+        #return torch.stack([mean, var], axis=0) # stacked in a innermost dim to replace mc_smp dim
+        return torch.cat([ mean, var ], axis=-1) # concat in channel dim
+        
     def parameters(self):
         return list(self.mgp.parameters()) + list(self.clf.parameters())
 
@@ -145,46 +143,28 @@ class GPAdapter(nn.Module):
         eval simply calls eval of super class (which in turn activates train with False)
         """
         super().eval()
-    
-    def _channel_reshape(self, Z_raw, test_indices, return_gp=False):
+   
+    def _channel_reshape(self, X, return_gp=False):
         """
         reshaping function required as hadamard MGP's output format is not directly compatible with subsequent network
-        batch-wise reshaping is not super easy due to padding, for now hacky & slow approach with loops. TODO: Fix this
         """
-        channel_dim = self.n_tasks
-        stats_dim  = Z_raw.shape[0] #either mc samples or [mean/var] dimension depending on sampling type
-        batch_size = Z_raw.shape[1]
-        max_len = int(Z_raw.shape[-1] / channel_dim) # max_len of time series in the batch
-
-        #initialise resulting tensor:
-        Z = torch.zeros([stats_dim, batch_size, max_len, channel_dim])
-        for sample in torch.arange(stats_dim):
-            for i in torch.arange(batch_size):
-                Z_raw_i = Z_raw[sample, i] # GP draw array of instance i, pooling all values in single vector
-                test_indices_i = test_indices[i].flatten() # array pointing to index of each value of raw gp output
-                # Create output channels:
-                for j in torch.arange(channel_dim):
-                    z_j = Z_raw_i[test_indices_i == j] #select all (time-ordered) values that belong to task/channel j
-                    curr_len = z_j.shape[0]
-                    Z[sample, i, :curr_len, j] = z_j
-        if return_gp:
-            return Z, Z_raw
+        #first check if we have to doubele the number of channels
+        if self.sampling_type == 'moments':
+            channel_dim = 2*self.n_tasks
         else:
-            return Z
+            channel_dim = self.n_tasks
 
-    def _collapse_tensor(self, X):
-        """
-        Util function to collapse tensor depending on sampling_type
-            - mc samples are joined in batch dimension
-            - moments are stacked in channel dimension
-        In dimensions:
-            [stats_dim, batch, length, channel]
-        Out dimension:
-            [batch, length, channel]
-        """
+        X_reshaped = X.view(X.shape[:-1]                    #batch-dim (or mc_smp and batch_dim)
+            + torch.Size([channel_dim])                     #channel-dim
+            + torch.Size([int(X.shape[-1] / channel_dim)])  #time steps dim
+        )
+        # finally, swap last two dims: timestep and channel dim for Signature Augmentations
+        X_reshaped = X_reshaped.transpose(-2,-1)
+        
         if self.sampling_type == 'monte_carlo':
-            return X.flatten(0,1) # merge mc_smp and batch dim
-        elif self.sampling_type == 'moments':
-            #X = X.transpose(0,2).tranpose(0,1)
-            X = X.permute(1,2,0,3)
-            return X.flatten(-2,-1) #merge channel and moments dim
+            X_reshaped = X_reshaped.flatten(0,1) #SigNet requires 3 dim setup, so we flatten out the mc dimension with batch
+        if return_gp:
+            return X_reshaped, X
+        else: 
+            return X_reshaped
+
