@@ -26,6 +26,16 @@ def GP_Sig():
         'output_device': 'cuda'
     }
 
+@ingredient.named_config
+def GPSignatureModel():
+    """MGP Adapter with Signature Model (using Monte-carlo sampling)."""
+    name = 'GPSignatureModel'
+    parameters = {
+        'sampling_type': 'monte_carlo' ,
+        'n_mc_smps': 10,
+        'n_devices': 1,
+        'output_device': 'cuda'
+    }
 
 @ingredient.capture
 def get_instance(n_input_dims, out_dimension, name, parameters, _log, _seed):
