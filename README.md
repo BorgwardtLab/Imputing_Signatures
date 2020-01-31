@@ -8,13 +8,27 @@ Please install the dependencies as indicated in the Pipfile
 ```> pipenv install --skip-lock```  
 ```> pipenv shell```
 
-## Hadamard MGP Adapter with off-the-shelf Deep Signature Model on Synthetic Data:
+
+## Train a end-to-end, posterior moments GP-imputed Signature Model, specifying signature depth (truncation level) to 3
+
+```> python exp/train_model.py with model.GPSignatureModel dataset.Physionet2012 model.parameters.sampling_type=moments model.parameters.sig_depth=3```
+
+
+## Start a hyperparameter search:
+```>python exp/hyperparameter_search.py -F exp_runs/SignatureModel with GP_mom_SignatureModel Physionet2012 ```
+
+
+
+
+
+## Below instructions are from an early phase of the projects and not guaranteed to still work:
+### Hadamard MGP Adapter with off-the-shelf Deep Signature Model on Synthetic Data:
 ```> python scripts/test_mgp_adapter.py```
 
 For quickly testing this on cpu (instead of gpu) use:
 ```> python scripts/test_mgp_adapter.py --device cpu```
 
-## First script running on Physionet2012:
+### First script running on Physionet2012:
 ```> python scripts/mgp_adapter_physionet2012.py```
 
 
