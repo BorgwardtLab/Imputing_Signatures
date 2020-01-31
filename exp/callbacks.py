@@ -225,7 +225,8 @@ class LogDatasetLoss(Callback):
         for key, value in losses.items():
             self.logged_averages[key].append(value)
     
-        print(self._progress_string(epoch, losses))
+        if self.prefix != 'testing':
+            print(self._progress_string(epoch, losses))
         for key, value in losses.items():
             self.run.log_scalar(
                 f'{self.prefix}.{key}',
