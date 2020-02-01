@@ -89,7 +89,8 @@ def dict_collate_fn(instances, padding_values=None):
         key: [d[key] for d in instances]
         for key in instances[0].keys() if key != 'n_tasks'
     }
-    n_tasks = instances[0]['n_tasks']
+    if 'n_tasks' in instances[0].keys():
+        n_tasks = instances[0]['n_tasks']
 
     # Pad instances to max shape
     max_shapes = {
