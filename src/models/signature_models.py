@@ -93,7 +93,7 @@ class RNNSignatureModel(nn.Module):
     """
 
     def __init__(self, in_channels, extra_channels, channel_groups, include_original, include_time, sig_depth, step,
-                 length, rnn_channels, out_channels):
+                 length, rnn_channels, out_channels, device='cuda'):
         """
         Inputs:
             in_channels: As SignatureModel.
@@ -106,6 +106,7 @@ class RNNSignatureModel(nn.Module):
             length: The length of the sliding window that a signature is taken over.
             rnn_channels: The size of the hidden state of the GRU.
             out_channels: As SignatureModel.
+            device: Running device (used for hidden state initialization). Default: cuda.
 
         Note:
             Unless step, length, and the length of the input stream all suitably line up, then the final pieces of data
@@ -121,6 +122,7 @@ class RNNSignatureModel(nn.Module):
         self.length = length
         self.rnn_channels = rnn_channels
         self.out_channels = out_channels
+        self.device = device
 
         layer_sizes = () if extra_channels == 0 else (extra_channels,)
         self.augments = nn.ModuleList(signatory.Augment(in_channels=in_channels,
@@ -149,7 +151,7 @@ class RNNSignatureModel(nn.Module):
         path = signatory.Path(x, self.sig_depth)
 
         # x now represents the hidden state of the GRU
-        x = torch.zeros(batch, self.rnn_channels)
+        x = torch.zeros(batch, self.rnn_channels).to(self.device)
         for index in range(0, path.size(1) - self.length + 1, self.step):
             # Compute the signature over a sliding window
             signature_of_window = path.signature(index, index + self.length)

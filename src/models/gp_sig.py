@@ -121,7 +121,8 @@ class GPGRUSignatureModel(nn.Module):
                                     step=step,
                                     length=length,
                                     rnn_channels=rnn_channels,
-                                    out_channels=out_dimension, 
+                                    out_channels=out_dimension,
+                                    device=output_device 
         )
         
         self.model = GPAdapter( clf, 
