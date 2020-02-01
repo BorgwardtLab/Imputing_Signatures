@@ -1,6 +1,24 @@
 import torch
 
 
+def forward_fill_imputation(batch):
+    """Simple forward-fill imputation. Every NaN value is replaced with the most recent non-NaN value. (And is left at
+    NaN if there are no preceding non-NaN values.)"""
+
+    old_values = batch['values']  # tensor of shape (batch, stream, channels)
+
+    # Now forward-fill impute the missing values
+    values = old_values.clone()
+    time_slices = iter(values.unbind(dim=1))
+    prev_time_slice = next(time_slices)
+    for time_slice in time_slices:
+        nan_mask = torch.isnan(time_slice)
+        time_slice.masked_scatter_(nan_mask, prev_time_slice.masked_select(nan_mask))
+        prev_time_slice = time_slice
+
+    return {'time': batch['time'], 'values': values, 'label': batch['label']}
+
+
 def causal_imputation(batch):
     """Performs causal imputation on the batch.
 
@@ -65,22 +83,14 @@ def causal_imputation(batch):
             (c) batch['labels'] will be a tensor of shape (batch, 1)
     """
 
-    old_time = batch['time']  # tensor of shape (batch, stream, 1)
-    old_values = batch['values']  # tensor of shape (batch, stream, channels)
-    old_label = batch['label']  # tensor of shape (batch, 1)
+    old_time = batch['time']
+
+    # Start off by forward-fill imputing the missing values
+    values = forward_fill_imputation(batch)['values']
 
     # For the times, we want to repeat every time twice, and then drop the first (repeated) time.
-    time = torch.repeat_interleave(old_time, 2, dim=1)
+    time = old_time.repeat_interleave(2, dim=1)
     time = time[:, 1:]
-
-    # Now forward-fill impute the missing values
-    values = old_values.clone()
-    time_slices = iter(values.unbind(dim=1))
-    prev_time_slice = next(time_slices)
-    for time_slice in time_slices:
-        nan_mask = torch.isnan(time_slice)
-        time_slice.masked_scatter_(nan_mask, prev_time_slice.masked_select(nan_mask))
-        prev_time_slice = time_slice
 
     # For the values, we want to repeat every value twice, and then drop the last (repeated) value.
     # This is a bit finickity because of the zero-padding of the shorter batch elements.
@@ -91,4 +101,4 @@ def causal_imputation(batch):
     values.scatter_(1, indices.unsqueeze(1).unsqueeze(2).expand(values.size(0), 1, values.size(2)), 0)
     values = values[:, :-1]
 
-    return {'time': time, 'values': values, 'label': old_label}
+    return {'time': time, 'values': values, 'label': batch['label']}
