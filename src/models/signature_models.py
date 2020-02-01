@@ -149,7 +149,7 @@ class RNNSignatureModel(nn.Module):
         path = signatory.Path(x, self.sig_depth)
 
         # x now represents the hidden state of the GRU
-        x = torch.zeros(x.size(0), self.rnn_channels)
+        x = torch.zeros(batch, self.rnn_channels)
         for index in range(0, path.size(1) - self.length + 1, self.step):
             # Compute the signature over a sliding window
             signature_of_window = path.signature(index, index + self.length)
