@@ -9,12 +9,10 @@ import torch
 
 sys.path.append(os.getcwd())
 
-from src.datasets import get_input_transform, get_collate_fn
-
 from exp.callbacks import Callback, Progressbar, LogDatasetLoss, LogTrainingLoss
-from exp.ingredients import model_config
-from exp.ingredients import dataset_config
-from exp.train_utils import augment_labels, count_parameters, plot_losses
+from exp.format import get_input_transform, get_collate_fn
+from exp.ingredients import dataset_config, model_config
+from exp.utils import augment_labels, count_parameters, plot_losses
 
 
 # Test for debugging sacred read-only error

@@ -1,4 +1,6 @@
 import matplotlib.pyplot as plt
+import numpy as np
+import torch
 
 
 def count_parameters(model):
@@ -37,3 +39,18 @@ def plot_losses(losses, losses_std=None, save_file=None):
     if save_file:
         plt.savefig(save_file, dpi=200)
         plt.close()
+
+
+def convert_to_base_type(value):
+    """Convert a value into a python base datatype.
+
+    Args:
+        value: numpy or torch value
+
+    Returns:
+        Python base type
+    """
+    if isinstance(value, (torch.Tensor, np.generic)):
+        return value.item()
+    else:
+        return value

@@ -8,7 +8,7 @@ from sklearn.metrics import average_precision_score as auprc
 import torch
 from tqdm import tqdm
 
-from exp.train_utils import augment_labels
+from exp.utils import augment_labels, convert_to_base_type
 
 
 # Hush the linter, child callbacks will always have different parameters than
@@ -74,21 +74,6 @@ class Progressbar(Callback):
         self.total_progress.update(1)
         if epoch == n_epochs:
             self.total_progress.close()
-
-
-def convert_to_base_type(value):
-    """Convert a value into a python base datatype.
-
-    Args:
-        value: numpy or torch value
-
-    Returns:
-        Python base type
-    """
-    if isinstance(value, (torch.Tensor, np.generic)):
-        return value.item()
-    else:
-        return value
 
 
 class LogTrainingLoss(Callback):

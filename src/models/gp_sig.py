@@ -2,7 +2,6 @@ import torch.nn as nn
 import gpytorch
 
 from src.models.mgp import GPAdapter
-from src.models.deep_models import DeepSignatureModel
 from src.models.signature_models import SignatureModel, RNNSignatureModel
 
 class GP_Sig(nn.Module):
