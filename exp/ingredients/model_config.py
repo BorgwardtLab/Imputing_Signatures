@@ -1,6 +1,5 @@
 """Module containing sacred functions for handling ML models."""
 import inspect
-
 from sacred import Ingredient
 
 from src import models
@@ -15,16 +14,6 @@ def cfg():
     parameters = {
     }
 
-@ingredient.named_config
-def GP_Sig():
-    """MGP Adapter with Deep Signature Model (using Monte-carlo sampling)."""
-    name = 'GP_Sig'
-    parameters = {
-        'sampling_type': 'monte_carlo' ,
-        'n_mc_smps': 10,
-        'n_devices': 1,
-        'output_device': 'cuda'
-    }
 
 @ingredient.named_config
 def GPSignatureModel():
@@ -37,12 +26,13 @@ def GPSignatureModel():
         'output_device': 'cuda'
     }
 
+
 @ingredient.named_config
 def GPGRUSignatureModel():
     """MGP Adapter with Signature Model (using Monte-carlo sampling)."""
     name = 'GPGRUSignatureModel'
     parameters = {
-        'sampling_type': 'monte_carlo' ,
+        'sampling_type': 'monte_carlo',
         'n_mc_smps': 10,
         'n_devices': 1,
         'output_device': 'cuda'

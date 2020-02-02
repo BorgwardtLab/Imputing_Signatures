@@ -1,0 +1,6 @@
+.idea/
+data/physionet_2012/test/
+data/physionet_2012/train/
+data/physionet_2012/train_labels.txt
+**/__pycache__/
+notebooks/

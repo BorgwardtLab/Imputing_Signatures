@@ -29,7 +29,7 @@ def main():
                         default='data',
                         help='Directory to data sets')
     parser.add_argument('--database', 
-                        default='UCR',
+                        default='UEA',
                         help='Which database to download: [UEA, UCR]')
     parser.add_argument('--used_format', 
                         default='ts',

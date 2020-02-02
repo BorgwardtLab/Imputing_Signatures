@@ -1,32 +1,72 @@
-"""Callbacks specific to sacred."""
-import os
+"""Callbacks for training loop."""
 from collections import defaultdict
-
 import gpytorch
 import numpy as np
-import torch
-from torch.utils.data import DataLoader
-
+import os
 from sklearn.metrics import roc_auc_score as auc
 from sklearn.metrics import average_precision_score as auprc
+import torch
+from tqdm import tqdm
 
-from src.callbacks import Callback
-from src.utils.train_utils import augment_labels
+from exp.utils import augment_labels, convert_to_base_type, compute_loss
 
 
-def convert_to_base_type(value):
-    """Convert a value into a python base datatype.
+# Hush the linter, child callbacks will always have different parameters than
+# the overwritten method of the parent class. Further kwargs will mostly be an
+# unused parameter due to the way arguments are passed.
+# pylint: disable=W0221,W0613
+class Callback:
+    """Callback for training loop."""
 
-    Args:
-        value: numpy or torch value
+    def on_epoch_begin(self, **local_variables):
+        """Call before an epoch begins."""
 
-    Returns:
-        Python base type
-    """
-    if isinstance(value, (torch.Tensor, np.generic)):
-        return value.item()
-    else:
-        return value
+    def on_epoch_end(self, **local_variables):
+        """Call after an epoch is finished."""
+
+    def on_batch_begin(self, **local_variables):
+        """Call before a batch is being processed."""
+
+    def on_batch_end(self, **local_variables):
+        """Call after a batch has be processed."""
+
+    def on_train_end(self, **local_variables):
+        """Call after training is finished."""
+
+
+class Progressbar(Callback):
+    """Callback to show a progressbar of the training progress."""
+
+    def __init__(self):
+        """Show a progressbar of the training progress."""
+        self.total_progress = None
+        self.epoch_progress = None
+
+    def on_epoch_begin(self, n_epochs, n_instances, **kwargs):
+        """Initialize the progressbar."""
+        if self.total_progress is None:
+            self.total_progress = tqdm(position=0, total=n_epochs, unit='epochs')
+        self.epoch_progress = tqdm(position=1, total=n_instances, unit='instances')
+
+    def _description(self, loss):
+        description = f'Loss: {loss:3.3f}'
+        return description
+
+    def on_batch_end(self, batch_size, loss, virtual_batch_size, **kwargs):
+        """Increment progressbar and update description."""
+        if virtual_batch_size is not None:
+            batch_size = virtual_batch_size
+        self.epoch_progress.update(batch_size)
+        description = self._description(loss)
+        self.epoch_progress.set_description(description)
+
+    def on_epoch_end(self, epoch, n_epochs, **kwargs):
+        """Increment total training progressbar."""
+        self.epoch_progress.close()
+        self.epoch_progress = None
+        self.total_progress.update(1)
+        if epoch == n_epochs:
+            self.total_progress.close()
 
 
 class LogTrainingLoss(Callback):
@@ -53,8 +93,7 @@ class LogTrainingLoss(Callback):
         for key in all_keys:
             last_average = self.logged_averages[key][-1]
             last_std = self.logged_stds[key][-1]
-            elements.append(
-                f'{key}: {last_average:3.3f} +/- {last_std:3.3f}')
+            elements.append(f'{key}: {last_average:3.3f} +/- {last_std:3.3f}')
         return ' '.join(elements)
 
     def on_epoch_begin(self, **kwargs):
@@ -106,8 +145,8 @@ class LogDatasetLoss(Callback):
         """
         self.prefix = dataset_name
         self.dataset = dataset
-        self.data_loader = DataLoader(self.dataset, batch_size=batch_size,
-                                      collate_fn=collate_fn, pin_memory=True, num_workers=8)
+        self.data_loader = torch.utils.data.DataLoader(self.dataset, batch_size=batch_size, collate_fn=collate_fn,
+                                                       pin_memory=True, num_workers=8)
         self.data_format = data_format
         self.loss_fn = loss_fn
         self.run = run
@@ -131,49 +170,9 @@ class LogDatasetLoss(Callback):
             y_score_total = []
 
         for d in self.data_loader:
-            
-            #Augment labels depending on whether mc sampling is used
-            #print(self.n_mc_smps)
-            if self.n_mc_smps > 1:
-                    y_true = augment_labels(d['label'], self.n_mc_smps)
-            else:
-                    y_true = d['label']
-            if self.data_format == 'GP':
-                #Unpack GP format data: 
-                inputs = d['inputs']
-                indices = d['indices'] 
-                values = d['values']
-                test_inputs = d['test_inputs']
-                test_indices = d['test_indices'] 
-                
-                if self.device == 'cuda':
-                    inputs  = inputs.cuda(non_blocking = True)
-                    indices = indices.cuda(non_blocking = True)
-                    values  = values.cuda(non_blocking = True)
-                    test_inputs = test_inputs.cuda(non_blocking = True)
-                    test_indices = test_indices.cuda(non_blocking = True) 
-
-                with gpytorch.settings.fast_pred_var(), gpytorch.settings.max_root_decomposition_size(
-                    self.max_root):
-    
-                    logits = model( inputs, 
-                                    indices, 
-                                    values, 
-                                    test_inputs, 
-                                    test_indices )
-            else: 
-                raise NotImplementedError('Data formats other than GP not implemented yet!')
-
-            #Compute loss
-            if self.device == 'cuda':
-                y_true = y_true.flatten().cuda( non_blocking=True )
-            else: 
-                y_true = y_true.flatten()
-            
-            loss = self.loss_fn(logits, y_true)
-
+            loss, logits, y_true = compute_loss(d, self.n_mc_smps, self.data_format, self.device, model, self.loss_fn,
+                                                callbacks=[])
             loss = convert_to_base_type(loss)
-
             losses['loss'].append(loss)
 
             if full_eval:
@@ -263,4 +262,3 @@ class LogDatasetLoss(Callback):
                 value,
                 self.iterations
             )
-

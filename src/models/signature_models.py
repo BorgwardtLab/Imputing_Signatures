@@ -11,6 +11,33 @@ def stack(tensors, dim):
         return torch.stack(tensors, dim)
 
 
+def become_constant_trick(x, lengths):
+    """
+    Input:
+        x: a tensor of shape (batch, stream, channel)
+        lengths: a tensor of shape (batch,)
+
+    Returns:
+        A tensor y of shape (batch, stream, channel), such that
+        y[i, j, k] = x[i, j, k] if j < lengths[i] else x[i, lengths[i], k]
+
+    This is useful when taking the signature afterwards, as it makes the signature not notice any changes made after
+    length.
+    """
+
+    batch, stream, channel = x.shape
+    if (stream < lengths).any():
+        raise ValueError("x's stream dimension is of length {} but one of the lengths is longer than this. lengths={}"
+                         "".format(stream, lengths))
+    lengths = lengths - 1  # go from length-of-sequence to index-of-final-element-in-sequence
+    expanded_lengths = lengths.unsqueeze(1).unsqueeze(2).expand(batch, 1, channel)
+    final_value = x.gather(dim=1, index=expanded_lengths)
+    final_value.expand(batch, stream, channel)
+    mask = torch.arange(0, stream).unsqueeze(0) > lengths.unsqueeze(1)
+    mask = mask.unsqueeze(2).expand(batch, stream, channel)
+    return x.masked_scatter(mask, final_value.masked_select(mask))
+
+
 class SignatureModel(nn.Module):
     """This is a reasonably simple, reasonably flexible signature model.
     It can be used as either as a shallow signature model, or as a simple deep signature model.
@@ -21,7 +48,7 @@ class SignatureModel(nn.Module):
     """
 
     def __init__(self, in_channels, extra_channels, channel_groups, include_original, include_time, sig_depth,
-                 out_channels):
+                 out_channels, final_network):
         """
         Inputs:
             in_channels: An integer specifying the number of input channels in the data.
@@ -38,7 +65,10 @@ class SignatureModel(nn.Module):
             sig_depth: What depth of signature to calculate. Careful - you'll get exponentially many more parameters as
                 this number is increased. Reducing the value of extra_channels or toggling off include_original will
                 also help reduce the number of parameters.
-            out_channels: How many channels to learn a linear map to, from the signature.
+            out_channels: How many channels to output.
+            final_network: What kind of network to use on the result of the signature. Should be a tuple or scalars,
+                representing the sizes of hidden layers in a small feedforward neural network. ReLU nonlinearities will
+                be placed in between. For example, an empty tuple represents no hidden layers; i.e. just a linear map.
 
         Examples:
             extra_channels=0, include_original=True, channel_groups=1:
@@ -51,11 +81,14 @@ class SignatureModel(nn.Module):
 
         super().__init__()
 
+        self.channel_groups = channel_groups
         self.sig_depth = sig_depth
 
         layer_sizes = () if extra_channels == 0 else (extra_channels,)
         self.augments = nn.ModuleList(signatory.Augment(in_channels=in_channels,
                                                         layer_sizes=layer_sizes,
+                                                        # IMPORTANT. We rely on kernel_size=1 to make trick for handling
+                                                        # variable-length inputs work.
                                                         kernel_size=1,
                                                         include_original=include_original,
                                                         include_time=include_time) for _ in range(channel_groups))
@@ -68,32 +101,44 @@ class SignatureModel(nn.Module):
         sig_channels = signatory.signature_channels(in_sig_channels, sig_depth)
         sig_channels *= channel_groups
 
-        self.linear = nn.Linear(sig_channels, out_channels)
+        layers = []
+        prev_size = sig_channels
+        for size in final_network:
+            layers.append(nn.Linear(prev_size, size))
+            layers.append(nn.ReLU())
+            prev_size = size
+        layers.append(nn.Linear(prev_size, out_channels))
+        self.neural = nn.Sequential(*layers)
 
-    def forward(self, x):
-        # x should be a three dimensional tensor (batch, stream, channel)
+    def forward(self, x, lengths):
+        # `x` should be a three dimensional tensor (batch, stream, channel)
+        # `lengths` should be a one dimensional tensor (batch,) giving the true length of each batch element along the
+        # stream dimension
+
+        batch, stream, channel = x.shape
+
+        x = become_constant_trick(x, lengths)
 
         x = stack([augment(x) for augment in self.augments], dim=1)
         # channel_group is essentially an extra batch dimension, but unfortunately signatory.signature doesn't support
         # multiple batch dimensions. So the trick is just to combine all the batch dimensions and then peel them apart
         # again afterwards.
-        batch, channel_group, stream, channels = x.shape
-        x = x.view(batch * channel_group, stream, channels)
+        x = x.view(batch * self.channel_groups, stream, channel)
         x = signatory.signature(x, self.sig_depth)
         x = x.view(batch, -1)
-        x = self.linear(x)
-        return torch.sigmoid(x)
+        x = self.neural(x)
+        return x
 
 
 class RNNSignatureModel(nn.Module):
     """This is a reasonably simple implementation of a model that:
     (a) Sweeps a linear augmentation over the data
     (b) Takes the signature (of the augmented data) over a series of sliding windows
-    (c) Runs a GRU over the sequence of signatures of each window.
+    (c) Runs a GRU or LSTM over the sequence of signatures of each window.
     """
 
     def __init__(self, in_channels, extra_channels, channel_groups, include_original, include_time, sig_depth, step,
-                 length, rnn_channels, out_channels, device='cuda'):
+                 length, rnn_channels, out_channels, rnn_type):
         """
         Inputs:
             in_channels: As SignatureModel.
@@ -106,7 +151,7 @@ class RNNSignatureModel(nn.Module):
             length: The length of the sliding window that a signature is taken over.
             rnn_channels: The size of the hidden state of the GRU.
             out_channels: As SignatureModel.
-            device: Running device (used for hidden state initialization). Default: cuda.
+            rnn_type: Either 'gru' or 'lstm'.
 
         Note:
             Unless step, length, and the length of the input stream all suitably line up, then the final pieces of data
@@ -117,16 +162,19 @@ class RNNSignatureModel(nn.Module):
 
         super().__init__()
 
+        self.channel_groups = channel_groups
         self.sig_depth = sig_depth
         self.step = step
         self.length = length
         self.rnn_channels = rnn_channels
         self.out_channels = out_channels
-        self.device = device
+        self.rnn_type = rnn_type
 
         layer_sizes = () if extra_channels == 0 else (extra_channels,)
         self.augments = nn.ModuleList(signatory.Augment(in_channels=in_channels,
                                                         layer_sizes=layer_sizes,
+                                                        # IMPORTANT. We rely on kernel_size=1 to make trick for handling
+                                                        # variable-length inputs work.
                                                         kernel_size=1,
                                                         include_original=include_original,
                                                         include_time=include_time) for _ in range(channel_groups))
@@ -138,25 +186,41 @@ class RNNSignatureModel(nn.Module):
             in_sig_channels += 1
         sig_channels = signatory.signature_channels(in_sig_channels, sig_depth)
         sig_channels *= channel_groups
-        self.rnn_cell = nn.GRUCell(sig_channels, rnn_channels)
+        if rnn_type == 'gru':
+            self.rnn_cell = nn.GRUCell(sig_channels, rnn_channels)
+        elif rnn_type == 'lstm':
+            self.rnn_cell = nn.LSTMCell(sig_channels, rnn_channels)
+        else:
+            raise ValueError('rnn_type of value "{}" not understood'.format(rnn_type))
 
         self.linear = nn.Linear(rnn_channels, out_channels)
 
-    def forward(self, x):
-        # x should be a three dimensional tensor (batch, stream, channel)
+    def forward(self, x, lengths):
+        # `x` should be a three dimensional tensor (batch, stream, channel)
+        # `lengths` should be a one dimensional tensor (batch,) giving the true length of each batch element along the
+        # stream dimension
+
+        batch, stream, channel = x.shape
+
+        x = become_constant_trick(x, lengths)
 
         x = stack([augment(x) for augment in self.augments], dim=1)
-        batch, channel_group, stream, channels = x.shape
-        x = x.view(batch * channel_group, stream, channels)
+        x = x.view(batch * self.channel_groups, stream, x.size(-1))
         path = signatory.Path(x, self.sig_depth)
 
         # x now represents the hidden state of the GRU
-        x = torch.zeros(batch, self.rnn_channels).to(self.device)
+        x = torch.zeros(batch, self.rnn_channels, device=x.device, dtype=x.dtype)
         for index in range(0, path.size(1) - self.length + 1, self.step):
             # Compute the signature over a sliding window
             signature_of_window = path.signature(index, index + self.length)
             signature_of_window = signature_of_window.view(batch, -1)
-            x = self.rnn_cell(signature_of_window, x)
+            # mask to only use the update when we're not exceeding the maximum length of this sequence
+            mask = (index + self.length) > lengths
+            mask = mask.unsqueeze(1).expand(batch, self.rnn_channels)
+            y = self.rnn_cell(signature_of_window, x)
+            if self.rnn_type == 'lstm':
+                y = torch.cat(y, dim=1)
+            x = torch.where(mask, x, y)
 
         x = self.linear(x)
-        return torch.sigmoid(x)
+        return x
