@@ -45,7 +45,8 @@ def GP_mc_GRUSignatureModel():
         'model__parameters__rnn_channels': ('Categorical', [16,32,64,128]) 
     }
     overrides = {
-        'model__name': 'GPGRUSignatureModel',
+        'model__name': 'GPRNNSignatureModel',
+        'model__parameters__rnn_type': 'gru',
         'model__parameters__sampling_type': 'monte_carlo',
         'model__parameters__n_mc_smps': 10,
         'model__parameters__n_devices': 1,
@@ -62,7 +63,8 @@ def GP_mom_GRUSignatureModel():
         'model__parameters__rnn_channels': ('Categorical', [16,32,64,128]) 
     }
     overrides = {
-        'model__name': 'GPGRUSignatureModel',
+        'model__name': 'GPRNNSignatureModel',
+        'model__parameters__rnn_type': 'gru',
         'model__parameters__sampling_type': 'moments',
         'model__parameters__n_mc_smps': 1,
         'model__parameters__n_devices': 1,

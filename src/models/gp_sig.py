@@ -50,15 +50,15 @@ class GPSignatureModel(nn.Module):
         return self.model(*data)
 
 
-class GPGRUSignatureModel(nn.Module):
+class GPRNNSignatureModel(nn.Module):
     """
-    GP Adapter combined with a GRU-SignatureModel
+    GP Adapter combined with a RNNSignatureModel
     """
 
     def __init__(self, n_input_dims, out_dimension, sampling_type, n_mc_smps, n_devices, output_device, sig_depth=2,
                  kernel='rbf', mode='normal', extra_channels=10, channel_groups=2, include_original=False, step=1,
-                 length=6, rnn_channels=32):
-        super(GPGRUSignatureModel, self).__init__()
+                 length=6, rnn_channels=32, rnn_type='gru'):
+        super(GPRNNSignatureModel, self).__init__()
         
         #safety guard:
         self.sampling_type = sampling_type
@@ -81,6 +81,7 @@ class GPGRUSignatureModel(nn.Module):
                                 length=length,
                                 rnn_channels=rnn_channels,
                                 out_channels=out_dimension,
+                                rnn_type=rnn_type
                                 )
         
         self.model = GPAdapter(clf,
