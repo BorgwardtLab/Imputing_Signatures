@@ -106,7 +106,10 @@ def dict_collate_fn(instances, padding_values=None):
             padding_shape = max_shape - instance_shape
             # Numpy wants the padding in the form before, after so we need to
             # prepend zeros
-            
+            if key == 'values':
+                # determine and append valid length
+                instance_len = instance_shape[0]
+
             if 'test_' in key:
                 #for GP format test inputs, test indices, put padded/invalid points
                 #directly in the time series between the channel switches for easier reshaping later 
@@ -146,6 +149,8 @@ def dict_collate_fn(instances, padding_values=None):
                     constant_values=padding_values[key]
                 )
             padded_output[key].append(padded)
+            if key == 'values':
+                padded_output['valid_lengths'].append(instance_len)
 
     # Combine instances into individual arrays
     combined = {
