@@ -3,6 +3,13 @@ from functools import partial
 import numpy as np
 import torch
 
+from src.imputation import (zero_imputation,
+                            linear_imputation,
+                            forward_fill_imputation,
+                            causal_imputation,
+                            indictator_imputation)
+
+
 def to_gpytorch_format(d, grid_spacing=1.0):
     """Convert dictionary with data into the gpytorch format.
 
@@ -148,15 +155,28 @@ def get_input_transform(data_format, grid_spacing):
     """
     Util function to return input transform of dataset, depending on data format
     Args:
-        - data_format: which data format to use depends on model
-            'GP' for models using gpytorch
-            'imputed' for imputed baselines
+        - data_format: which imputation scheme to use. Acceptable values are:
+            'GP'
+            'zero'
+            'linear'
+            'forwardfill'
+            'causal'
+            'indicator'
         - grid_spacing: number of hours between each query point / or imputed point depending on format
     """
+
     if data_format == 'GP':
         return partial(to_gpytorch_format, grid_spacing=grid_spacing)
-    elif data_format == 'imputed':
-        raise NotImplementedError('Pre-Imputed dataset not implemented yet!')
+    elif data_format == 'zero':
+        return zero_imputation
+    elif data_format == 'linear':
+        return linear_imputation
+    elif data_format == 'forwardfill':
+        return forward_fill_imputation
+    elif data_format == 'causal':
+        return causal_imputation
+    elif data_format == 'indicator':
+        return indictator_imputation
     else:
         raise ValueError('No valid data format provided!')
 

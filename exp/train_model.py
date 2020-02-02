@@ -211,17 +211,24 @@ def train_loop(model, dataset, data_format, loss_fn, collate_fn, n_epochs, batch
                 values = d['values'].to(device)
                 test_inputs = d['test_inputs'].to(device)
                 test_indices = d['test_indices'].to(device)
+            elif data_format in ('zero', 'linear', 'forwardfill', 'causal', 'indicator'):
+                raise NotImplementedError
+                # TODO!
             else:
-                raise NotImplementedError('Trainloop for other data formats not implemented yet.')
+                raise ValueError('Not understood data_format: {}'.format(data_format))
 
             execute_callbacks(callbacks, 'on_batch_begin', locals())
 
             model.train()
 
             if data_format == 'GP':
-                with gpytorch.settings.fast_pred_var(), \
-                     gpytorch.settings.max_root_decomposition_size(max_root):
+                with gpytorch.settings.fast_pred_var(), gpytorch.settings.max_root_decomposition_size(max_root):
                     logits = model(inputs, indices, values, test_inputs, test_indices)
+            elif data_format in ('zero', 'linear', 'forwardfill', 'causal', 'indicator'):
+                raise NotImplementedError
+                # TODO!
+            else:
+                raise ValueError('Not understood data_format: {}'.format(data_format))
 
             y_true = y_true.flatten().to(device)
 
