@@ -240,3 +240,28 @@ def causal_imputation(batch):
     batch['time'] = imputed_time
     batch['values'] = imputed_values
     return batch
+
+
+def indictator_imputation(batch):
+    """Simple indicator "imputation"; mark the missing values in a separate channel, and set the missing value to zero.
+
+    Returns:
+        A Python dictionary with three keys, 'time', 'values', 'labels'.
+            (a) batch['time'] will be a tensor of shape (batch, stream, 1)
+            (b) batch['values'] will be a tensor of shape (batch, stream, 2 * channels)
+            (c) batch['labels'] will be a tensor of shape (batch, 1)
+    """
+
+    values = batch['values']
+    indicators = torch.isnan(values)
+
+    batch, stream, channels = values.shape
+    imputed_values = torch.empty(batch, stream, 2 * channels, dtype=values.dtype, device=values.device)
+    imputed_values_no_indicator = imputed_values[:, :, :channels]
+    imputed_values_no_indicator.copy_(values)
+    imputed_values_no_indicator[indicators] = 0
+    imputed_values[:, :, channels:].copy_(indicators)
+
+    batch = dict(batch)  # copy
+    batch['values'] = imputed_values
+    return batch

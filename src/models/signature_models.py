@@ -21,7 +21,7 @@ class SignatureModel(nn.Module):
     """
 
     def __init__(self, in_channels, extra_channels, channel_groups, include_original, include_time, sig_depth,
-                 out_channels):
+                 out_channels, final_network):
         """
         Inputs:
             in_channels: An integer specifying the number of input channels in the data.
@@ -38,7 +38,10 @@ class SignatureModel(nn.Module):
             sig_depth: What depth of signature to calculate. Careful - you'll get exponentially many more parameters as
                 this number is increased. Reducing the value of extra_channels or toggling off include_original will
                 also help reduce the number of parameters.
-            out_channels: How many channels to learn a linear map to, from the signature.
+            out_channels: How many channels to output.
+            final_network: What kind of network to use on the result of the signature. Should be a tuple or scalars,
+                representing the sizes of hidden layers in a small feedforward neural network. ReLU nonlinearities will
+                be placed in between. For example, an empty tuple represents no hidden layers; i.e. just a linear map.
 
         Examples:
             extra_channels=0, include_original=True, channel_groups=1:
@@ -68,7 +71,14 @@ class SignatureModel(nn.Module):
         sig_channels = signatory.signature_channels(in_sig_channels, sig_depth)
         sig_channels *= channel_groups
 
-        self.linear = nn.Linear(sig_channels, out_channels)
+        layers = []
+        prev_size = sig_channels
+        for size in final_network:
+            layers.append(nn.Linear(prev_size, size))
+            layers.append(nn.ReLU())
+            prev_size = size
+        layers.append(nn.Linear(prev_size, out_channels))
+        self.neural = nn.Sequential(*layers)
 
     def forward(self, x):
         # x should be a three dimensional tensor (batch, stream, channel)
@@ -81,19 +91,19 @@ class SignatureModel(nn.Module):
         x = x.view(batch * channel_group, stream, channels)
         x = signatory.signature(x, self.sig_depth)
         x = x.view(batch, -1)
-        x = self.linear(x)
-        return torch.sigmoid(x)
+        x = self.neural(x)
+        return x
 
 
 class RNNSignatureModel(nn.Module):
     """This is a reasonably simple implementation of a model that:
     (a) Sweeps a linear augmentation over the data
     (b) Takes the signature (of the augmented data) over a series of sliding windows
-    (c) Runs a GRU over the sequence of signatures of each window.
+    (c) Runs a GRU or LSTM over the sequence of signatures of each window.
     """
 
     def __init__(self, in_channels, extra_channels, channel_groups, include_original, include_time, sig_depth, step,
-                 length, rnn_channels, out_channels, device='cuda'):
+                 length, rnn_channels, out_channels, rnn_type):
         """
         Inputs:
             in_channels: As SignatureModel.
@@ -106,7 +116,7 @@ class RNNSignatureModel(nn.Module):
             length: The length of the sliding window that a signature is taken over.
             rnn_channels: The size of the hidden state of the GRU.
             out_channels: As SignatureModel.
-            device: Running device (used for hidden state initialization). Default: cuda.
+            rnn_type: Either 'gru' or 'lstm'.
 
         Note:
             Unless step, length, and the length of the input stream all suitably line up, then the final pieces of data
@@ -122,7 +132,6 @@ class RNNSignatureModel(nn.Module):
         self.length = length
         self.rnn_channels = rnn_channels
         self.out_channels = out_channels
-        self.device = device
 
         layer_sizes = () if extra_channels == 0 else (extra_channels,)
         self.augments = nn.ModuleList(signatory.Augment(in_channels=in_channels,
@@ -138,7 +147,12 @@ class RNNSignatureModel(nn.Module):
             in_sig_channels += 1
         sig_channels = signatory.signature_channels(in_sig_channels, sig_depth)
         sig_channels *= channel_groups
-        self.rnn_cell = nn.GRUCell(sig_channels, rnn_channels)
+        if rnn_type == 'gru':
+            self.rnn_cell = nn.GRUCell(sig_channels, rnn_channels)
+        elif rnn_type == 'lstm':
+            self.rnn_cell = nn.LSTMCell(sig_channels, rnn_channels)
+        else:
+            raise ValueError('rnn_type of value "{}" not understood'.format(rnn_type))
 
         self.linear = nn.Linear(rnn_channels, out_channels)
 
@@ -151,7 +165,7 @@ class RNNSignatureModel(nn.Module):
         path = signatory.Path(x, self.sig_depth)
 
         # x now represents the hidden state of the GRU
-        x = torch.zeros(batch, self.rnn_channels).to(self.device)
+        x = torch.zeros(batch, self.rnn_channels, device=x.device, dtype=x.dtype)
         for index in range(0, path.size(1) - self.length + 1, self.step):
             # Compute the signature over a sliding window
             signature_of_window = path.signature(index, index + self.length)
@@ -159,4 +173,4 @@ class RNNSignatureModel(nn.Module):
             x = self.rnn_cell(signature_of_window, x)
 
         x = self.linear(x)
-        return torch.sigmoid(x)
+        return x
