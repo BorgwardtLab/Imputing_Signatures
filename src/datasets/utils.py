@@ -155,6 +155,7 @@ def dict_collate_fn(instances, padding_values=None):
 
     return combined
 
+
 def get_input_transform(data_format, grid_spacing):
     """
     Util function to return input transform of dataset, depending on data format 
@@ -171,7 +172,8 @@ def get_input_transform(data_format, grid_spacing):
         raise NotImplementedError('Pre-Imputed dataset not implemented yet!')
     else:
         raise ValueError('No valid data format provided!') 
-     
+
+
 def get_collate_fn(data_format, n_input_dims):
     """
     Util function to retrun collate_fn which might depend on data format / used model

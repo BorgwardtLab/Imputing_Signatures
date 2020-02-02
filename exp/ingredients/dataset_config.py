@@ -1,9 +1,11 @@
 """Module containing sacred functions for handling ML models."""
+
 import inspect
 from sacred import Ingredient
 from src import datasets
 
 ingredient = Ingredient('dataset')
+
 
 @ingredient.config
 def cfg():
@@ -11,6 +13,7 @@ def cfg():
     name = ''
     parameters = {
     }
+
 
 @ingredient.named_config
 def Physionet2012():
@@ -40,9 +43,7 @@ def get_instance(name, parameters, _log, **kwargs):
         if key not in available_parameters.keys():
             # If a parameter is defined which does not fit to the constructor
             # raise an error
-            raise ValueError(
-                f'{key} is not available in {name}\'s Constructor'
-            )
+            raise ValueError(f'{key} is not available in {name}\'s Constructor')
 
     # Now check if optional parameters of the constructor are not defined
     optional_parameters = list(available_parameters.keys())[4:]

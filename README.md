@@ -23,17 +23,3 @@ Please install the dependencies as indicated in the Pipfile
 ### For instance, to inspect all set parameters in one of the commands above, use:
 ```> python exp/train_model.py print_config with model.GPSignatureModel dataset.Physionet2012 model.parameters.sampling_type=moments model.parameters.sig_depth=3```
 
-
-
-
-## Below instructions are from an early phase of the projects and not guaranteed to still work:
-### Hadamard MGP Adapter with off-the-shelf Deep Signature Model on Synthetic Data:
-```> python scripts/test_mgp_adapter.py```
-
-For quickly testing this on cpu (instead of gpu) use:
-```> python scripts/test_mgp_adapter.py --device cpu```
-
-### First script running on Physionet2012:
-```> python scripts/mgp_adapter_physionet2012.py```
-
-
