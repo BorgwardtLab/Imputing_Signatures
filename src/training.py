@@ -7,11 +7,11 @@ import numpy as np
 from src.utils.train_utils import augment_labels
 
 
-class TrainingLoop():
+class TrainingLoop:
     """Training a model using a dataset."""
 
-    def __init__(self, model, dataset, data_format, loss_fn, collate_fn, n_epochs, batch_size, virtual_batch_size, learning_rate,
-                 n_mc_smps=1, max_root=25, weight_decay=1e-5, device='cuda', callbacks=None):
+    def __init__(self, model, dataset, data_format, loss_fn, collate_fn, n_epochs, batch_size, virtual_batch_size,
+                 learning_rate, n_mc_smps=1, max_root=25, weight_decay=1e-5, device='cuda', callbacks=None):
         """Training of a model using a dataset and the defined callbacks.
 
         Args:
@@ -75,7 +75,7 @@ class TrainingLoop():
         virtual_batch_size = self.virtual_batch_size
         if virtual_batch_size is not None:
             virtual_scaling = virtual_batch_size / batch_size
-            if virtual_batch_size == batch_size: #if virtual batch_size is 'inactive' / same as bs, set it to None
+            if virtual_batch_size == batch_size:  # if virtual batch_size is 'inactive' / same as bs, set it to None
                 virtual_batch_size = None
         learning_rate = self.learning_rate
         n_mc_smps = self.n_mc_smps
@@ -83,12 +83,10 @@ class TrainingLoop():
 
         n_instances = len(dataset)
         train_loader = DataLoader(dataset, batch_size=batch_size, collate_fn=collate_fn, 
-                                  shuffle=True, pin_memory=True, num_workers=8) #drop_last=True)
+                                  shuffle=True, pin_memory=True, num_workers=8)  # drop_last=True)
         n_batches = len(train_loader)
 
-        optimizer = torch.optim.Adam(
-            model.parameters(), lr=learning_rate,
-            weight_decay=self.weight_decay)
+        optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=self.weight_decay)
 
         epoch = 1
         for epoch in range(1, n_epochs+1):
@@ -96,14 +94,14 @@ class TrainingLoop():
                 break
             optimizer.zero_grad()
             for batch, d in enumerate(train_loader):
-                #if we use mc sampling, expand labels to match multiple predictions
+                # if we use mc sampling, expand labels to match multiple predictions
                 if n_mc_smps > 1:
                     y_true = augment_labels(d['label'], n_mc_smps)
                 else:
                     y_true = d['label']
 
                 if self.data_format == 'GP':
-                    #GP format of data:
+                    # GP format of data:
                     inputs = d['inputs']
                     indices = d['indices'] 
                     values = d['values']
@@ -111,11 +109,11 @@ class TrainingLoop():
                     test_indices = d['test_indices'] 
                     
                     if self.device == 'cuda':
-                        inputs  = inputs.cuda(non_blocking = True)
-                        indices = indices.cuda(non_blocking = True)
-                        values  = values.cuda(non_blocking = True)
-                        test_inputs = test_inputs.cuda(non_blocking = True)
-                        test_indices = test_indices.cuda(non_blocking = True)
+                        inputs = inputs.cuda(non_blocking=True)
+                        indices = indices.cuda(non_blocking=True)
+                        values = values.cuda(non_blocking=True)
+                        test_inputs = test_inputs.cuda(non_blocking=True)
+                        test_indices = test_indices.cuda(non_blocking=True)
                 else:
                     raise NotImplementedError('Trainloop for other data formats not implemented yet.')
                  
@@ -125,14 +123,15 @@ class TrainingLoop():
                 model.train()
                 
                 if self.data_format == 'GP':
-                    with gpytorch.settings.fast_pred_var(), gpytorch.settings.max_root_decomposition_size(self.max_root):
-                        logits = model( inputs, 
-                                        indices, 
-                                        values, 
-                                        test_inputs, 
-                                        test_indices)
+                    with gpytorch.settings.fast_pred_var(),\
+                         gpytorch.settings.max_root_decomposition_size(self.max_root):
+                        logits = model(inputs,
+                                       indices,
+                                       values,
+                                       test_inputs,
+                                       test_indices)
 
-                #Compute Loss:
+                # Compute Loss:
                 if self.device == 'cuda':
                     y_true = y_true.flatten().cuda(non_blocking=True) 
                 else: 
@@ -183,4 +182,3 @@ def remove_self(dictionary):
     """
     del dictionary['self']
     return dictionary
-

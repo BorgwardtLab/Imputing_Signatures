@@ -89,12 +89,12 @@ def train(n_epochs, batch_size, virtual_batch_size, learning_rate, weight_decay,
     except IndexError:
         pass
 
-    #Check if virtual batch size is defined and valid:
+    # Check if virtual batch size is defined and valid:
     if virtual_batch_size is not None:
         if virtual_batch_size % batch_size != 0:
             raise ValueError(f'Virtual batch size {virtual_batch_size} has to be a multiple of batch size {batch_size}') 
     
-    #Define dataset transform:
+    # Define dataset transform:
     input_transform = get_input_transform(data_format, grid_spacing)
 
     # Get data, sacred does some magic here so we need to hush the linter
@@ -114,21 +114,21 @@ def train(n_epochs, batch_size, virtual_batch_size, learning_rate, weight_decay,
     # Get model, sacred does some magic here so we need to hush the linter
     # pylint: disable=E1120
 
-    #n_devices = torch.cuda.device_count()
+    # n_devices = torch.cuda.device_count()
     model = model_config.get_instance(n_input_dims, out_dimension)
     print(f'Number of trainable Parameters: {count_parameters(model)}')
     model.to(device)
    
-    #Safety guard, ensure that if mc_sampling is inactive that n_mc_smps are 1 to
-    #prevent unwanted label augmentation 
+    # Safety guard, ensure that if mc_sampling is inactive that n_mc_smps are 1 to
+    # prevent unwanted label augmentation
     if not hasattr(model, 'sampling_type'):
         n_mc_smps = 1     
     elif model.sampling_type != 'monte_carlo':
         n_mc_smps = 1
  
     # Loss function:
-    #loss_fn = nn.CrossEntropyLoss(reduction='mean')
-    loss_fn = torch.nn.BCELoss() 
+    #loss_fn = nn.CrossEntropyLoss()
+    loss_fn = torch.nn.BCELossWithLogits()
 
     callbacks = [
         LogTrainingLoss(_run, print_progress=quiet),
