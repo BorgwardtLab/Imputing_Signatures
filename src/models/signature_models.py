@@ -11,6 +11,33 @@ def stack(tensors, dim):
         return torch.stack(tensors, dim)
 
 
+def become_constant_trick(x, lengths):
+    """
+    Input:
+        x: a tensor of shape (batch, stream, channel)
+        lengths: a tensor of shape (batch,)
+
+    Returns:
+        A tensor y of shape (batch, stream, channel), such that
+        y[i, j, k] = x[i, j, k] if j < lengths[i] else x[i, lengths[i], k]
+
+    This is useful when taking the signature afterwards, as it makes the signature not notice any changes made after
+    length.
+    """
+
+    batch, stream, channel = x.shape
+    if (stream < lengths).any():
+        raise ValueError("x's stream dimension is of length {} but one of the lengths is longer than this. lengths={}"
+                         "".format(stream, lengths))
+    lengths = lengths - 1  # go from length-of-sequence to index-of-final-element-in-sequence
+    expanded_lengths = lengths.unsqueeze(1).unsqueeze(2).expand(batch, 1, channel)
+    final_value = x.gather(dim=1, index=expanded_lengths)
+    final_value.expand(batch, stream, channel)
+    mask = torch.arange(0, stream).unsqueeze(0) > lengths.unsqueeze(1)
+    mask = mask.unsqueeze(2).expand(batch, stream, channel)
+    return x.masked_scatter(mask, final_value.masked_select(mask))
+
+
 class SignatureModel(nn.Module):
     """This is a reasonably simple, reasonably flexible signature model.
     It can be used as either as a shallow signature model, or as a simple deep signature model.
@@ -54,11 +81,14 @@ class SignatureModel(nn.Module):
 
         super().__init__()
 
+        self.channel_groups = channel_groups
         self.sig_depth = sig_depth
 
         layer_sizes = () if extra_channels == 0 else (extra_channels,)
         self.augments = nn.ModuleList(signatory.Augment(in_channels=in_channels,
                                                         layer_sizes=layer_sizes,
+                                                        # IMPORTANT. We rely on kernel_size=1 to make trick for handling
+                                                        # variable-length inputs work.
                                                         kernel_size=1,
                                                         include_original=include_original,
                                                         include_time=include_time) for _ in range(channel_groups))
@@ -80,15 +110,20 @@ class SignatureModel(nn.Module):
         layers.append(nn.Linear(prev_size, out_channels))
         self.neural = nn.Sequential(*layers)
 
-    def forward(self, x):
-        # x should be a three dimensional tensor (batch, stream, channel)
+    def forward(self, x, lengths):
+        # `x` should be a three dimensional tensor (batch, stream, channel)
+        # `lengths` should be a one dimensional tensor (batch,) giving the true length of each batch element along the
+        # stream dimension
+
+        batch, stream, channel = x.shape
+
+        x = become_constant_trick(x, lengths)
 
         x = stack([augment(x) for augment in self.augments], dim=1)
         # channel_group is essentially an extra batch dimension, but unfortunately signatory.signature doesn't support
         # multiple batch dimensions. So the trick is just to combine all the batch dimensions and then peel them apart
         # again afterwards.
-        batch, channel_group, stream, channels = x.shape
-        x = x.view(batch * channel_group, stream, channels)
+        x = x.view(batch * self.channel_groups, stream, channel)
         x = signatory.signature(x, self.sig_depth)
         x = x.view(batch, -1)
         x = self.neural(x)
@@ -127,15 +162,19 @@ class RNNSignatureModel(nn.Module):
 
         super().__init__()
 
+        self.channel_groups = channel_groups
         self.sig_depth = sig_depth
         self.step = step
         self.length = length
         self.rnn_channels = rnn_channels
         self.out_channels = out_channels
+        self.rnn_type = rnn_type
 
         layer_sizes = () if extra_channels == 0 else (extra_channels,)
         self.augments = nn.ModuleList(signatory.Augment(in_channels=in_channels,
                                                         layer_sizes=layer_sizes,
+                                                        # IMPORTANT. We rely on kernel_size=1 to make trick for handling
+                                                        # variable-length inputs work.
                                                         kernel_size=1,
                                                         include_original=include_original,
                                                         include_time=include_time) for _ in range(channel_groups))
@@ -156,12 +195,17 @@ class RNNSignatureModel(nn.Module):
 
         self.linear = nn.Linear(rnn_channels, out_channels)
 
-    def forward(self, x):
-        # x should be a three dimensional tensor (batch, stream, channel)
+    def forward(self, x, lengths):
+        # `x` should be a three dimensional tensor (batch, stream, channel)
+        # `lengths` should be a one dimensional tensor (batch,) giving the true length of each batch element along the
+        # stream dimension
+
+        batch, stream, channel = x.shape
+
+        x = become_constant_trick(x, lengths)
 
         x = stack([augment(x) for augment in self.augments], dim=1)
-        batch, channel_group, stream, channels = x.shape
-        x = x.view(batch * channel_group, stream, channels)
+        x = x.view(batch * self.channel_groups, stream, x.size(-1))
         path = signatory.Path(x, self.sig_depth)
 
         # x now represents the hidden state of the GRU
@@ -170,7 +214,13 @@ class RNNSignatureModel(nn.Module):
             # Compute the signature over a sliding window
             signature_of_window = path.signature(index, index + self.length)
             signature_of_window = signature_of_window.view(batch, -1)
-            x = self.rnn_cell(signature_of_window, x)
+            # mask to only use the update when we're not exceeding the maximum length of this sequence
+            mask = (index + self.length) > lengths
+            mask = mask.unsqueeze(1).expand(batch, self.rnn_channels)
+            y = self.rnn_cell(signature_of_window, x)
+            if self.rnn_type == 'lstm':
+                y = torch.cat(y, dim=1)
+            x = torch.where(mask, x, y)
 
         x = self.linear(x)
         return x

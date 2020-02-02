@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 
 
@@ -10,6 +11,7 @@ class LSTM(nn.Module):
     """
 
     def __init__(self, out_channels, **kwargs):
+        super().__init__()
         hidden_size = kwargs['hidden_size']
         kwargs['batch_first'] = True
         kwargs['bidirectional'] = False
@@ -17,7 +19,13 @@ class LSTM(nn.Module):
         self.lstm = nn.LSTM(**kwargs)
         self.linear = nn.Linear(2 * hidden_size, out_channels)
 
-    def forward(self, x):
+    def forward(self, x, lengths):
+        # `x` should be a three dimensional tensor (batch, stream, channel)
+        # `lengths` should be a one dimensional tensor (batch,) giving the true length of each batch element along the
+        # stream dimension
+
+        x = nn.utils.rnn.pack_padded_sequence(x, lengths, batch_first=True, enforce_sorted=False)
+
         _, (h, c) = self.lstm(x)
         h = h[-1]
         c = c[-1]
@@ -35,6 +43,7 @@ class GRU(nn.Module):
     """
 
     def __init__(self, out_channels, **kwargs):
+        super().__init__()
         kwargs['batch_first'] = True
         kwargs['bidirectional'] = False
         self.hidden_size = kwargs['hidden_size']
@@ -43,7 +52,13 @@ class GRU(nn.Module):
         self.gru = nn.GRU(**kwargs)
         self.linear = nn.Linear(self.hidden_size, out_channels)
 
-    def forward(self, x):
+    def forward(self, x, lengths):
+        # `x` should be a three dimensional tensor (batch, stream, channel)
+        # `lengths` should be a one dimensional tensor (batch,) giving the true length of each batch element along the
+        # stream dimension
+
+        x = nn.utils.rnn.pack_padded_sequence(x, lengths, batch_first=True, enforce_sorted=False)
+
         _, x = self.gru(x)
         x = x[-1]  # take the last GRU layer
         x = self.linear(x)
