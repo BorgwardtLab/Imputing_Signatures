@@ -8,7 +8,7 @@ from sklearn.metrics import average_precision_score as auprc
 import torch
 from tqdm import tqdm
 
-from exp.utils import augment_labels, convert_to_base_type
+from exp.utils import augment_labels, convert_to_base_type, compute_loss
 
 
 # Hush the linter, child callbacks will always have different parameters than
@@ -38,22 +38,15 @@ class Progressbar(Callback):
     """Callback to show a progressbar of the training progress."""
 
     def __init__(self):
-        """Show a progressbar of the training progress.
-
-        Args:
-            print_loss_components: Print all components of the loss in the
-                progressbar
-        """
+        """Show a progressbar of the training progress."""
         self.total_progress = None
         self.epoch_progress = None
 
     def on_epoch_begin(self, n_epochs, n_instances, **kwargs):
         """Initialize the progressbar."""
         if self.total_progress is None:
-            self.total_progress = tqdm(
-                position=0, total=n_epochs, unit='epochs')
-        self.epoch_progress = tqdm(
-            position=1, total=n_instances, unit='instances')
+            self.total_progress = tqdm(position=0, total=n_epochs, unit='epochs')
+        self.epoch_progress = tqdm(position=1, total=n_instances, unit='instances')
 
     def _description(self, loss):
         description = f'Loss: {loss:3.3f}'
@@ -100,8 +93,7 @@ class LogTrainingLoss(Callback):
         for key in all_keys:
             last_average = self.logged_averages[key][-1]
             last_std = self.logged_stds[key][-1]
-            elements.append(
-                f'{key}: {last_average:3.3f} +/- {last_std:3.3f}')
+            elements.append(f'{key}: {last_average:3.3f} +/- {last_std:3.3f}')
         return ' '.join(elements)
 
     def on_epoch_begin(self, **kwargs):
@@ -178,49 +170,9 @@ class LogDatasetLoss(Callback):
             y_score_total = []
 
         for d in self.data_loader:
-            
-            #Augment labels depending on whether mc sampling is used
-            #print(self.n_mc_smps)
-            if self.n_mc_smps > 1:
-                    y_true = augment_labels(d['label'], self.n_mc_smps)
-            else:
-                    y_true = d['label']
-            if self.data_format == 'GP':
-                #Unpack GP format data: 
-                inputs = d['inputs']
-                indices = d['indices'] 
-                values = d['values']
-                test_inputs = d['test_inputs']
-                test_indices = d['test_indices'] 
-                
-                if self.device == 'cuda':
-                    inputs  = inputs.cuda(non_blocking = True)
-                    indices = indices.cuda(non_blocking = True)
-                    values  = values.cuda(non_blocking = True)
-                    test_inputs = test_inputs.cuda(non_blocking = True)
-                    test_indices = test_indices.cuda(non_blocking = True) 
-
-                with gpytorch.settings.fast_pred_var(), gpytorch.settings.max_root_decomposition_size(
-                    self.max_root):
-    
-                    logits = model( inputs, 
-                                    indices, 
-                                    values, 
-                                    test_inputs, 
-                                    test_indices )
-            else: 
-                raise NotImplementedError('Data formats other than GP not implemented yet!')
-
-            #Compute loss
-            if self.device == 'cuda':
-                y_true = y_true.flatten().cuda( non_blocking=True )
-            else: 
-                y_true = y_true.flatten()
-            
-            loss = self.loss_fn(logits, y_true)
-
+            loss, logits, y_true = compute_loss(d, self.n_mc_smps, self.data_format, self.device, model, self.loss_fn,
+                                                callbacks=[])
             loss = convert_to_base_type(loss)
-
             losses['loss'].append(loss)
 
             if full_eval:

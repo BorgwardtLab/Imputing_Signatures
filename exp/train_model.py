@@ -12,7 +12,7 @@ sys.path.append(os.getcwd())
 from exp.callbacks import Callback, Progressbar, LogDatasetLoss, LogTrainingLoss
 from exp.format import get_input_transform, get_collate_fn
 from exp.ingredients import dataset_config, model_config
-from exp.utils import augment_labels, count_parameters, plot_losses
+from exp.utils import count_parameters, plot_losses, execute_callbacks, compute_loss
 
 
 # Test for debugging sacred read-only error
@@ -167,15 +167,6 @@ def train(n_epochs, batch_size, virtual_batch_size, learning_rate, weight_decay,
     return result
 
 
-def execute_callbacks(callbacks, hook, local_variables):
-    stop = False
-    for callback in callbacks:
-        # Convert return value to bool --> if callback doesn't return
-        # anything we interpret it as False
-        stop |= bool(getattr(callback, hook)(**local_variables))
-    return stop
-
-
 def train_loop(model, dataset, data_format, loss_fn, collate_fn, n_epochs, batch_size, virtual_batch_size,
                learning_rate, n_mc_smps=1, max_root=25, weight_decay=1e-5, device='cuda', callbacks=None):
     if callbacks is None:
@@ -198,41 +189,7 @@ def train_loop(model, dataset, data_format, loss_fn, collate_fn, n_epochs, batch
             break
         optimizer.zero_grad()
         for batch, d in enumerate(train_loader):
-            # if we use mc sampling, expand labels to match multiple predictions
-            if n_mc_smps > 1:
-                y_true = augment_labels(d['label'], n_mc_smps)
-            else:
-                y_true = d['label']
-
-            if data_format == 'GP':
-                # GP format of data:
-                inputs = d['inputs'].to(device)
-                indices = d['indices'].to(device)
-                values = d['values'].to(device)
-                test_inputs = d['test_inputs'].to(device)
-                test_indices = d['test_indices'].to(device)
-            elif data_format in ('zero', 'linear', 'forwardfill', 'causal', 'indicator'):
-                raise NotImplementedError
-                # TODO!
-            else:
-                raise ValueError('Not understood data_format: {}'.format(data_format))
-
-            execute_callbacks(callbacks, 'on_batch_begin', locals())
-
-            model.train()
-
-            if data_format == 'GP':
-                with gpytorch.settings.fast_pred_var(), gpytorch.settings.max_root_decomposition_size(max_root):
-                    logits = model(inputs, indices, values, test_inputs, test_indices)
-            elif data_format in ('zero', 'linear', 'forwardfill', 'causal', 'indicator'):
-                raise NotImplementedError
-                # TODO!
-            else:
-                raise ValueError('Not understood data_format: {}'.format(data_format))
-
-            y_true = y_true.flatten().to(device)
-
-            loss = loss_fn(logits, y_true)
+            loss, _, _ = compute_loss(d, n_mc_smps, data_format, device, model, loss_fn, callbacks)
 
             loss = loss / virtual_scaling
             loss.backward()
