@@ -135,9 +135,13 @@ def train(n_epochs, batch_size, virtual_batch_size, learning_rate, weight_decay,
     out_dimension = train_dataset.n_classes
     collate_fn = get_collate_fn(data_format, n_input_dims) 
     
+    # In case we use indicator imputation, double the input dim for model:
+    if data_format == 'indicator':
+        n_input_dims *= 2
+    
     # Get model, sacred does some magic here so we need to hush the linter
     # pylint: disable=E1120
-
+    
     model = model_config.get_instance(n_input_dims, out_dimension)
     print(f'Number of trainable Parameters: {count_parameters(model)}')
     model.to(device)
