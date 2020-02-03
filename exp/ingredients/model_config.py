@@ -30,8 +30,19 @@ def GPSignatureModel():
 def ImputedSignatureModel():
     """Signature Model (requiring imputation!)."""
     name = 'ImputedSignatureModel'
+
+@ingredient.named_config
+def ImputedRNNSignatureModel():
+    """RNNSignature Model (requiring imputation!)."""
+    name = 'ImputedRNNSignatureModel'
+
+@ingredient.named_config
+def ImputedRNNModel():
+    """RNN Model (requiring imputation!)."""
+    name = 'ImputedRNNModel'
     parameters = {
-    }
+        'rnn_type': 'gru' #lstm alternative
+    }  
 
 @ingredient.named_config
 def GPRNNSignatureModel():
