@@ -66,20 +66,23 @@ def execute_callbacks(callbacks, hook, local_variables):
     return stop
 
 
-def compute_loss(d, n_mc_smps, data_format, device, model, loss_fn, callbacks):
+def compute_loss(d, data_format, device, model, loss_fn, callbacks, imputation_params):
     # if we use mc sampling, expand labels to match multiple predictions
-    if n_mc_smps > 1:
-        y_true = augment_labels(d['label'], n_mc_smps)
-    else:
-        y_true = d['label']
-
+    
     if data_format == 'GP':
+        n_mc_smps = imputation_params['n_mc_smps']
+        max_root = imputation_params['max_root']
+        if n_mc_smps > 1:
+            y_true = augment_labels(d['label'], n_mc_smps)
+        else:
+            y_true = d['label']
         # GP format of data:
         inputs = d['inputs'].to(device)
         indices = d['indices'].to(device)
         values = d['values'].to(device)
         test_inputs = d['test_inputs'].to(device)
         test_indices = d['test_indices'].to(device)
+        valid_lengths = d['valid_lengths'].to(device)
     elif data_format in ('zero', 'linear', 'forwardfill', 'causal', 'indicator'):
         raise NotImplementedError
         # TODO!
@@ -92,7 +95,7 @@ def compute_loss(d, n_mc_smps, data_format, device, model, loss_fn, callbacks):
 
     if data_format == 'GP':
         with gpytorch.settings.fast_pred_var(), gpytorch.settings.max_root_decomposition_size(max_root):
-            logits = model(inputs, indices, values, test_inputs, test_indices)
+            logits = model(inputs, indices, values, test_inputs, test_indices, valid_lengths)
     elif data_format in ('zero', 'linear', 'forwardfill', 'causal', 'indicator'):
         raise NotImplementedError
         # TODO!
@@ -100,6 +103,7 @@ def compute_loss(d, n_mc_smps, data_format, device, model, loss_fn, callbacks):
         raise ValueError('Not understood data_format: {}'.format(data_format))
 
     y_true = y_true.flatten().to(device)
-
+    if logits.shape[1] == 1:
+        logits = logits.squeeze(-1)
     loss = loss_fn(logits, y_true)
     return loss, logits, y_true

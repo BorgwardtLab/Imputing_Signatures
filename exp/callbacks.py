@@ -122,7 +122,7 @@ class LogDatasetLoss(Callback):
     """Logging of loss and other eval measures during and after training into sacred run."""
 
     def __init__(self, dataset_name, dataset, data_format, collate_fn, loss_fn, run, 
-                 batch_size=64, max_root=25, n_mc_smps=1, early_stopping=None, save_path=None,
+                 imputation_params, batch_size=64, early_stopping=None, save_path=None,
                  device='cpu', print_progress=True):
         """Create logger callback.
 
@@ -151,8 +151,7 @@ class LogDatasetLoss(Callback):
         self.loss_fn = loss_fn
         self.run = run
         self.print_progress = print_progress
-        self.max_root = max_root
-        self.n_mc_smps = n_mc_smps
+        self.imputation_params = imputation_params
         self.early_stopping = early_stopping
         self.save_path = save_path
         self.device = device
@@ -170,8 +169,8 @@ class LogDatasetLoss(Callback):
             y_score_total = []
 
         for d in self.data_loader:
-            loss, logits, y_true = compute_loss(d, self.n_mc_smps, self.data_format, self.device, model, self.loss_fn,
-                                                callbacks=[])
+            loss, logits, y_true = compute_loss(d, self.data_format, self.device, model, self.loss_fn,
+                                                callbacks=[], imputation_params=self.imputation_params)
             loss = convert_to_base_type(loss)
             losses['loss'].append(loss)
 
