@@ -79,7 +79,7 @@ def train_loop(model, dataset, data_format, loss_fn, collate_fn, n_epochs, batch
         virtual_scaling = virtual_batch_size / batch_size
 
     train_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, collate_fn=collate_fn, shuffle=True,
-                                               pin_memory=True, num_workers=8)
+                                               pin_memory=True, num_workers=4)
     n_instances = len(dataset)
     n_batches = len(train_loader)
 

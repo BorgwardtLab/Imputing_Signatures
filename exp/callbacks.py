@@ -146,7 +146,7 @@ class LogDatasetLoss(Callback):
         self.prefix = dataset_name
         self.dataset = dataset
         self.data_loader = torch.utils.data.DataLoader(self.dataset, batch_size=batch_size, collate_fn=collate_fn,
-                                                       pin_memory=True, num_workers=8)
+                                                       pin_memory=True, num_workers=4)
         self.data_format = data_format
         self.loss_fn = loss_fn
         self.run = run
