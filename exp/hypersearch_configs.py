@@ -4,6 +4,7 @@ def Physionet2012():
 def add_datasets(experiment):
     experiment.named_config(Physionet2012)
 
+## Simple Signature Models:
 
 def GP_mc_SignatureModel():
     train_module = 'train_model'
@@ -37,6 +38,8 @@ def GP_mom_SignatureModel():
         'model__parameters__final_network': [30,30]
     }
 
+## RNN Signature Models
+
 def GP_mc_GRUSignatureModel():
     train_module = 'train_model'
     hyperparameter_space = {   
@@ -44,7 +47,8 @@ def GP_mc_GRUSignatureModel():
         'model__parameters__extra_channels': ('Integer', 5, 10),
         'model__parameters__channel_groups': ('Integer', 1, 10),
         'model__parameters__length': ('Integer', 3, 10),
-        'model__parameters__rnn_channels': ('Categorical', [16,32,64,128]) 
+        'model__parameters__rnn_channels': ('Categorical', [16,32,64,128]),
+        'weight_decay': ('Real', 10**-4, 10**-3, 'uniform')
     }
     overrides = {
         'model__name': 'GPRNNSignatureModel',
@@ -72,6 +76,9 @@ def GP_mom_GRUSignatureModel():
         'model__parameters__n_devices': 1,
         'model__parameters__output_device': 'cuda'
     }
+
+## RNN Models
+
 
 
 def add_models(experiment):
