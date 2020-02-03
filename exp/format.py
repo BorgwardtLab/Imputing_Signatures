@@ -166,6 +166,20 @@ def dict_collate_fn(instances, padding_values=None):
 
     return combined
 
+def get_imputation_wrapper(collate_fn, imputation_fn):
+    """
+    This wrapper takes both a
+        - collate_fn (which pads instances to create a batch tensor), and a 
+        - imputation_fn (which imputes missing values on the batch level)
+        and returns:
+        - new collate_fn which creates the batch and imputes it.
+    """
+    def collate_and_impute(instances, padding_values=None):
+        batch_dict = collate_fn(instances, padding_values)
+        imputed_batch_dict = zero_imputation( imputation_fn(batch_dict) )
+        return imputed_batch_dict
+    return collate_and_impute
+
 
 def get_input_transform(data_format, grid_spacing):
     """
@@ -203,9 +217,17 @@ def get_collate_fn(data_format, n_input_dims):
         - n_input_dims: number of input dims, the gpytorch implementation uses a dummy task for padded
             values in the batch tensor (due to zero indexing it's exactly n_input_dims)
     """
+    imputation_dict = {
+        'zero':         zero_imputation,
+        'linear':       linear_imputation,
+        'forwardfill':  forward_fill_imputation, 
+        'causal':       causal_imputation, 
+        'indicator':    indictator_imputation 
+    } 
     if data_format == 'GP':
         return partial(dict_collate_fn, padding_values={'indices': n_input_dims, 'test_indices': n_input_dims})
-    elif data_format in ['zero', 'linear', 'forwardfill', 'causal', 'indicator']:
-        raise NotImplementedError('Not yet implemented')
+    elif data_format in imputation_dict.keys():
+        imputation_fn = imputation_dict[data_format]
+        return get_imputation_wrapper(dict_collate_fn, imputation_fn)
     else:
         raise ValueError('No valid data format provided!')
