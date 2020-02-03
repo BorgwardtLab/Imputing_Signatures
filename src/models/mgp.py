@@ -91,7 +91,7 @@ class GPAdapter(nn.Module):
         """
         self.posterior = self.gp_forward(*data)
 
-        # inputs, indices, values, test_inputs, test_indices = data
+        inputs, indices, values, test_inputs, test_indices, valid_lengths = data
 
         # Get regularly-spaced "latent" timee series Z:
         if self.sampling_type == 'monte_carlo':
@@ -108,13 +108,13 @@ class GPAdapter(nn.Module):
             Z = self._channel_reshape(Z)
 
         if self.return_gp:
-            return self.clf(Z), Z, Z_raw
+            return self.clf(Z, valid_lengths), Z, Z_raw
         else:
-            return self.clf(Z)
+            return self.clf(Z, valid_lengths)
 
     def gp_forward(self, *data):
         # Unpack data:
-        inputs, indices, values, test_inputs, test_indices = data
+        inputs, indices, values, test_inputs, test_indices, _ = data
 
         # Condition MGP on training data:
         self.mgp.condition_on_train_data(inputs, indices, values)
