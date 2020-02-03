@@ -123,7 +123,7 @@ class SignatureModel(nn.Module):
         # channel_group is essentially an extra batch dimension, but unfortunately signatory.signature doesn't support
         # multiple batch dimensions. So the trick is just to combine all the batch dimensions and then peel them apart
         # again afterwards.
-        x = x.view(batch * self.channel_groups, stream, channel)
+        x = x.view(batch * self.channel_groups, stream, x.size(-1))
         x = signatory.signature(x, self.sig_depth)
         x = x.view(batch, -1)
         x = self.neural(x)
