@@ -26,6 +26,12 @@ def GPSignatureModel():
         'output_device': 'cuda'
     }
 
+@ingredient.named_config
+def ImputedSignatureModel():
+    """Signature Model (requiring imputation!)."""
+    name = 'ImputedSignatureModel'
+    parameters = {
+    }
 
 @ingredient.named_config
 def GPRNNSignatureModel():
