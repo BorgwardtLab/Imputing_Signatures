@@ -97,6 +97,7 @@ class GPAdapter(nn.Module):
         if self.sampling_type == 'monte_carlo':
             # draw sample in MGP format (all tasks in same dimension)
             Z = self.draw_samples(self.posterior, self.n_mc_smps)
+            valid_lengths = valid_lengths.repeat(self.n_mc_smps)
         elif self.sampling_type == 'moments':
             # feed moments of GP posterior to classifier (mean, variance)
             Z = self.feed_moments(self.posterior)
