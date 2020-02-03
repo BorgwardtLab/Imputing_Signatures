@@ -255,8 +255,8 @@ def indictator_imputation(batch):
     values = batch['values']
     indicators = torch.isnan(values)
 
-    batch, stream, channels = values.shape
-    imputed_values = torch.empty(batch, stream, 2 * channels, dtype=values.dtype, device=values.device)
+    batch_, stream, channels = values.shape
+    imputed_values = torch.empty(batch_, stream, 2 * channels, dtype=values.dtype, device=values.device)
     imputed_values_no_indicator = imputed_values[:, :, :channels]
     imputed_values_no_indicator.copy_(values)
     imputed_values_no_indicator[indicators] = 0
