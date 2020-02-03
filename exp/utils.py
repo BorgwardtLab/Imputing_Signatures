@@ -68,24 +68,24 @@ def execute_callbacks(callbacks, hook, local_variables):
 
 def compute_loss(d, data_format, device, model, loss_fn, callbacks, imputation_params):
     # if we use mc sampling, expand labels to match multiple predictions
-    
+    y_true = d['label']
+    valid_lengths = d['valid_lengths'].to(device)
+    #handling data_format-specific cases:  
     if data_format == 'GP':
         n_mc_smps = imputation_params['n_mc_smps']
         max_root = imputation_params['max_root']
         if n_mc_smps > 1:
             y_true = augment_labels(d['label'], n_mc_smps)
-        else:
-            y_true = d['label']
         # GP format of data:
         inputs = d['inputs'].to(device)
         indices = d['indices'].to(device)
-        values = d['values'].to(device)
         test_inputs = d['test_inputs'].to(device)
         test_indices = d['test_indices'].to(device)
-        valid_lengths = d['valid_lengths'].to(device)
+        values = d['values'].to(device)
     elif data_format in ('zero', 'linear', 'forwardfill', 'causal', 'indicator'):
-        raise NotImplementedError
-        # TODO!
+        #in case we use other imputation scheme, we feed the irregular time steps to the model (via values)
+        values = torch.cat([d['values'],d['time']], dim=2) #the time is treated as additional channel
+        values = values.to(device)
     else:
         raise ValueError('Not understood data_format: {}'.format(data_format))
 
@@ -97,8 +97,7 @@ def compute_loss(d, data_format, device, model, loss_fn, callbacks, imputation_p
         with gpytorch.settings.fast_pred_var(), gpytorch.settings.max_root_decomposition_size(max_root):
             logits = model(inputs, indices, values, test_inputs, test_indices, valid_lengths)
     elif data_format in ('zero', 'linear', 'forwardfill', 'causal', 'indicator'):
-        raise NotImplementedError
-        # TODO!
+        logits = model(values, valid_lengths)
     else:
         raise ValueError('Not understood data_format: {}'.format(data_format))
 
