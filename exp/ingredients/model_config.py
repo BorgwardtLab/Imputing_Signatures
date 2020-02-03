@@ -55,6 +55,16 @@ def GPRNNSignatureModel():
         'output_device': 'cuda'
     }
 
+@ingredient.named_config
+def GPRNNModel():
+    """MGP Adapter with RNN Model (using Monte-carlo sampling)."""
+    name = 'GPRNNModel'
+    parameters = {
+        'sampling_type': 'monte_carlo',
+        'n_mc_smps': 10,
+        'n_devices': 1,
+        'output_device': 'cuda'
+    }
 
 @ingredient.capture
 def get_instance(n_input_dims, out_dimension, name, parameters, _log, _seed):
