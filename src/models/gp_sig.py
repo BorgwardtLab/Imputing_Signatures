@@ -11,7 +11,7 @@ class GPSignatureModel(nn.Module):
     """
 
     def __init__(self, n_input_dims, out_dimension, sampling_type, n_mc_smps, n_devices, output_device, sig_depth=2,
-                 kernel='rbf', mode='normal', extra_channels=10, channel_groups=2, include_original=False):
+                 kernel='rbf', mode='normal', extra_channels=10, channel_groups=2, include_original=False, final_network=(30,30)):
         super(GPSignatureModel, self).__init__()
         
         #safety guard:
@@ -32,6 +32,7 @@ class GPSignatureModel(nn.Module):
                              include_time=True,
                              sig_depth=sig_depth,
                              out_channels=out_dimension,
+                             final_network=final_network
                              )
 
         self.model = GPAdapter(clf,
