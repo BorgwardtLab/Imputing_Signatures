@@ -18,7 +18,7 @@ def GP_mc_SignatureModel():
         'model__parameters__n_mc_smps': 10,
         'model__parameters__n_devices': 1,
         'model__parameters__output_device': 'cuda',
-        'model__parameters__final_network': (30,30)
+        'model__parameters__final_network': [30,30]
     }
 
 def GP_mom_SignatureModel():
@@ -34,7 +34,7 @@ def GP_mom_SignatureModel():
         'model__parameters__n_mc_smps': 1,
         'model__parameters__n_devices': 1,
         'model__parameters__output_device': 'cuda',
-        'model__parameters__final_network': (30,30)
+        'model__parameters__final_network': [30,30]
     }
 
 def GP_mc_GRUSignatureModel():
