@@ -44,6 +44,7 @@ def to_gpytorch_format(d, grid_spacing=1.0):
     test_indices = np.repeat(np.arange(n_tasks), len_test_grid)
     d['test_inputs'] = test_inputs[:, np.newaxis].astype(np.float32)
     d['test_indices'] = test_indices[:, np.newaxis].astype(np.int64)
+    d['data_format'] = 'GP' #we pass this info here, as the collate_fn has predefined args (used inside the dataloder)
     return d
 
 
@@ -78,10 +79,14 @@ def dict_collate_fn(instances, padding_values=None):
     # Convert list of dicts to dict of lists
     dict_of_lists = {
         key: [d[key] for d in instances]
-        for key in instances[0].keys() if key != 'n_tasks'
+        for key in instances[0].keys() if key not in ['n_tasks', 'data_format']
     }
     if 'n_tasks' in instances[0].keys():
         n_tasks = instances[0]['n_tasks']
+    if 'data_format' in instances[0].keys():
+        data_format = instances[0]['data_format']
+    else:
+        data_format = None
 
     # Pad instances to max shape
     max_shapes = {key: get_max_shape(value) for key, value in dict_of_lists.items()}
@@ -97,7 +102,7 @@ def dict_collate_fn(instances, padding_values=None):
             # prepend zeros
             if key == 'values':
                 # determine and append valid length
-                instance_len = instance_shape[0]
+                valid_len = instance_shape[0] # this correct in all cases other than GP format
 
             if 'test_' in key:
                 # for GP format test inputs, test indices, put padded/invalid points
@@ -108,6 +113,11 @@ def dict_collate_fn(instances, padding_values=None):
                     # temporarily get rid of extra dim (for GP format):
                     instance = instance[:, 0]
                     time_len = int(instance_len / n_tasks)  # time_length of valid observation of current instance
+                    # test_indices and test_inputs only occur in GP format. As they set fewer query times, 
+                    # we overwrite valid length of instance here:
+                    valid_len = time_len
+                    # Next do the padding of the query points (do some rearranging, as it saves us from 
+                    # doing it in tensor reshapes after the GP draw 
                     padding = np.repeat(padding_values[key], to_pad / n_tasks)  # as to_pad counts all
                     # padded values per multi variate time series
                     total_padding = np.repeat(padding, n_tasks)
@@ -139,8 +149,14 @@ def dict_collate_fn(instances, padding_values=None):
                     constant_values=padding_values[key]
                 )
             padded_output[key].append(padded)
-            if key == 'values':
-                padded_output['valid_lengths'].append(instance_len)
+            
+            #Determine which valid len to append (depending on imputation scheme):
+            if not data_format: #if GP format not specified use values valid length 
+                if key == 'values':
+                    padded_output['valid_lengths'].append(valid_len)
+            elif data_format == 'GP':
+                if key == 'test_indices': #make sure to append GP valid length only once, per instance
+                    padded_output['valid_lengths'].append(valid_len)
 
     # Combine instances into individual arrays
     combined = {
@@ -167,16 +183,8 @@ def get_input_transform(data_format, grid_spacing):
 
     if data_format == 'GP':
         return partial(to_gpytorch_format, grid_spacing=grid_spacing)
-    elif data_format == 'zero':
-        return zero_imputation
-    elif data_format == 'linear':
-        return linear_imputation
-    elif data_format == 'forwardfill':
-        return forward_fill_imputation
-    elif data_format == 'causal':
-        return causal_imputation
-    elif data_format == 'indicator':
-        return indictator_imputation
+    elif data_format in ['zero', 'linear', 'forwardfill', 'causal', 'indicator']:
+        return None
     else:
         raise ValueError('No valid data format provided!')
 
@@ -185,15 +193,19 @@ def get_collate_fn(data_format, n_input_dims):
     """
     Util function to return collate_fn which might depend on data format / used model
     Args:
-        - data_format: which data format to use depends on model
-            'GP' for models using gpytorch
-            'imputed' for imputed baselines
+        - data_format: which imputation scheme to use. Acceptable values are:
+            'GP'
+            'zero'
+            'linear'
+            'forwardfill'
+            'causal'
+            'indicator'
         - n_input_dims: number of input dims, the gpytorch implementation uses a dummy task for padded
             values in the batch tensor (due to zero indexing it's exactly n_input_dims)
     """
     if data_format == 'GP':
         return partial(dict_collate_fn, padding_values={'indices': n_input_dims, 'test_indices': n_input_dims})
-    elif data_format == 'imputed':
-        raise NotImplementedError('Pre-Imputed dataset not implemented yet!')
+    elif data_format in ['zero', 'linear', 'forwardfill', 'causal', 'indicator']:
+        raise NotImplementedError('Not yet implemented')
     else:
         raise ValueError('No valid data format provided!')
