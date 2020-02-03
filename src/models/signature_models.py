@@ -33,7 +33,7 @@ def become_constant_trick(x, lengths):
     expanded_lengths = lengths.unsqueeze(1).unsqueeze(2).expand(batch, 1, channel)
     final_value = x.gather(dim=1, index=expanded_lengths)
     final_value.expand(batch, stream, channel)
-    mask = torch.arange(0, stream).unsqueeze(0) > lengths.unsqueeze(1)
+    mask = torch.arange(0, stream, device=x.device).unsqueeze(0) > lengths.unsqueeze(1)
     mask = mask.unsqueeze(2).expand(batch, stream, channel)
     return x.masked_scatter(mask, final_value.masked_select(mask))
 

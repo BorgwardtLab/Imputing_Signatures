@@ -48,7 +48,9 @@ def cfg_train_model_defaults(train_module):
     if train_module == 'train_model':
         hyperparameter_space = {
             'learning_rate': ('Real', 10**-4, 10**-2, 'log-uniform'),
-            'virtual_batch_size': ('Categorical', [32, 64, 128, 256])
+            'virtual_batch_size': ('Categorical', [32, 64, 128, 256]),
+            'weight_decay': ('Real', 10**-3, 10**-2, 'uniform')
+
         }
         overrides = {
             'n_epochs': 50,

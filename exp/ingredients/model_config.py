@@ -28,9 +28,9 @@ def GPSignatureModel():
 
 
 @ingredient.named_config
-def GPGRUSignatureModel():
+def GPRNNSignatureModel():
     """MGP Adapter with Signature Model (using Monte-carlo sampling)."""
-    name = 'GPGRUSignatureModel'
+    name = 'GPRNNSignatureModel'
     parameters = {
         'sampling_type': 'monte_carlo',
         'n_mc_smps': 10,
