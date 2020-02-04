@@ -14,7 +14,7 @@ def _mask_tensor(X, p, random_state):
     Masks values in a tensor with a given probability. The masking will
     set certain values to `np.nan`, making it easy to ignore them for a
     downstream processing task. Given an unravelled tensor of size $m$,
-    this function will mask up to $p \cdot m$ of the entries. 
+    this function will mask up to $p \cdot m$ of the entries.
 
     Parameters
     ----------
@@ -58,23 +58,47 @@ class MissingAtRandomSubsampler:
     threshold.
     '''
 
-    def __init__(self, probability=0.1, random_state=2020):
-        self.probability = probability
-        self.random_state = np.random.RandomState(random_state)
+    def __init__(self, probability=0.1, random_seed=2020):
+        '''
+        Creates a new instance of the sampler object.
 
-    def __call__(self, X, y=None):
+        Parameters
+        ----------
+
+            probability: Subsampling probability
+            random_seed: Random seed to use for the subsampling
+        '''
+
+        self.probability = probability
+        self.random_seed = random_seed
+
+        assert self.probability >= 0 and self.probability <= 1.0
+
+    def __call__(self, instance, index):
         '''
         Applies the MAR subsampling to a given instance. The input label
         is optional because it will be ignored.
 
         Parameters
         ----------
-            X: Input tensor or `np.ndarray`. 
-            y: Input label. Will be ignored and returned as-is in order
-            to provide a consistent interface with other schemes.
+
+            index: Index of the instance, with respect to some outer
+            counter. This is required to ensure reproducibility.
+
+            instance: An instance of a data set, as supplied by the
+            `UEADataset` class. Requires the existence of `dict` or
+            a `dict`-like object, containing the keys `values`, for
+            the tensor values, and `label` for the label.
+
         '''
 
-        return _mask_tensor(X, self.probability, self.random_state), y
+        instance['values'] = _mask_tensor(
+            instance['values'],
+            self.probability,
+            np.random.RandomState(self.random_seed + index)
+        )
+
+        return instance
 
 
 class LabelBasedSubsampler:
@@ -96,20 +120,35 @@ class LabelBasedSubsampler:
             prob_l, prob_r, n_classes
         )
 
-    def __call__(self, X, y=None):
+    def __call__(self, instance, index):
         '''
-        Applies the label-based subsampling to a given instance.
+        Applies the MAR subsampling to a given instance. The input label
+        is optional because it will be ignored.
 
         Parameters
         ----------
-            X: Input tensor or array.
-            y: Input label. Will be used to look up a *pre-defined*
-            label-based subsampling probability.
+
+            index: Index of the instance, with respect to some outer
+            counter. This is required to ensure reproducibility.
+
+            instance: An instance of a data set, as supplied by the
+            `UEADataset` class. Requires the existence of `dict` or
+            a `dict`-like object, containing the keys `values`, for
+            the tensor values, and `label` for the label.
+
         '''
 
-        # Get probability for the particular instance. This call looks
-        # idiosyncratic because the UEA reader class wraps labels into
-        # an additional dimension.
-        p = self.probabilities[y[0]]
-        
-        return _mask_tensor(X, p, self.random_state), y
+        # This call looks idiosyncratic because the UEA reader class
+        # wraps labels into an additional dimension.
+        label = int(instance['label'][0])
+
+        # Get probability for the particular instance.
+        p = self.probabilities[label]
+
+        instance['values'] = _mask_tensor(
+            instance['values'],
+            p,
+            np.random.RandomState(self.random_seed + index)
+        )
+
+        return instance
