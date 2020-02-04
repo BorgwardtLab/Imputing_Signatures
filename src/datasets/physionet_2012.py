@@ -42,20 +42,49 @@ class PhysionetDataReader():
         # Drop backlisted records
         self.endpoint_data = endpoint_data[
             ~endpoint_data['RecordID'].isin(self.blacklisted_records)]
+        
+        self.feature_transform = PhysionetFeatureTransform()
 
     def convert_string_to_decimal_time(self, values):
         return values.str.split(':').apply(
             lambda a: float(a[0]) + float(a[1])/60
         )
 
-    def read_example(self, index):
+
+    def read_raw_example(self, index):
         example_row = self.endpoint_data.iloc[index, :]
         record_id = example_row['RecordID']
         data = self.read_file(str(record_id))
         data['Time'] = self.convert_string_to_decimal_time(data['Time'])
-        return {'X': data, 'y': example_row['In-hospital_death']}
+        #return {'X': data, 'y': example_row['In-hospital_death']}
+        label = example_row['In-hospital_death'] 
+        times, features = self.feature_transform(data)            
+        return times, features, label
 
-    def read_file(self, record_id):
+    def read_example(self, index, mode='raw'):
+        """
+        mode: [raw, zero, linear, forwardfill, causal, indicator ] 
+                new format: returning [times, features, label]  
+        """
+        if mode == 'raw':
+            return read_raw_example(index)            
+        elif mode in ['zero', 'linear', 'forwardfill', 'causal', 'indicator']:
+            #check for imputed data path:
+            imputed_path = os.path.join(self.data_path, mode + '_imputations')
+            if os.path.exists(imputed_path):
+                # read imputed data
+                pass
+            else:
+                # create imputed data and save it 
+                times, features, label = read_raw_example(index)
+                # reformat for imputation (batch dict of tensor)
+                # do imputation
+                # save imputation
+            #return imputed data  
+        else raise ValueError('mode not among available ones: [raw, zero, linear, forwardfill, causal, indicator]')
+
+
+    def read_file(self, record_id, mode='raw'):
         filename = os.path.join(self.data_path, record_id + '.txt')
         df = pd.read_csv(filename, sep=',', header=0)
         # Sometimes the same value is observered twice fot the same time, in
