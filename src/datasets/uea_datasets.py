@@ -106,8 +106,11 @@ class UEADataset(Dataset):
         else:
             self.normalizer.load_params(self.normalizer_config)
 
-        self.maybe_transform = transform if transform else lambda a: a
-    
+        # Sets a default transformation that only returns the first
+        # argument. This ensures that later on, if no transform has
+        # been set, only the *instance* is returned.
+        self.maybe_transform = transform if transform else lambda a: a[0]
+
     def _set_properties(self):
         self.has_unaligned_measurements = False
         self.statics = None
@@ -149,8 +152,11 @@ class UEADataset(Dataset):
         label = np.array(label, dtype=np.float32)
         time = np.array(np.arange(features.shape[0]), dtype=np.float32)[:, None]
         features = np.array(features, dtype=np.float32)
+
         return self.maybe_transform(
-            {'time': time, 'values': features, 'label': label})
+            {'time': time, 'values': features, 'label': label},
+            index
+        )
 
     
 def _to_array(data):
