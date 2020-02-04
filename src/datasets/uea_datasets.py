@@ -32,9 +32,9 @@ class UEADataReader():
                 from sklearn.model_selection import StratifiedShuffleSplit
                 sss = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
                 #X_dummy = np.zeros([len(y),2])
-                sss.get_n_splits(X, y) #for simpler NaN handling, we use dummy data for splitting, 
+                sss.get_n_splits(X, y) #for simpler NaN handling, we use dummy data for splitting,
                 #as only labels are relevant
-                
+
                 training_indices, validation_indices = next(sss.split(X, y))
                 split_dict = {'training': training_indices,
                               'validation': validation_indices
@@ -50,33 +50,33 @@ class UEADataReader():
                     split_dict = pickle.load(f)
             indices = split_dict[split]
             self.X = X[indices] #subsetting the split
-            self.y =  y[indices] 
+            self.y =  y[indices]
         else:
-            raise ValueError('Provided split not available.', 
+            raise ValueError('Provided split not available.',
                              'Use any of [training, validation, testing]'
                             )
     def read_example(self, index):
         return {'X': self.X[index], 'y': self.y[index]}
     def get_number_of_examples(self):
         return len(self.X)
-        
-        
+
+
 class UEADataset(Dataset):
     """UEA Dataset Class to load any UEA dataset."""
 
     #Here, the normalizer config path is still abstract, to be formatted later:
     normalizer_config = os.path.join(
-         os.path.dirname(__file__), #hard code this line with cwd when working interactively 
+         os.path.dirname(__file__), #hard code this line with cwd when working interactively
         'resources',
         '{}Dataset_normalization.json'
     )
-    
+
     def __init__(self, dataset_name, split, transform=None, data_path=DATASET_BASE_PATH):
         """Initialize dataset.
 
         Args:
             dataset_name: Name of UEA dataset to load.
-                [ PenDigits, .. ] 
+                [ PenDigits, .. ]
             split: Name of split. One of `training`, `validation`, `testing`.
             data_path: Path to data. Default:
                 {project_root_dir}/data/UEA
@@ -88,8 +88,8 @@ class UEADataset(Dataset):
         self.reader = UEADataReader(dataset_name, split, self.data_path)
         self.normalizer_config = self.normalizer_config.format(dataset_name)
         self.normalizer = Normalizer()
-        self._set_properties()        
-        
+        self._set_properties()
+
         if not os.path.exists(self.normalizer_config):
             print(f'Normalizer config {self.normalizer_config} not found!')
             print('Generating normalizer config...')
@@ -123,8 +123,8 @@ class UEADataset(Dataset):
         """
         Refering to multi-label settings (conforming with other pipelines)
         """
-        return 1 
-    
+        return 1
+
     @property
     def n_class_types(self):
         """
@@ -136,10 +136,10 @@ class UEADataset(Dataset):
     @property
     def measurement_dims(self):
         return self._measurement_dims
-    
+
     def __len__(self):
         return self.reader.get_number_of_examples()
-    
+
     def __getitem__(self, index):
         instance = self.reader.read_example(index)
         features = self.normalizer.transform(instance['X'])
@@ -158,7 +158,7 @@ class UEADataset(Dataset):
             index
         )
 
-    
+
 def _to_array(data):
         """
         Util function to convert iterable dataset to X,y arrays for stratified splitting, only used once for defining splits, so no need for speed
@@ -169,4 +169,4 @@ def _to_array(data):
             y.append(instance_y)
         X = np.array(X)
         y = np.array(y)
-        return X, y 
+        return X, y
