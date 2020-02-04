@@ -265,3 +265,45 @@ def indictator_imputation(batch):
     batch = dict(batch)  # copy
     batch['values'] = imputed_values
     return batch
+
+
+class ImputationStrategy:
+    """
+    Main class for encapsulating different imputation strategies and
+    making them mesh well with a dataset class.
+    """
+
+    def __init__(self, strategy='zero'):
+
+        strategy_to_fn = {
+            'zero': zero_imputation,
+            'linear': linear_imputation,
+            'forward_fill': forward_fill_imputation,
+            'backward_fill': backward_fill_imputation,
+            'causal': causal_imputation,
+            'indicator': indictator_imputation,  # FIXME: typo; impact?
+        }
+
+        self.strategy = strategy
+        self.strategy_fn = strategy_to_fn[strategy]
+
+    def __repr__(self):
+        '''
+        Returns a string-based representation of the class, which will
+        be useful when creating output filenames.
+        '''
+
+        return __name__ + '_' + self.strategy
+
+    def __call__(self, instance, index):
+
+        # Apply conversions to tensors because the imputation strategies
+        # require this. This should be a no-op for tensors.
+        #
+        # TODO: check whether shape is correct for all operations; maybe
+        # an additional dimension is required.
+        instance['time'] = torch.Tensor(instance['time'])
+        instance['values'] = torch.Tensor(instance['values'])
+        instance['label'] = torch.Tensor(instance['label'])
+
+        return self.strategy_fn(instance)
