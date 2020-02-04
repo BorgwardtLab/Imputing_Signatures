@@ -72,7 +72,7 @@ class MissingAtRandomSubsampler:
         self.probability = probability
         self.random_seed = random_seed
 
-        assert self.probability >= 0 and self.probability <= 1.0
+        assert 0.0 <= self.probability <= 1.0
 
     def __call__(self, instance, index):
         '''
@@ -107,11 +107,32 @@ class LabelBasedSubsampler:
     a pre-defined set of thresholds for each class.
     '''
 
-    def __init__(self, n_classes, probability_ranges, random_state=2020):
+    def __init__(self, n_classes, probability_ranges, random_seed=2020):
+        '''
+        Creates a new instance of the sampler object.
+
+        Parameters
+        ----------
+
+            n_classes: The number of classes for the data set. This
+            directly influences the number of probabilities for the
+            subsampling procedure.
+
+            probability_ranges: Tuple, specifying a lower and upper
+            range for the per-class subsample probabilities.
+
+            random_seed: Random seed to use for the subsampling
+        '''
+
         self.random_state = np.random.RandomState(random_state)
 
         prob_l = probability_ranges[0]
         prob_r = probability_ranges[1]
+
+        assert probl_l <= prob_r
+
+        assert 0.0 <= self.prob_l <= 1.0
+        assert 0.0 <= self.prob_r <= 1.0
 
         # Generate dropout probabilities for each of the classes. This
         # assumes that labels are forming a contiguous range between 0
