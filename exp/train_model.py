@@ -153,7 +153,10 @@ def train(n_epochs, batch_size, virtual_batch_size, learning_rate, weight_decay,
     elif model.sampling_type != 'monte_carlo':
         imputation_params['n_mc_smps'] = 1 
 
-    loss_fn = torch.nn.BCEWithLogitsLoss()
+    if out_dimension == 1:
+        loss_fn = torch.nn.BCEWithLogitsLoss()
+    else:
+        loss_fn = torch.nn.CrossEntropyLoss()
 
     callbacks = [
         LogTrainingLoss(_run, print_progress=quiet),
