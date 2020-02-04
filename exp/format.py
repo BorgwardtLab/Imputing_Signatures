@@ -227,7 +227,6 @@ def get_collate_fn(data_format, n_input_dims):
     if data_format == 'GP':
         return partial(dict_collate_fn, padding_values={'indices': n_input_dims, 'test_indices': n_input_dims})
     elif data_format in imputation_dict.keys():
-        imputation_fn = imputation_dict[data_format]
-        return get_imputation_wrapper(dict_collate_fn, imputation_fn)
+        return dict_collate_fn
     else:
         raise ValueError('No valid data format provided!')

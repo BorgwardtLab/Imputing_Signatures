@@ -2,8 +2,16 @@
 import os
 
 import pandas as pd
+import pickle
 import numpy as np
 from tqdm import trange
+
+from src.imputation import (zero_imputation,
+                            linear_imputation,
+                            forward_fill_imputation,
+                            causal_imputation,
+                            indictator_imputation)
+import torch
 
 # from ..tasks import BinaryClassification
 from .dataset import Dataset
@@ -42,18 +50,80 @@ class PhysionetDataReader():
         # Drop backlisted records
         self.endpoint_data = endpoint_data[
             ~endpoint_data['RecordID'].isin(self.blacklisted_records)]
+        
+        self.feature_transform = PhysionetFeatureTransform()
 
     def convert_string_to_decimal_time(self, values):
         return values.str.split(':').apply(
             lambda a: float(a[0]) + float(a[1])/60
         )
 
-    def read_example(self, index):
-        example_row = self.endpoint_data.iloc[index, :]
-        record_id = example_row['RecordID']
-        data = self.read_file(str(record_id))
-        data['Time'] = self.convert_string_to_decimal_time(data['Time'])
-        return {'X': data, 'y': example_row['In-hospital_death']}
+    def read_example(self, index, mode='GP', normalizer=None, overwrite=False):
+        """
+        mode: [GP, zero, linear, forwardfill, causal, indicator ] whereas default (GP) refers to raw mode without imputation 
+                new format: returning [times, features, label] 
+        """
+        def read_raw_example(index):
+            example_row = self.endpoint_data.iloc[index, :]
+            record_id = example_row['RecordID']
+            data = self.read_file(str(record_id))
+            data['Time'] = self.convert_string_to_decimal_time(data['Time'])
+            #return {'X': data, 'y': example_row['In-hospital_death']}
+            label = example_row['In-hospital_death'] 
+            time, features = self.feature_transform(data)            
+            return time, features, label
+        
+        if mode == 'GP': #GP refers to raw mode where nothing is changed
+            if normalizer is not None:
+                time, features, label = read_raw_example(index)
+                return time, normalizer.transform(features), label
+            else:
+                return read_raw_example(index)            
+        elif mode in ['zero', 'linear', 'forwardfill', 'causal', 'indicator']:
+            #check for imputed data path:
+            imputed_path = os.path.join(self.data_path, mode + '_imputations')
+            imputed_file = os.path.join(imputed_path, str(index) + '.pkl')
+            if os.path.exists(imputed_file) and not overwrite:
+                # read imputed data
+                with open(imputed_file, 'rb') as f:
+                    data_dict = pickle.load(f)
+            else:
+                # create imputed data and save it
+                imputation_dict = {
+                    'zero':         zero_imputation,
+                    'linear':       linear_imputation,
+                    'forwardfill':  forward_fill_imputation, 
+                    'causal':       causal_imputation, 
+                    'indicator':    indictator_imputation 
+                }
+                imputation_fn = imputation_dict[mode]
+                time, features, label = read_raw_example(index)
+                if normalizer is not None:
+                    features = normalizer.transform(features)
+                data_dict = {'time': time, 'values': features, 'label': label} 
+                # convert to torch tensor for imputation fn compatibility:
+                tensor_dict = {key: torch.tensor(value).unsqueeze(0) for key,value in data_dict.items()}
+                # ensure time has proper format as in batch:
+                tensor_dict['time'] = tensor_dict['time'].unsqueeze(-1)
+
+                # reformat for imputation (batch dict of tensor)
+                # do imputation
+                imputed_dict = zero_imputation( 
+                        imputation_fn(tensor_dict) 
+                ) 
+                #reformat to numpy:
+                data_dict = {key: value.squeeze(0).numpy() for key,value in imputed_dict.items()}
+                data_dict['time'] = data_dict['time'].squeeze(-1) #to stay consistent with other formats
+                
+                # save imputation
+                if not os.path.exists(imputed_path):
+                    os.makedirs(imputed_path, exist_ok=True)
+                with open(imputed_file, 'wb') as f:
+                    pickle.dump(data_dict, f) 
+            return data_dict['time'], data_dict['values'], data_dict['label'] 
+        else:
+            raise ValueError('mode not among available ones: [GP, zero, linear, forwardfill, causal, indicator]')
+
 
     def read_file(self, record_id):
         filename = os.path.join(self.data_path, record_id + '.txt')
@@ -88,20 +158,22 @@ class Physionet2012Dataset(Dataset):
         'Physionet2012Dataset_normalization.json'
     )
 
-    def __init__(self, split, transform=None, data_path=DATASET_BASE_PATH):
+    def __init__(self, split, data_format, transform=None, data_path=DATASET_BASE_PATH, overwrite=False):
         """Initialize dataset.
 
         Args:
             split: Name of split. One of `training`, `validation`, `testing`.
+            data_format: which format to return, [GP, zero, linear, forwardfill, causal, indicator]
             data_path: Path to data. Default:
                 {project_root_dir}/data/physionet_2012
+            overwrite: recomputing imputation dumps (useful for debugging)
 
         """
+        self.data_format = data_format
         self.data_path = data_path
         split_dir, split_file = self._get_split_path(split)
-
+        self.overwrite = overwrite
         self.reader = PhysionetDataReader(split_dir, split_file)
-        self.feature_transform = PhysionetFeatureTransform()
         self.normalizer = Normalizer()
         self._set_properties()
 
@@ -115,9 +187,8 @@ class Physionet2012Dataset(Dataset):
                     'on other splits than training.'
                 )
             for i in trange(len(self)):
-                instance = self.reader.read_example(i)['X']
-                transformed = self.feature_transform(instance)
-                self.normalizer._feed_data(transformed[1])
+                time, features, label = self.reader.read_example(i) #read raw data wihout imputation!
+                self.normalizer._feed_data(features)
             self.normalizer._save_params(self.normalizer_config)
         else:
             self.normalizer.load_params(self.normalizer_config)
@@ -145,8 +216,7 @@ class Physionet2012Dataset(Dataset):
         self.has_unaligned_measurements = True
         self.statics = None
         self.n_statics = 0
-        instance = self.reader.read_example(0)
-        times, features = self.feature_transform(instance['X'])
+        times, features, label = self.reader.read_example(0)
         self._measurement_dims = features.shape[1]
 
     @property
@@ -161,10 +231,10 @@ class Physionet2012Dataset(Dataset):
         return self.reader.get_number_of_examples()
 
     def __getitem__(self, index):
-        instance = self.reader.read_example(index)
-        t, features = self.feature_transform(instance['X'])
-        features = self.normalizer.transform(features)
-        label = instance['y']
+        t, features, label = self.reader.read_example(index, mode=self.data_format, normalizer=self.normalizer, overwrite=self.overwrite)
+ 
+        #t, features = self.feature_transform(instance['X'])
+        #features = self.normalizer.transform(features)
         if self.n_classes == 1:
             # Add an additional dimension to the label if it is only a scalar.
             # This makes it confirm more to the treatment of multi-class
