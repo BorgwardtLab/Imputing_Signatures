@@ -126,9 +126,9 @@ def train(n_epochs, batch_size, virtual_batch_size, learning_rate, weight_decay,
 
     # Get data, sacred does some magic here so we need to hush the linter
     # pylint: disable=E1120,E1123
-    train_dataset = dataset_config.get_instance(split='training', transform=input_transform)
-    validation_dataset = dataset_config.get_instance(split='validation', transform=input_transform)
-    test_dataset = dataset_config.get_instance(split='testing', transform=input_transform)
+    train_dataset = dataset_config.get_instance(split='training', transform=input_transform, data_format=data_format)
+    validation_dataset = dataset_config.get_instance(split='validation', transform=input_transform, data_format=data_format)
+    test_dataset = dataset_config.get_instance(split='testing', transform=input_transform, data_format=data_format)
     
     # Determine number of input dimensions as GP-Sig models requires this parameter for initialisation
     n_input_dims = train_dataset.measurement_dims
