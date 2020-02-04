@@ -124,22 +124,24 @@ class LabelBasedSubsampler:
             random_seed: Random seed to use for the subsampling
         '''
 
-        self.random_state = np.random.RandomState(random_state)
+        random_state = np.random.RandomState(random_seed)
 
         prob_l = probability_ranges[0]
         prob_r = probability_ranges[1]
 
-        assert probl_l <= prob_r
+        assert prob_l <= prob_r
 
-        assert 0.0 <= self.prob_l <= 1.0
-        assert 0.0 <= self.prob_r <= 1.0
+        assert 0.0 <= prob_l <= 1.0
+        assert 0.0 <= prob_r <= 1.0
 
         # Generate dropout probabilities for each of the classes. This
         # assumes that labels are forming a contiguous range between 0
         # and `n_classes`.
-        self.probabilities = self.random_state.uniform(
+        self.probabilities = random_state.uniform(
             prob_l, prob_r, n_classes
         )
+
+        self.random_seed = random_seed
 
     def __call__(self, instance, index):
         '''
