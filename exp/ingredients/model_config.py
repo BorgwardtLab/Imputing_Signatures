@@ -58,6 +58,7 @@ def GP_mc_GRUSignatureModel():
             'extra_channels': 5,
             'channel_groups': 3,
             'rnn_channels': [32] 
+    }
 
     
 @ingredient.named_config
@@ -72,6 +73,7 @@ def GP_mom_GRUSignatureModel():
             'extra_channels': 5,
             'channel_groups': 3,
             'rnn_channels': [32] 
+    }
 
 @ingredient.named_config
 def GP_mc_DeepSignatureModel():
