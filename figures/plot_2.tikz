@@ -1,0 +1,40 @@
+% Add lower path	
+\addplot[
+	name path=A, 
+	mark=none,
+	]			
+	coordinates {(0,0) (2,0) (3,3)};
+
+		
+% Add diagonal 
+\addplot[
+	name path=B,
+	mark=none,
+	dashed,
+	]
+	coordinates {(0,0) (3,3)};
+
+% Add fill 	
+\addplot[red!50] fill between[of=A and B];
+
+% Add label
+\node[roundnode] at (axis cs: 1.6, 0.75) {$-$};		
+
+%\coordinate (p3) at (axis cs: 3,3);
+
+% Add connectors		
+\coordinate (p1) at (axis cs: 0,0);
+\coordinate (pX11) at (axis cs: -1,0);
+\coordinate (pt1) at (axis cs: 0,-1);
+\draw[dash pattern=on 1pt off 1pt, gray] (p1) -- (pX11);
+\draw[dash pattern=on 1pt off 1pt, gray] (p1) -- (pt1);
+
+\coordinate (p2) at (axis cs: 2,0);
+\coordinate (pt32) at (axis cs: 2,-1);
+\draw[dash pattern=on 1pt off 1pt, gray] (p2) -- (pt32);
+
+\coordinate (p3) at (axis cs: 3,3);
+\coordinate (pX12) at (axis cs: -1,3);
+\coordinate (pt2) at (axis cs: 3,-1);
+\draw[dash pattern=on 1pt off 1pt, gray] (p3) -- (pX12);
+\draw[dash pattern=on 1pt off 1pt, gray] (p3) -- (pt2);
