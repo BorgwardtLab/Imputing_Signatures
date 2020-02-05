@@ -100,6 +100,15 @@ class MissingAtRandomSubsampler:
 
         return instance
 
+    def __repr__(self):
+        '''
+        Returns a string-based representation of the class, which will
+        be useful when creating output filenames.
+        '''
+
+        r = f'{self.__class__.__name__}_{self.probability:.2f}'
+        return r.replace('.', '_')
+
 
 class LabelBasedSubsampler:
     '''
@@ -175,3 +184,15 @@ class LabelBasedSubsampler:
         )
 
         return instance
+
+    def __repr__(self):
+        '''
+        Returns a string-based representation of the class, which will
+        be useful when creating output filenames.
+        '''
+
+        p = '_'.join(f'{prob:.2f}' for prob in self.probabilities)
+        r = f'{self.__class__.__name__}_{p}'
+
+        return r.replace('.', '_')
+

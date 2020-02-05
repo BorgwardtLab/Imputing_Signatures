@@ -265,3 +265,69 @@ def indictator_imputation(batch):
     batch = dict(batch)  # copy
     batch['values'] = imputed_values
     return batch
+
+
+class ImputationStrategy:
+    """
+    Main class for encapsulating different imputation strategies and
+    making them mesh well with a dataset class.
+    """
+
+    def __init__(self, strategy='zero', ensure_zero_imputation=True):
+        '''
+        Creates a new imputation scheme based on a pre-defined strategy
+        that can be applied to individual instances of a data set class
+        on demand.
+
+        Parameters
+        ----------
+
+            strategy: One value of ['zero', 'linear', 'forward_fill',
+                      'backward_fill', 'causal', 'indicator']. This
+                      determines the imputation strategy.
+
+            ensure_zero_imputation: If set, will always apply zero-based
+            imputation after any scheme, thus ensuring that no NaNs will
+            remain in the data.
+        '''
+
+        strategy_to_fn = {
+            'zero': zero_imputation,
+            'linear': linear_imputation,
+            'forward_fill': forward_fill_imputation,
+            'backward_fill': backward_fill_imputation,
+            'causal': causal_imputation,
+            'indicator': indictator_imputation,  # FIXME: typo; impact?
+        }
+
+        # Report available strategies in order to make this class
+        # configurable from outside.
+        self.available_strategies = sorted(strategy_to_fn.keys())
+
+        self.strategy = strategy
+        self.strategy_fn = strategy_to_fn[strategy]
+
+        self.ensure_zero_imputation = ensure_zero_imputation
+
+    def __repr__(self):
+        '''
+        Returns a string-based representation of the class, which will
+        be useful when creating output filenames.
+        '''
+
+        return __name__ + '_' + self.strategy
+
+    def __call__(self, instance, index):
+
+        # Apply conversions to tensors because the imputation strategies
+        # require this. This should be a no-op for tensors.
+        instance['time'] = torch.Tensor(instance['time']).unsqueeze(0)
+        instance['values'] = torch.Tensor(instance['values']).unsqueeze(0)
+        instance['label'] = torch.Tensor(instance['label']).unsqueeze(0)
+
+        instance = self.strategy_fn(instance)
+
+        if self.ensure_zero_imputation:
+            instance = zero_imputation(instance)
+
+        return instance
