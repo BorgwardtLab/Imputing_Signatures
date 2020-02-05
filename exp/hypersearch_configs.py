@@ -182,7 +182,6 @@ def ImputedRNNSignatureModel():
 def ImputedDeepSignatureModel():
     train_module = 'train_model'
     hyperparameter_space = {
-        'model__parameters__sig_depth': ('Integer', 2, 4),
         'model__parameters__hidden_channels1': ('Integer', 8, 32),
         'model__parameters__hidden_channels2': ('Integer', 4, 8),
         'model__parameters__kernel_size': ('Integer', 3, 6),
@@ -190,6 +189,7 @@ def ImputedDeepSignatureModel():
     }
     overrides = {
         'model__name': 'ImputedDeepSignatureModel',
+        'model__parameters__sig_depth': 2,
         'virtual_batch_size': None
     }
 
