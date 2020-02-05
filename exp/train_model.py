@@ -40,6 +40,28 @@ def cfg():
                         }                              
 
 @EXP.named_config
+def zero():
+    data_format = 'zero'
+@EXP.named_config
+def forwardfill():
+    data_format = 'forwardfill'
+@EXP.named_config
+def causal():
+    data_format = 'causal'
+@EXP.named_config
+def indicator():
+    data_format = 'indicator'
+@EXP.named_config
+def linear():
+    data_format = 'linear'
+
+
+
+
+
+
+
+@EXP.named_config
 def rep1():
     seed = 249040430
 
