@@ -17,6 +17,7 @@ import torch
 from .dataset import Dataset
 from .mimic_benchmarks_utils import Normalizer
 from .utils import DATA_DIR
+import os
 
 DATASET_BASE_PATH = os.path.join(DATA_DIR, 'physionet_2012')
 
@@ -46,6 +47,7 @@ class PhysionetDataReader():
 
     def __init__(self, data_path, endpoint_file):
         self.data_path = data_path
+        self.split_file_name = os.path.split(endpoint_file)[1]
         endpoint_data = pd.read_csv(endpoint_file, header=0, sep=',')
         # Drop backlisted records
         self.endpoint_data = endpoint_data[
@@ -81,7 +83,11 @@ class PhysionetDataReader():
                 return read_raw_example(index)            
         elif mode in ['zero', 'linear', 'forwardfill', 'causal', 'indicator']:
             #check for imputed data path:
-            imputed_path = os.path.join(self.data_path, mode + '_imputations')
+            if 'val_' in self.split_file_name: #doing validation 
+                outpath = os.path.join( os.path.split(self.data_path)[0], 'validation') 
+            else:
+                outpath = self.data_path
+            imputed_path = os.path.join(outpath, mode + '_imputations')
             imputed_file = os.path.join(imputed_path, str(index) + '.pkl')
             if os.path.exists(imputed_file) and not overwrite:
                 # read imputed data
