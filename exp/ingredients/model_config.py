@@ -63,7 +63,7 @@ def GPRNNSignatureModel():
 @ingredient.named_config
 def GPDeepSignatureModel():
     """MGP Adapter with Deep Signature Model (using Monte-carlo sampling)."""
-    name = 'GPRNNSignatureModel'
+    name = 'GPDeepSignatureModel'
     parameters = {
         'sampling_type': 'monte_carlo',
         'n_mc_smps': 10,
