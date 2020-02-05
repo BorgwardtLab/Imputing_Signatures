@@ -40,8 +40,8 @@ if __name__ == '__main__':
                                 use_disk_cache=True
                     )
 
-                    for instance, index in enumerate(dataset):
-                        print(f'MAR: {dataset_name}: {split}: {index}')
+                    for index, instance in enumerate(dataset):
+                        print(f'MAR--{name}: {dataset_name}: {split}: {index}')
 
     for dataset_name, n_classes in datasets:
 
@@ -63,4 +63,4 @@ if __name__ == '__main__':
                     )
 
                     for index, instance in enumerate(dataset):
-                        print(f'LCM: {dataset_name}: {split}: {index}')
+                        print(f'LCM--{name}: {dataset_name}: {split}: {index}')
