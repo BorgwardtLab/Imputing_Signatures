@@ -273,7 +273,23 @@ class ImputationStrategy:
     making them mesh well with a dataset class.
     """
 
-    def __init__(self, strategy='zero'):
+    def __init__(self, strategy='zero', ensure_zero_imputation=True):
+        '''
+        Creates a new imputation scheme based on a pre-defined strategy
+        that can be applied to individual instances of a data set class
+        on demand.
+
+        Parameters
+        ----------
+
+            strategy: One value of ['zero', 'linear', 'forward_fill',
+                      'backward_fill', 'causal', 'indicator']. This
+                      determines the imputation strategy.
+
+            ensure_zero_imputation: If set, will always apply zero-based
+            imputation after any scheme, thus ensuring that no NaNs will
+            remain in the data.
+        '''
 
         strategy_to_fn = {
             'zero': zero_imputation,
@@ -284,8 +300,14 @@ class ImputationStrategy:
             'indicator': indictator_imputation,  # FIXME: typo; impact?
         }
 
+        # Report available strategies in order to make this class
+        # configurable from outside.
+        self.available_strategies = sorted(strategy_to_fn.keys())
+
         self.strategy = strategy
         self.strategy_fn = strategy_to_fn[strategy]
+
+        self.ensure_zero_imputation = ensure_zero_imputation
 
     def __repr__(self):
         '''
@@ -303,4 +325,9 @@ class ImputationStrategy:
         instance['values'] = torch.Tensor(instance['values']).unsqueeze(0)
         instance['label'] = torch.Tensor(instance['label']).unsqueeze(0)
 
-        return self.strategy_fn(instance)
+        instance = self.strategy_fn(instance)
+
+        if self.ensure_zero_imputation:
+            instance = zero_imputation(instance)
+
+        return instance
