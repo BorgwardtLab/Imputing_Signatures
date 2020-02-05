@@ -127,7 +127,7 @@ class GPDeepSignatureModel(nn.Module):
                                         hidden_channels2=hidden_channels2,
                                         kernel_size=kernel_size,
                                         include_original=include_original,
-                                        include_time=False,
+                                        include_time=True,
                                         sig_depth=sig_depth,
                                         out_channels=out_dimension
                                         )
