@@ -28,7 +28,7 @@ def cfg():
     batch_size = 32
     virtual_batch_size = None
     learning_rate = 5e-4
-    weight_decay = 1e-3
+    weight_decay = 1e-4
     early_stopping = 20
     data_format = 'GP'
     device = 'cuda'
@@ -70,7 +70,7 @@ class NewlineCallback(Callback):
         print()
 
 def train_loop(model, dataset, data_format, loss_fn, collate_fn, n_epochs, batch_size, virtual_batch_size,
-               learning_rate, imputation_params, weight_decay=1e-5, device='cuda', callbacks=None):
+               learning_rate, imputation_params, weight_decay=1e-4, device='cuda', callbacks=None):
     if callbacks is None:
         callbacks = []
 
