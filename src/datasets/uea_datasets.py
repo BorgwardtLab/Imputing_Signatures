@@ -72,7 +72,8 @@ class UEADataset(Dataset):
     )
 
     def __init__(self,
-        dataset_name, split,
+        dataset_name,
+        split,
         transform=None,
         data_path=DATASET_BASE_PATH,
         use_disk_cache=False):
@@ -87,6 +88,7 @@ class UEADataset(Dataset):
 
         """
         self.data_path = os.path.join(data_path, dataset_name)
+        self.split = split
 
         #self.dataset = uea_ucr_datasets.Dataset(dataset_name, train=True)
         self.reader = UEADataReader(dataset_name, split, self.data_path)
@@ -158,6 +160,7 @@ class UEADataset(Dataset):
 
             path = os.path.join(
                 self.data_path,
+                self.split,
                 mode
             )
 
