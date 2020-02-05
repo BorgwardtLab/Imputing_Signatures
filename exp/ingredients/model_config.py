@@ -46,7 +46,7 @@ def GP_mom_SignatureModel():
         'final_network': [30,30]
     }
 
-
+@ingredient.named_config
 def GP_mc_GRUSignatureModel():
     name = 'GPRNNSignatureModel'
     parameters = {
@@ -60,7 +60,6 @@ def GP_mc_GRUSignatureModel():
             'rnn_channels': [32] 
     }
 
-    
 @ingredient.named_config
 def GP_mom_GRUSignatureModel():
     name = 'GPRNNSignatureModel'
@@ -115,7 +114,6 @@ def GP_mom_GRUModel():
         'n_devices': 1,
         'output_device': 'cuda',
         'hidden_size': 32 
-        
     }
 
 @ingredient.named_config
@@ -132,130 +130,117 @@ def GP_mc_GRUModel():
     }
 
 
-#@ingredient.named_config
-#def ImputedSignatureModel():
-#    """Signature Model (requiring imputation!)."""
-#    name = 'ImputedSignatureModel'
-#    parameters = {
-#        'sig_depth': 2,
-#        'extra_channels': 5,
-#        'channel_groups': 3,
-#        'model__parameters__final_network': [30,30]
-#    }
-#
-###########################################    
-#def ImputedRNNSignatureModel():
-#    train_module = 'train_model'
-#    hyperparameter_space = {   
-#        'model__parameters__sig_depth': ('Integer', 2, 4),
-#        'model__parameters__extra_channels': ('Integer', 5, 10),
-#        'model__parameters__channel_groups': ('Integer', 1, 10),
-#        'model__parameters__length': ('Integer', 3, 10),
-#        'model__parameters__rnn_channels': ('Categorical', [16,32,64,128]),
-#        'batch_size': ('Categorical', [32,64,128,256]) 
-#    }
-#    overrides = {
-#        'model__name': 'ImputedRNNSignatureModel',
-#        'model__parameters__rnn_type': 'gru',
-#        'virtual_batch_size': None
-#    }
-#
-#def ImputedDeepSignatureModel():
-#    train_module = 'train_model'
-#    hyperparameter_space = {
-#        'model__parameters__hidden_channels1': ('Integer', 8, 32),
-#        'model__parameters__hidden_channels2': ('Integer', 4, 8),
-#        'model__parameters__kernel_size': ('Integer', 3, 6),
-#        'batch_size': ('Categorical', [32,64,128,256])
-#    }
-#    overrides = {
-#        'model__name': 'ImputedDeepSignatureModel',
-#        'model__parameters__sig_depth': 2,
-#        'virtual_batch_size': None
-#    }
-#
-#def ImputedRNNModel():
-#    train_module = 'train_model'
-#    hyperparameter_space = {   
-#        'model__parameters__hidden_size': ('Categorical', [16,32,64,128]),
-#        'batch_size': ('Categorical', [32,64,128,256]) 
-#    }
-#    overrides = {
-#        'model__name': 'ImputedRNNModel',
-#        'model__parameters__rnn_type': 'gru',
-#        'virtual_batch_size': None
-#    }
-#
-
-########################
-
-
-@ingredient.named_config
-def GPSignatureModel():
-    """MGP Adapter with Signature Model (using Monte-carlo sampling)."""
-    name = 'GPSignatureModel'
-    parameters = {
-        'sampling_type': 'monte_carlo' ,
-        'n_mc_smps': 10,
-        'n_devices': 1,
-        'output_device': 'cuda'
-    }
-
 @ingredient.named_config
 def ImputedSignatureModel():
     """Signature Model (requiring imputation!)."""
     name = 'ImputedSignatureModel'
+    parameters = {
+        'sig_depth': 2,
+        'extra_channels': 5,
+        'channel_groups': 3,
+        'model__parameters__final_network': [30,30]
+    }
 
 @ingredient.named_config
 def ImputedRNNSignatureModel():
-    """RNNSignature Model (requiring imputation!)."""
     name = 'ImputedRNNSignatureModel'
+    parameters = {
+        'sig_depth': 2, 
+        'extra_channels': 5,
+        'channel_groups': 3,
+        'length': 5,
+        'rnn_channels': 32,
+        'rnn_type': 'gru'
+    } 
 
 @ingredient.named_config
 def ImputedDeepSignatureModel():
-    """DeepSignature Model (requiring imputation!)."""
     name = 'ImputedDeepSignatureModel'
+    parameters = {
+        'sig_depth': 2, 
+        'hidden_channels1': 8,
+        'hidden_channels2': 4,
+        'kernel_size': 4
+    }
 
 @ingredient.named_config
 def ImputedRNNModel():
-    """RNN Model (requiring imputation!)."""
     name = 'ImputedRNNModel'
     parameters = {
-        'rnn_type': 'gru' #lstm alternative
-    }  
-
-@ingredient.named_config
-def GPRNNSignatureModel():
-    """MGP Adapter with Signature Model (using Monte-carlo sampling)."""
-    name = 'GPRNNSignatureModel'
-    parameters = {
-        'sampling_type': 'monte_carlo',
-        'n_mc_smps': 10,
-        'n_devices': 1,
-        'output_device': 'cuda'
+        'hidden_size': 32,
+        'rnn_type': 'gru'
     }
+    
 
-@ingredient.named_config
-def GPDeepSignatureModel():
-    """MGP Adapter with Deep Signature Model (using Monte-carlo sampling)."""
-    name = 'GPDeepSignatureModel'
-    parameters = {
-        'sampling_type': 'monte_carlo',
-        'n_mc_smps': 10,
-        'n_devices': 1,
-        'output_device': 'cuda'
-    }
 
-@ingredient.named_config
-def GPRNNModel():
-    """MGP Adapter with RNN Model (using Monte-carlo sampling)."""
-    name = 'GPRNNModel'
-    parameters = {
-        'sampling_type': 'monte_carlo',
-        'n_mc_smps': 10,
-        'n_devices': 1,
-        'output_device': 'cuda'
-    }
+#######################
+#
+#@ingredient.named_config
+#def GPSignatureModel():
+#    """MGP Adapter with Signature Model (using Monte-carlo sampling)."""
+#    name = 'GPSignatureModel'
+#    parameters = {
+#        'sampling_type': 'monte_carlo' ,
+#        'n_mc_smps': 10,
+#        'n_devices': 1,
+#        'output_device': 'cuda'
+#    }
+#
+#@ingredient.named_config
+#def ImputedSignatureModel():
+#    """Signature Model (requiring imputation!)."""
+#    name = 'ImputedSignatureModel'
+#
+#@ingredient.named_config
+#def ImputedRNNSignatureModel():
+#    """RNNSignature Model (requiring imputation!)."""
+#    name = 'ImputedRNNSignatureModel'
+#
+#@ingredient.named_config
+#def ImputedDeepSignatureModel():
+#    """DeepSignature Model (requiring imputation!)."""
+#    name = 'ImputedDeepSignatureModel'
+#
+#@ingredient.named_config
+#def ImputedRNNModel():
+#    """RNN Model (requiring imputation!)."""
+#    name = 'ImputedRNNModel'
+#    parameters = {
+#        'rnn_type': 'gru' #lstm alternative
+#    }  
+#
+#@ingredient.named_config
+#def GPRNNSignatureModel():
+#    """MGP Adapter with Signature Model (using Monte-carlo sampling)."""
+#    name = 'GPRNNSignatureModel'
+#    parameters = {
+#        'sampling_type': 'monte_carlo',
+#        'n_mc_smps': 10,
+#        'n_devices': 1,
+#        'output_device': 'cuda'
+#    }
+#
+#@ingredient.named_config
+#def GPDeepSignatureModel():
+#    """MGP Adapter with Deep Signature Model (using Monte-carlo sampling)."""
+#    name = 'GPDeepSignatureModel'
+#    parameters = {
+#        'sampling_type': 'monte_carlo',
+#        'n_mc_smps': 10,
+#        'n_devices': 1,
+#        'output_device': 'cuda'
+#    }
+#
+#@ingredient.named_config
+#def GPRNNModel():
+#    """MGP Adapter with RNN Model (using Monte-carlo sampling)."""
+#    name = 'GPRNNModel'
+#    parameters = {
+#        'sampling_type': 'monte_carlo',
+#        'n_mc_smps': 10,
+#        'n_devices': 1,
+#        'output_device': 'cuda'
+#    }
 
 @ingredient.capture
 def get_instance(n_input_dims, out_dimension, name, parameters, _log, _seed):

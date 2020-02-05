@@ -28,7 +28,7 @@ def cfg():
     batch_size = 32
     virtual_batch_size = None
     learning_rate = 5e-4
-    weight_decay = 1e-3
+    weight_decay = 1e-4
     early_stopping = 20
     data_format = 'GP'
     device = 'cuda'
@@ -38,6 +38,28 @@ def cfg():
                          'max_root': 25, #max_root_decomposition_size for MGP lanczos iters
                          'grid_spacing': 1. # determines n_hours between query points
                         }                              
+
+@EXP.named_config
+def zero():
+    data_format = 'zero'
+@EXP.named_config
+def forwardfill():
+    data_format = 'forwardfill'
+@EXP.named_config
+def causal():
+    data_format = 'causal'
+@EXP.named_config
+def indicator():
+    data_format = 'indicator'
+@EXP.named_config
+def linear():
+    data_format = 'linear'
+
+
+
+
+
+
 
 @EXP.named_config
 def rep1():
@@ -70,7 +92,7 @@ class NewlineCallback(Callback):
         print()
 
 def train_loop(model, dataset, data_format, loss_fn, collate_fn, n_epochs, batch_size, virtual_batch_size,
-               learning_rate, imputation_params, weight_decay=1e-5, device='cuda', callbacks=None):
+               learning_rate, imputation_params, weight_decay=1e-4, device='cuda', callbacks=None):
     if callbacks is None:
         callbacks = []
 
