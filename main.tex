@@ -104,7 +104,7 @@ Engineering, ETH Zurich, Switzerland}
 \printAffiliationsAndNotice{\icmlEqualContribution} % otherwise use the standard text.
 
 \begin{abstract}
-The signature transform is a powerful transform, acting as a `universal nonlinearity' on the space of continuous vector-valued paths, and has recently received attention for use in machine learning. However real-world data is typically discretized, and must first be transformed into a continuous path before signature techniques can be applied. Existing solutions have often been ad-hoc and exhibit a variety of subtle flaws. In our analysis, we regard this as an imputation problem, study the merits of different schemes, evaluate them in theoretical terms and in terms of time series classification performance, and conclude by recommending particular novel and existing schemes.
+The signature transform is a powerful transform, acting as a `universal nonlinearity' on the space of continuous vector-valued paths, and has recently received attention for use in machine learning. However real-world data is typically discretized, and must first be transformed into a continuous path before signature techniques can be applied. Existing solutions have often been ad-hoc and exhibit a variety of subtle flaws, e.g. non-causality. In our analysis, we regard this as an imputation problem, study the merits of different schemes, evaluate them in theoretical terms and in terms of time series classification performance, and conclude by recommending particular novel and existing schemes.
 \end{abstract}
 
 \section{Introduction}\label{intro}
@@ -114,17 +114,15 @@ Strikingly, every continuous function of a path can be recovered by applying a l
 
 \subsubsection{Difficulties in applications}
 
-Given the similarities between continuous paths and multivariate time series, it is natural to hope that we can use the tools that apply to one, namely the signature transform, and apply it to the other.
+Given the similarities between continuous paths and multivariate time series, it is natural to hope that we can use the tools that apply to one, in this case the signature transform, and apply it to the other. Of course, multivariate time series are not paths. For signature techniques to be applied, a continuous path must first be constructed from this data.
 
-Of course, multivariate time series are not paths. For signature techniques to be applied, a continuous path must first be constructed from this data.
-
-This should sound sensible: the data is often assumed to be a discretization of an underlying continuous process, and we now simply wish to recover some approximation to that process. Whilst methods such as e.g. recurrent neural networks may paper over the issue (see also our remarks later), signature methods require a path to be constructed.
+This should sound sensible: the data is often assumed to be a discretization of an underlying continuous process, and we are now recovering some approximation to that process. Whilst methods such as e.g. recurrent neural networks may paper over the issue (see also our remarks later), signature methods explicitly require a path to be constructed.
 
 We identify the task of going from a finite number of points to a continuous path in data space as an imputation problem; admittedly an unusual one, given the desire to impute an infinite number of values.
 
 \subsubsection{The task at hand}
 
-This certainly sounds like a simple enough goal. Indeed, every previous author considering practical uses of the signature transform has in some sense already solved it, one way or another. However, the seeming simplicity of the problem belies the subtle issues that can arise from it. Typical solutions are often ad-hoc, and tend to exhibit two particular flaws: non-causality, and a fragile dependence on sampling times in unrelated channels.
+This certainly sounds like a simple enough goal. Indeed, every previous author considering practical uses of the signature transform has already solved it, one way or another. However, the seeming simplicity of the problem belies the subtle issues that can arise from it. Typical solutions are often ad-hoc, and tend to exhibit two particular flaws: non-causality, and a fragile dependence on sampling times in unrelated channels.
 % TODO: more of a call to arms here
 
 We believe this issue has gone unobserved due to the (perfectly sensible) behaviour of current software packages for computing the signature transform \citep{esig, iisignature, signatory}. Such packages typically compute the signature of a continuous piecewise linear path, which they expect to be described as a sequence of points, representing the knots between which the linear pieces interpolate.
