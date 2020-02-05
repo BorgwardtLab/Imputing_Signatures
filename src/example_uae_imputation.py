@@ -17,8 +17,6 @@ if __name__ == '__main__':
         ImputationStrategy(strategy='forward_fill')
     ]
 
-    print(transforms)
-
     dataset_train = UEADataset(
             'PenDigits',
             'training',
