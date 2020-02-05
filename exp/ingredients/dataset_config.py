@@ -22,6 +22,16 @@ def Physionet2012():
     parameters = {
     }
 
+@ingredient.named_config
+def PenDigits():
+    """PenDigits Dataset."""
+    name = 'UEADataset'
+    parameters = {
+        'dataset_name': 'PenDigits',
+        'use_disk_cache': True
+    }
+
+
 
 @ingredient.capture
 def get_instance(name, parameters, _log, **kwargs):
