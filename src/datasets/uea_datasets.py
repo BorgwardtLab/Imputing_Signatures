@@ -71,7 +71,11 @@ class UEADataset(Dataset):
         '{}Dataset_normalization.json'
     )
 
-    def __init__(self, dataset_name, split, transform=None, data_path=DATASET_BASE_PATH):
+    def __init__(self,
+        dataset_name, split,
+        transform=None,
+        data_path=DATASET_BASE_PATH,
+        use_disk_cache=False):
         """Initialize dataset.
 
         Args:
@@ -105,6 +109,8 @@ class UEADataset(Dataset):
             self.normalizer._save_params(self.normalizer_config)
         else:
             self.normalizer.load_params(self.normalizer_config)
+
+        self.use_disk_cache = use_disk_cache
 
         # Sets a default transformation that only returns the first
         # argument. This ensures that later on, if no transform has
@@ -141,6 +147,68 @@ class UEADataset(Dataset):
         return self.reader.get_number_of_examples()
 
     def __getitem__(self, index):
+
+        # Check for the existence of data files or create them if they
+        # do not exist.
+        if self.use_disk_cache:
+
+            # Create proper mode string depending on the transformations
+            # that are set. We use this to check the disk cache.
+            mode = '__'.join(repr(t) for t in self.maybe_transform)
+
+            path = os.path.join(
+                self.data_path,
+                mode
+            )
+
+            os.makedirs(path, exist_ok=True)
+
+            cached_file = os.path.join(path, str(index) + '.pkl')
+
+            if os.path.exists(cached_file):
+                with open(cached_file, 'rb') as f:
+                    instance = pickle.load(f)
+
+                # TODO: check whether the data format is sufficient and
+                # contains all information.
+                return instance
+
+            # File does not exist; perform all transformations and write
+            # it out later.
+            else:
+                instance = self._read_and_process_instance(index)
+
+                # Convert back to `numpy` because we have to delete the
+                # first column of the batches.
+                instance = {
+                        k: v.squeeze(0).numpy() for k, v in instance.items()
+                }
+
+                # Consistency; need to store file as in the original
+                # data set.
+                instance['time'] = instance['time'].squeeze(-1)
+
+                with open(cached_file, 'wb') as f:
+                    pickle.dump(instance, f)
+
+                return instance
+
+        # Just load the existing file
+        else:
+            return self._read_and_process_instance(index)
+
+    def _read_and_process_instance(self, index):
+        '''
+        Internal reading and processing function. Loads a single example
+        from a raw dataset and applies all [optional] transformations.
+
+        Parameters
+        ----------
+
+            index: Index of the instance to load. Should be supplied by
+            the caller, e.g. by `__getitem__`.
+        '''
+
         instance = self.reader.read_example(index)
         features = self.normalizer.transform(instance['X'])
         label = instance['y']
