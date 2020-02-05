@@ -46,7 +46,7 @@ def GP_mom_SignatureModel():
         'final_network': [30,30]
     }
 
-
+@ingredient.named_config
 def GP_mc_GRUSignatureModel():
     name = 'GPRNNSignatureModel'
     parameters = {
@@ -115,7 +115,6 @@ def GP_mom_GRUModel():
         'n_devices': 1,
         'output_device': 'cuda',
         'hidden_size': 32 
-        
     }
 
 @ingredient.named_config
