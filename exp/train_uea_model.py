@@ -127,8 +127,9 @@ def train_loop(model, dataset, data_format, loss_fn, collate_fn, n_epochs, batch
     execute_callbacks(callbacks, 'on_train_end', locals())
 
 @EXP.automain
-def train(n_epochs, batch_size, virtual_batch_size, learning_rate, weight_decay, early_stopping, data_format,
-          imputation_params, device, quiet, evaluation, _run, _log, _seed, _rnd):
+def train(n_epochs, batch_size, virtual_batch_size, learning_rate,
+        weight_decay, early_stopping, data_format, imputation_params,
+        subsampler_name, subsampler_parameters, imputation_scheme, device, quiet, evaluation, _run, _log, _seed, _rnd):
     """Sacred wrapped function to run training of model."""
 
     torch.manual_seed(_seed)
@@ -143,15 +144,32 @@ def train(n_epochs, batch_size, virtual_batch_size, learning_rate, weight_decay,
         if virtual_batch_size % batch_size != 0:
             raise ValueError(f'Virtual batch size {virtual_batch_size} has to be a multiple of batch size {batch_size}') 
     
-    # Define dataset transform:
-    input_transform = get_input_transform(data_format, imputation_params['grid_spacing'])
+
+    transforms = [
+        get_subsampler(subsampler_name, subsampler_parameters),
+        get_imputation_scheme(imputation_scheme)
+    ]
 
     # Get data, sacred does some magic here so we need to hush the linter
     # pylint: disable=E1120,E1123
-    train_dataset = dataset_config.get_instance(split='training', transform=input_transform, data_format=data_format)
-    validation_dataset = dataset_config.get_instance(split='validation', transform=input_transform, data_format=data_format)
-    test_dataset = dataset_config.get_instance(split='testing', transform=input_transform, data_format=data_format)
-    
+    train_dataset = dataset_config.get_instance(
+            split='training',
+            transform=transforms,
+            use_disk_cache=True
+    )
+
+    validation_dataset = dataset_config.get_instance(
+            split='validation',
+            transform=transforms,
+            use_disk_cache=True
+    )
+
+    test_dataset = dataset_config.get_instance(
+            split='testing',
+            transform=transforms,
+            use_disk_cache=True
+    )
+
     # Determine number of input dimensions as GP-Sig models requires this parameter for initialisation
     n_input_dims = train_dataset.measurement_dims
     out_dimension = train_dataset.n_classes
