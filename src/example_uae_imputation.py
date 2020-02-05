@@ -13,14 +13,17 @@ from imputation import ImputationStrategy
 if __name__ == '__main__':
 
     transforms = [
-        MissingAtRandomSubsampler(0.25),
-        ImputationStrategy(strategy='zero')
+        LabelBasedSubsampler(10, (0.3, 0.6)),
+        ImputationStrategy(strategy='forward_fill')
     ]
+
+    print(transforms)
 
     dataset_train = UEADataset(
             'PenDigits',
             'training',
-            transform=transforms
+            transform=transforms,
+            use_disk_cache=True,
     )
 
     print('Missing-at-random subsampling')
