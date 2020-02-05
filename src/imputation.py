@@ -299,11 +299,8 @@ class ImputationStrategy:
 
         # Apply conversions to tensors because the imputation strategies
         # require this. This should be a no-op for tensors.
-        #
-        # TODO: check whether shape is correct for all operations; maybe
-        # an additional dimension is required.
-        instance['time'] = torch.Tensor(instance['time'])
-        instance['values'] = torch.Tensor(instance['values'])
-        instance['label'] = torch.Tensor(instance['label'])
+        instance['time'] = torch.Tensor(instance['time']).unsqueeze(0)
+        instance['values'] = torch.Tensor(instance['values']).unsqueeze(0)
+        instance['label'] = torch.Tensor(instance['label']).unsqueeze(0)
 
         return self.strategy_fn(instance)
