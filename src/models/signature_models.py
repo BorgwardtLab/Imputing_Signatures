@@ -250,7 +250,12 @@ class DeepSignatureModel(nn.Module):
         self.signature1 = signatory.Signature(depth=sig_depth,
                                               stream=True)
 
-        sig_channels1 = signatory.signature_channels(channels=in_channels + hidden_channels2 + int(include_time),
+        sig_hidden_channels = hidden_channels2
+        if include_original:
+            sig_hidden_channels += in_channels
+        if include_time:
+            sig_hidden_channels += 1
+        sig_channels1 = signatory.signature_channels(channels=sig_hidden_channels,
                                                      depth=sig_depth)
         self.augment2 = signatory.Augment(in_channels=sig_channels1,
                                           layer_sizes=(hidden_channels1, hidden_channels1, hidden_channels2),
@@ -260,7 +265,7 @@ class DeepSignatureModel(nn.Module):
         self.signature2 = signatory.Signature(depth=sig_depth,
                                               stream=False)
 
-        sig_channels2 = signatory.signature_channels(channels=4,
+        sig_channels2 = signatory.signature_channels(channels=hidden_channels2,
                                                      depth=sig_depth)
         self.linear = torch.nn.Linear(sig_channels2, out_channels)
 
@@ -268,11 +273,15 @@ class DeepSignatureModel(nn.Module):
         # `x` should be a three dimensional tensor (batch, stream, channel)
         # `lengths` should be a one dimensional tensor (batch,) giving the true length of each batch element along the
         # stream dimension
+        
+        adjusted_lengths = lengths - 2 * self.kernel_size + 2
+        if (adjusted_lengths < 0).any():
+            raise ValueError('The kernel size is too large top operate this model on a stream this short.')
 
-        x = become_constant_trick(x, lengths)
         x = self.augment1(x)
         x = self.signature1(x, basepoint=True)
         x = self.augment2(x)
+        x = become_constant_trick(x, adjusted_lengths)
         x = self.signature2(x, basepoint=True)
         x = self.linear(x)
         return x
