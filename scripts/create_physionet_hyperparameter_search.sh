@@ -1,26 +1,25 @@
 #!/bin/bash
 
-#clf_models=(GP_mc_SignatureModel GP_mom_SignatureModel GP_mc_GRUSignatureModel GP_mom_GRUSignatureModel GP_mom_GRUModel GP_mc_GRUModel)
-#
-#output_pattern='experiments/hyperparameter_search/GP_based/{dataset}/{model}.json'
-#
-##GP methods:
-#python scripts/configs_from_product.py exp.hyperparameter_search \
-#  --name model \
-#  --set ${clf_models[*]} \
-#  --name dataset --set Physionet2012 \
-#  --output-pattern ${output_pattern}
-#
+gp_models=(GP_mc_SignatureModel GP_mom_SignatureModel GP_mc_GRUSignatureModel GP_mom_GRUSignatureModel GP_mom_GRUModel GP_mc_GRUModel GP_mom_DeepSignatureModel GP_mc_DeepSignatureModel)
+output_pattern='experiments/hyperparameter_search/GP_based/{dataset}/{model}.json'
+
+#GP methods:
+python scripts/configs_from_product.py exp.hyperparameter_search \
+  --name model \
+  --set ${gp_models[*]} \
+  --name dataset --set Physionet2012 \
+  --output-pattern ${output_pattern}
 
 
-clf_models=(ImputedSignatureModel ImputedRNNSignatureModel ImputedRNNModel)
+
+imputed_models=(ImputedSignatureModel ImputedRNNSignatureModel ImputedRNNModel)
 data_formats=(zero linear forwardfill causal indicator)
 output_pattern='experiments/hyperparameter_search/{dataset}/{data_format}{model}.json'
 
 #GP methods:
 python scripts/configs_from_product.py exp.hyperparameter_search \
   --name model \
-  --set ${clf_models[*]} \
+  --set ${imputed_models[*]} \
   --name dataset --set Physionet2012 \
   --name data_format \
   --set ${data_formats[*]} \
