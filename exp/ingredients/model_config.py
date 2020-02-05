@@ -132,60 +132,60 @@ def GP_mc_GRUModel():
     }
 
 
-@ingredient.named_config
-def ImputedSignatureModel():
-    """Signature Model (requiring imputation!)."""
-    name = 'ImputedSignatureModel'
-    parameters = {
-        'sig_depth': 2,
-        'extra_channels': 5,
-        'channel_groups': 3,
-        'model__parameters__final_network': [30,30]
-    }
-
+#@ingredient.named_config
+#def ImputedSignatureModel():
+#    """Signature Model (requiring imputation!)."""
+#    name = 'ImputedSignatureModel'
+#    parameters = {
+#        'sig_depth': 2,
+#        'extra_channels': 5,
+#        'channel_groups': 3,
+#        'model__parameters__final_network': [30,30]
+#    }
+#
 ###########################################    
-def ImputedRNNSignatureModel():
-    train_module = 'train_model'
-    hyperparameter_space = {   
-        'model__parameters__sig_depth': ('Integer', 2, 4),
-        'model__parameters__extra_channels': ('Integer', 5, 10),
-        'model__parameters__channel_groups': ('Integer', 1, 10),
-        'model__parameters__length': ('Integer', 3, 10),
-        'model__parameters__rnn_channels': ('Categorical', [16,32,64,128]),
-        'batch_size': ('Categorical', [32,64,128,256]) 
-    }
-    overrides = {
-        'model__name': 'ImputedRNNSignatureModel',
-        'model__parameters__rnn_type': 'gru',
-        'virtual_batch_size': None
-    }
-
-def ImputedDeepSignatureModel():
-    train_module = 'train_model'
-    hyperparameter_space = {
-        'model__parameters__hidden_channels1': ('Integer', 8, 32),
-        'model__parameters__hidden_channels2': ('Integer', 4, 8),
-        'model__parameters__kernel_size': ('Integer', 3, 6),
-        'batch_size': ('Categorical', [32,64,128,256])
-    }
-    overrides = {
-        'model__name': 'ImputedDeepSignatureModel',
-        'model__parameters__sig_depth': 2,
-        'virtual_batch_size': None
-    }
-
-def ImputedRNNModel():
-    train_module = 'train_model'
-    hyperparameter_space = {   
-        'model__parameters__hidden_size': ('Categorical', [16,32,64,128]),
-        'batch_size': ('Categorical', [32,64,128,256]) 
-    }
-    overrides = {
-        'model__name': 'ImputedRNNModel',
-        'model__parameters__rnn_type': 'gru',
-        'virtual_batch_size': None
-    }
-
+#def ImputedRNNSignatureModel():
+#    train_module = 'train_model'
+#    hyperparameter_space = {   
+#        'model__parameters__sig_depth': ('Integer', 2, 4),
+#        'model__parameters__extra_channels': ('Integer', 5, 10),
+#        'model__parameters__channel_groups': ('Integer', 1, 10),
+#        'model__parameters__length': ('Integer', 3, 10),
+#        'model__parameters__rnn_channels': ('Categorical', [16,32,64,128]),
+#        'batch_size': ('Categorical', [32,64,128,256]) 
+#    }
+#    overrides = {
+#        'model__name': 'ImputedRNNSignatureModel',
+#        'model__parameters__rnn_type': 'gru',
+#        'virtual_batch_size': None
+#    }
+#
+#def ImputedDeepSignatureModel():
+#    train_module = 'train_model'
+#    hyperparameter_space = {
+#        'model__parameters__hidden_channels1': ('Integer', 8, 32),
+#        'model__parameters__hidden_channels2': ('Integer', 4, 8),
+#        'model__parameters__kernel_size': ('Integer', 3, 6),
+#        'batch_size': ('Categorical', [32,64,128,256])
+#    }
+#    overrides = {
+#        'model__name': 'ImputedDeepSignatureModel',
+#        'model__parameters__sig_depth': 2,
+#        'virtual_batch_size': None
+#    }
+#
+#def ImputedRNNModel():
+#    train_module = 'train_model'
+#    hyperparameter_space = {   
+#        'model__parameters__hidden_size': ('Categorical', [16,32,64,128]),
+#        'batch_size': ('Categorical', [32,64,128,256]) 
+#    }
+#    overrides = {
+#        'model__name': 'ImputedRNNModel',
+#        'model__parameters__rnn_type': 'gru',
+#        'virtual_batch_size': None
+#    }
+#
 
 ########################
 
