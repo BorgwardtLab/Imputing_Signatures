@@ -153,10 +153,27 @@ class UEADataset(Dataset):
         time = np.array(np.arange(features.shape[0]), dtype=np.float32)[:, None]
         features = np.array(features, dtype=np.float32)
 
-        return self.maybe_transform(
-            {'time': time, 'values': features, 'label': label},
-            index
-        )
+        # Instance that will be returned to the user or transformed
+        # depending on the availability of transformations.
+        instance = {
+            'time': time,
+            'values': features,
+            'label': label
+        }
+
+        # Check if multiple transformations are present and apply them
+        # in the correct order.
+        if type(self.maybe_transform) is list:
+
+            # Note that the index is supplied multiple times because we
+            # do not make any assumptions about the underlying functor.
+            for transform in self.maybe_transform:
+                instance = transform(instance, index)
+
+        else:
+            instance = self.maybe_transform(instance, index)
+
+        return instance
 
 
 def _to_array(data):
