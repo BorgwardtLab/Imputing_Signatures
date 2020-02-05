@@ -86,13 +86,13 @@ def GP_mom_GRUSignatureModel():
 def GP_mc_DeepSignatureModel():
     train_module = 'train_model'
     hyperparameter_space = {
-        'model__parameters__sig_depth': ('Integer', 2, 4),
         'model__parameters__hidden_channels1': ('Integer', 8, 32),
         'model__parameters__hidden_channels2': ('Integer', 4, 8),
         'model__parameters__kernel_size': ('Integer', 3, 6),
         'weight_decay': ('Real', 10**-4, 10**-3, 'uniform')
     }
     overrides = {
+        'model__parameters__sig_depth': 2,
         'model__name': 'GPDeepSignatureModel',
         'model__parameters__sampling_type': 'monte_carlo',
         'model__parameters__n_mc_smps': 10,
@@ -103,13 +103,12 @@ def GP_mc_DeepSignatureModel():
 def GP_mom_DeepSignatureModel():
     train_module = 'train_model'
     hyperparameter_space = {
-        'model__parameters__sig_depth': ('Integer', 2, 4),
         'model__parameters__hidden_channels1': ('Integer', 8, 32),
         'model__parameters__hidden_channels2': ('Integer', 4, 8),
         'model__parameters__kernel_size': ('Integer', 3, 6),
-        'weight_decay': ('Real', 10 ** -4, 10 ** -3, 'uniform')
     }
     overrides = {
+        'model__parameters__sig_depth': 2,
         'model__name': 'GPDeepSignatureModel',
         'model__parameters__sampling_type': 'moments',
         'model__parameters__n_mc_smps': 1,
