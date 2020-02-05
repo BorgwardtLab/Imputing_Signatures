@@ -81,6 +81,42 @@ def GP_mom_GRUSignatureModel():
         'model__parameters__output_device': 'cuda'
     }
 
+## Deep Signature Models
+
+def GP_mc_DeepSignatureModel():
+    train_module = 'train_model'
+    hyperparameter_space = {
+        'model__parameters__sig_depth': ('Integer', 2, 4),
+        'model__parameters__hidden_channels1': ('Integer', 8, 32),
+        'model__parameters__hidden_channels2': ('Integer', 4, 8),
+        'model__parameters__kernel_size': ('Integer', 3, 6),
+        'weight_decay': ('Real', 10**-4, 10**-3, 'uniform')
+    }
+    overrides = {
+        'model__name': 'GPDeepSignatureModel',
+        'model__parameters__sampling_type': 'monte_carlo',
+        'model__parameters__n_mc_smps': 10,
+        'model__parameters__n_devices': 1,
+        'model__parameters__output_device': 'cuda'
+    }
+
+def GP_mom_DeepSignatureModel():
+    train_module = 'train_model'
+    hyperparameter_space = {
+        'model__parameters__sig_depth': ('Integer', 2, 4),
+        'model__parameters__hidden_channels1': ('Integer', 8, 32),
+        'model__parameters__hidden_channels2': ('Integer', 4, 8),
+        'model__parameters__kernel_size': ('Integer', 3, 6),
+        'weight_decay': ('Real', 10 ** -4, 10 ** -3, 'uniform')
+    }
+    overrides = {
+        'model__name': 'GPDeepSignatureModel',
+        'model__parameters__sampling_type': 'moments',
+        'model__parameters__n_mc_smps': 1,
+        'model__parameters__n_devices': 1,
+        'model__parameters__output_device': 'cuda'
+    }
+
 ## RNN Models
 def GP_mom_GRUModel():
     train_module = 'train_model'
@@ -144,6 +180,20 @@ def ImputedRNNSignatureModel():
         'virtual_batch_size': None
     }
 
+def ImputedDeepSignatureModel():
+    train_module = 'train_model'
+    hyperparameter_space = {
+        'model__parameters__sig_depth': ('Integer', 2, 4),
+        'model__parameters__hidden_channels1': ('Integer', 8, 32),
+        'model__parameters__hidden_channels2': ('Integer', 4, 8),
+        'model__parameters__kernel_size': ('Integer', 3, 6),
+        'batch_size': ('Categorical', [32,64,128,256])
+    }
+    overrides = {
+        'model__name': 'ImputedDeepSignatureModel',
+        'virtual_batch_size': None
+    }
+
 def ImputedRNNModel():
     train_module = 'train_model'
     hyperparameter_space = {   
@@ -178,9 +228,12 @@ def add_models(experiment):
     experiment.named_config(GP_mc_GRUSignatureModel)
     experiment.named_config(GP_mom_GRUModel)
     experiment.named_config(GP_mc_GRUModel)
+    experiment.named_config(GP_mc_DeepSignatureModel)
+    experiment.named_config(GP_mom_DeepSignatureModel)
     experiment.named_config(ImputedSignatureModel)
     experiment.named_config(ImputedRNNSignatureModel)
     experiment.named_config(ImputedRNNModel)
+    experiment.named_config(ImputedDeepSignatureModel)
     experiment.named_config(zero)
     experiment.named_config(linear)
     experiment.named_config(forwardfill)

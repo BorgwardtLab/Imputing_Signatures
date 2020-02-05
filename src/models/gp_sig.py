@@ -2,7 +2,7 @@ import torch.nn as nn
 import gpytorch
 
 from src.models.mgp import GPAdapter
-from src.models.signature_models import SignatureModel, RNNSignatureModel
+from src.models.signature_models import SignatureModel, RNNSignatureModel, DeepSignatureModel
 from src.models.non_signature_models import GRU, LSTM
 
 class GPSignatureModel(nn.Module):
@@ -85,6 +85,53 @@ class GPRNNSignatureModel(nn.Module):
                                 rnn_type=rnn_type
                                 )
         
+        self.model = GPAdapter(clf,
+                               None,
+                               n_mc_smps,
+                               sampling_type,
+                               likelihood,
+                               n_input_dims + 1,
+                               n_devices,
+                               output_device,
+                               kernel,
+                               mode
+                               )
+
+    def forward(self, *data):
+        return self.model(*data)
+
+
+class GPDeepSignatureModel(nn.Module):
+    """
+    GP Adapter combined with a DeepSignatureModel
+    """
+
+    def __init__(self, n_input_dims, out_dimension, sampling_type, n_mc_smps, n_devices, output_device, sig_depth=2,
+                 kernel='rbf', mode='normal', hidden_channels1=8, hidden_channels2=4, kernel_size=4,
+                 include_original=True):
+        super(GPDeepSignatureModel, self).__init__()
+
+        # safety guard:
+        self.sampling_type = sampling_type
+        if self.sampling_type == 'moments':
+            n_mc_smps = 1
+            # the classifier receives mean and variance of GPs posterior
+            clf_input_dims = 2 * n_input_dims
+        else:
+            clf_input_dims = n_input_dims
+
+        likelihood = gpytorch.likelihoods.GaussianLikelihood().to(output_device, non_blocking=True)
+
+        clf = DeepSignatureModel(in_channels=clf_input_dims,
+                                        hidden_channels1=hidden_channels1,
+                                        hidden_channels2=hidden_channels2,
+                                        kernel_size=kernel_size,
+                                        include_original=include_original,
+                                        include_time=False,
+                                        sig_depth=sig_depth,
+                                        out_channels=out_dimension
+                                        )
+
         self.model = GPAdapter(clf,
                                None,
                                n_mc_smps,

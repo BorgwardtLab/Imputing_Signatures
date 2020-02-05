@@ -37,6 +37,11 @@ def ImputedRNNSignatureModel():
     name = 'ImputedRNNSignatureModel'
 
 @ingredient.named_config
+def ImputedDeepSignatureModel():
+    """DeepSignature Model (requiring imputation!)."""
+    name = 'ImputedDeepSignatureModel'
+
+@ingredient.named_config
 def ImputedRNNModel():
     """RNN Model (requiring imputation!)."""
     name = 'ImputedRNNModel'
@@ -47,6 +52,17 @@ def ImputedRNNModel():
 @ingredient.named_config
 def GPRNNSignatureModel():
     """MGP Adapter with Signature Model (using Monte-carlo sampling)."""
+    name = 'GPRNNSignatureModel'
+    parameters = {
+        'sampling_type': 'monte_carlo',
+        'n_mc_smps': 10,
+        'n_devices': 1,
+        'output_device': 'cuda'
+    }
+
+@ingredient.named_config
+def GPDeepSignatureModel():
+    """MGP Adapter with Deep Signature Model (using Monte-carlo sampling)."""
     name = 'GPRNNSignatureModel'
     parameters = {
         'sampling_type': 'monte_carlo',

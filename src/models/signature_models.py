@@ -224,3 +224,55 @@ class RNNSignatureModel(nn.Module):
 
         x = self.linear(x)
         return x
+
+
+class DeepSignatureModel(nn.Module):
+    def __init__(self, in_channels, hidden_channels1, hidden_channels2, kernel_size, include_original, include_time,
+                 sig_depth, out_channels):
+        """
+        Inputs:
+            in_channels: As SignatureModel.
+            hidden_channels1: How large to make certain hidden channels within the model.
+            hidden_channels2: How large to make certain hidden channels within the model.
+            kernel_size: How far to look back in time.
+            include_original: As SignatureModel.
+            include_time: As SignatureModel.
+            sig_depth: As SignatureModel.
+            out_channels: As SignatureModel.
+        """
+        super().__init__()
+        self.kernel_size = kernel_size
+        self.augment1 = signatory.Augment(in_channels=in_channels,
+                                          layer_sizes=(hidden_channels1, hidden_channels1, hidden_channels2),
+                                          kernel_size=kernel_size,
+                                          include_original=include_original,
+                                          include_time=include_time)
+        self.signature1 = signatory.Signature(depth=sig_depth,
+                                              stream=True)
+
+        sig_channels1 = signatory.signature_channels(channels=in_channels + hidden_channels2 + int(include_time),
+                                                     depth=sig_depth)
+        self.augment2 = signatory.Augment(in_channels=sig_channels1,
+                                          layer_sizes=(hidden_channels1, hidden_channels1, hidden_channels2),
+                                          kernel_size=kernel_size,
+                                          include_original=False,
+                                          include_time=False)
+        self.signature2 = signatory.Signature(depth=sig_depth,
+                                              stream=False)
+
+        sig_channels2 = signatory.signature_channels(channels=4,
+                                                     depth=sig_depth)
+        self.linear = torch.nn.Linear(sig_channels2, out_channels)
+
+    def forward(self, x, lengths):
+        # `x` should be a three dimensional tensor (batch, stream, channel)
+        # `lengths` should be a one dimensional tensor (batch,) giving the true length of each batch element along the
+        # stream dimension
+
+        x = become_constant_trick(x, lengths)
+        x = self.augment1(x)
+        x = self.signature1(x, basepoint=True)
+        x = self.augment2(x)
+        x = self.signature2(x, basepoint=True)
+        x = self.linear(x)
+        return x

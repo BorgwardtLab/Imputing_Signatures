@@ -1,6 +1,6 @@
 import torch.nn as nn
 
-from src.models.signature_models import SignatureModel, RNNSignatureModel
+from src.models.signature_models import SignatureModel, RNNSignatureModel, DeepSignatureModel
 from src.models.non_signature_models import GRU
 
 
@@ -46,6 +46,29 @@ class ImputedRNNSignatureModel(nn.Module):
                              out_channels=out_dimension,
                              rnn_type=rnn_type 
         )
+
+    def forward(self, *data):
+        return self.model(*data)
+
+
+class ImputedDeepSignatureModel(nn.Module):
+    """
+    SignatureModel using preprocessed imputations
+    """
+
+    def __init__(self, n_input_dims, out_dimension, sig_depth=2, hidden_channels1=8, hidden_channels2=4, kernel_size=4,
+                 include_original=True):
+        super(ImputedDeepSignatureModel, self).__init__()
+
+        self.model = DeepSignatureModel(in_channels=n_input_dims + 1,  # as we feed time also
+                                        hidden_channels1=hidden_channels1,
+                                        hidden_channels2=hidden_channels2,
+                                        kernel_size=kernel_size,
+                                        include_original=include_original,
+                                        include_time=False,
+                                        sig_depth=sig_depth,
+                                        out_channels=out_dimension
+                                       )
 
     def forward(self, *data):
         return self.model(*data)
