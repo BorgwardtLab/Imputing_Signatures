@@ -1,0 +1,57 @@
+% Add lower path	
+\addplot[
+	name path=B, 
+	mark=none,
+	line width=2pt,
+	smooth,
+	]			
+	table [x=x, y=y, col sep=comma] {data/gp.csv};
+
+
+\addplot[
+	name path=C, 
+	mark=none,
+	line width=0.5pt,
+	smooth
+	]			
+	table [x=x, y=y, col sep=comma] {data/gp_low.csv};
+	
+\addplot[
+	name path=D, 
+	mark=none,
+	line width=0.5pt,
+	smooth,
+	]			
+	table [x=x, y=y, col sep=comma] {data/gp_high.csv};
+
+	
+\node[roundnode2] (a2) at (0, 0.5) {};
+\node[roundnode2] (b2) at (3,1) {};
+\node[roundnode2] (c2) at (4, 1.5) {};
+\node[roundnode2] (d2) at (6, 0.5) {};
+
+\addplot[red!20] fill between [of=C and D, split,];
+
+% Error bar 1
+\node[roundnode3] (e) at (1.5, 0.62) {};
+\draw[draw=red, thick] (1.4, -0.5) -- (1.6, -0.5);
+\draw[draw=red, thick] (1.5, 0.62) -- (1.5, -0.5);
+
+\draw[draw=red, thick] (1.4, 1.75) -- (1.6, 1.75);
+\draw[draw=red, thick] (1.5, 0.62) -- (1.5, 1.75);
+
+% Error bar 2
+\node[roundnode3] (f) at (3.5, 1.31) {};
+\draw[draw=red, thick] (3.4, 1) -- (3.6, 1);
+\draw[draw=red, thick] (3.5, 1.31) -- (3.5, 1);
+
+\draw[draw=red, thick] (3.4, 1.7) -- (3.6, 1.7);
+\draw[draw=red, thick] (3.5, 1.31) -- (3.5, 1.7);
+
+% Error bar 3
+\node[roundnode3] (g) at (5,1.3) {};
+\draw[draw=red, thick] (4.9, 0.5) -- (5.1, 0.5);
+\draw[draw=red, thick] (5, 0.5) -- (5, 1.3);
+
+\draw[draw=red, thick] (4.9, 2) -- (5.1, 2);
+\draw[draw=red, thick] (5, 1.3) -- (5, 2);

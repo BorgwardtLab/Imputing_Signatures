@@ -1,0 +1,13 @@
+% Add lower path	
+\addplot[
+	name path=A, 
+	mark=none,
+	line width=2pt,
+	smooth,
+	]			
+	table [x=x, y=y, col sep=comma] {data/unobserved_process.csv};
+
+\node[roundnode] (a) at (0, 0.5) {};
+\node[roundnode] (b) at (3,1) {};
+\node[roundnode] (c) at (4, 1.5) {};
+\node[roundnode] (d) at (6, 0.5) {};

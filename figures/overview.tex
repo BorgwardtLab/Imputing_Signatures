@@ -1,0 +1,90 @@
+\documentclass[preview, tikz]{standalone}
+\usepackage{tikz, pgfplots}
+\usepgfplotslibrary{groupplots}
+\usepgfplotslibrary{fillbetween}
+\usetikzlibrary{arrows,shapes,positioning}
+
+\pgfplotsset{compat=1.16}
+
+\begin{document}
+	\begin{tikzpicture}[
+	    clip=false,
+		roundnode/.style={circle, draw=black, fill=green, inner sep=0pt, minimum size=5pt},
+		roundnode2/.style={circle, draw=black, fill=orange, inner sep=0pt, minimum size=5pt},
+		roundnode3/.style={circle, draw=red, fill=red, inner sep=0pt, minimum size=2.5pt},
+		every text node part/.style={align=center}
+	]
+			
+		\begin{groupplot}[
+			group style = {
+				group size = 1 by 3,
+				xlabels at=edge bottom,
+			},
+			height=3.5cm,
+			width=10cm,
+			xtick align = outside,
+			tickpos=left,
+			hide y axis,
+		]
+			
+		\nextgroupplot[
+			ticks=none,
+			enlargelimits=false,
+			xmin=-0.25, xmax=6.5,
+			ymin=-1, ymax=2.25,
+			axis x line=none
+		]
+		
+		\input{overview_3.tikz}
+		\draw[dashed, black, thick] (axis cs: -0.25, -1) -- (6.5, -1);
+		
+		
+		
+		\nextgroupplot[
+			ticks=none,
+			enlargelimits=false,
+			xmin=-0.25, xmax=6.5,
+			ymin=-1, ymax=2.25,
+			extra x tick labels ={$t$},
+			axis x line=none
+		]
+		
+		\input{overview_2.tikz}
+		\draw[dashed, black, thick] (axis cs: -0.25, -1) -- (6.5, -1);		
+		
+		
+		\nextgroupplot[
+			xtick={0,3,4,5,6},
+			xticklabels={
+				$t_1$,
+				$t_2$,
+				$t_3$,
+				$\cdots$,
+				$t_n$
+			},
+			enlargelimits=false,
+			xmin=-0.25, xmax=6.5,
+			ymin=-1, ymax=2.25,
+			extra x tick labels ={$t$},
+			axis x line=bottom,
+		]
+		
+		\input{overview_1.tikz}
+	
+		
+		
+		\end{groupplot}
+		
+		\draw[-latex, dashed, gray] (a) -- (a2);
+		\draw[-latex, dashed, gray] (b) -- (b2);
+		\draw[-latex, dashed, gray] (c) -- (c2);
+		\draw[-latex, dashed, gray] (d) -- (d2);
+		
+		
+		\node[text width=3cm] (text1) at (10, 0.75) {uncertainty aware piecewise linear path};
+		\node[text width=3cm] (text2) at (10, -1.5) {uncertainty \\ aware \\ Gaussian \\ Process};
+		\node[text width=3cm] (text3) at (10, -4.5) {unobserved underlying process};
+	
+	\end{tikzpicture}
+\end{document}
+	
