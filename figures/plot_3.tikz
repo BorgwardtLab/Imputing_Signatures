@@ -4,7 +4,22 @@
 	mark=none,
 	line width=2pt
 	]			
+	coordinates {(0.2,0.2) (2,0.2) (2.8,2.8)};
+
+		
+% Add diagonal 
+\addplot[
+	name path=B,
+	mark=none,
+	dashed,
+	]
 	coordinates {(0.2,0.2) (2.8,2.8)};
+
+% Add fill 	
+\addplot[red!50] fill between[of=A and B];
+
+% Add label
+\node at (axis cs: 1.6, 0.85) {\huge$\mathbf{-}$};
 
 %\coordinate (p3) at (axis cs: 3,3);
 
@@ -14,6 +29,10 @@
 \coordinate (pt1) at (axis cs: 0.2,-1);
 \draw[dash pattern=on 1pt off 1pt, gray] (p1) -- (pX11);
 \draw[dash pattern=on 1pt off 1pt, gray] (p1) -- (pt1);
+
+\coordinate (p2) at (axis cs: 2,0.2);
+\coordinate (pt32) at (axis cs: 2,-1);
+\draw[dash pattern=on 1pt off 1pt, gray] (p2) -- (pt32);
 
 \coordinate (p3) at (axis cs: 2.8,2.8);
 \coordinate (pX12) at (axis cs: -1,2.8);
