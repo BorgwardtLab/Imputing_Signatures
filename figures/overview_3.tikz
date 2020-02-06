@@ -3,6 +3,5 @@
 	name path=A, 
 	mark=none,
 	line width=2pt,
-	smooth,
 	]			
 	table [x=x, y=y, col sep=comma] {data/unobserved_process.csv};
