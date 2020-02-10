@@ -10,7 +10,7 @@ from src.imputation import (zero_imputation,
                             linear_imputation,
                             forward_fill_imputation,
                             causal_imputation,
-                            indictator_imputation)
+                            indicator_imputation)
 import torch
 
 # from ..tasks import BinaryClassification
@@ -100,7 +100,7 @@ class PhysionetDataReader():
                     'linear':       linear_imputation,
                     'forwardfill':  forward_fill_imputation, 
                     'causal':       causal_imputation, 
-                    'indicator':    indictator_imputation 
+                    'indicator':    indicator_imputation 
                 }
                 imputation_fn = imputation_dict[mode]
                 time, features, label = read_raw_example(index)
