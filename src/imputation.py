@@ -288,8 +288,10 @@ class ImputationStrategy:
 
             ensure_zero_imputation: If set, will always apply zero-based
             imputation after any scheme, thus ensuring that no NaNs will
-            remain in the data.
+            remain in the data (except for inactive GP mode!).
         '''
+        def inactive(x):
+            return x
 
         strategy_to_fn = {
             'zero': zero_imputation,
@@ -297,7 +299,8 @@ class ImputationStrategy:
             'forward_fill': forward_fill_imputation,
             'backward_fill': backward_fill_imputation,
             'causal': causal_imputation,
-            'indicator': indicator_imputation
+            'indicator': indicator_imputation,
+            'GP' : inactive  #here we don't want any preprocessing imputation
         }
 
         # Report available strategies in order to make this class
@@ -325,9 +328,14 @@ class ImputationStrategy:
         instance['values'] = torch.Tensor(instance['values']).unsqueeze(0)
         instance['label'] = torch.Tensor(instance['label']).unsqueeze(0)
 
-        instance = self.strategy_fn(instance)
+        instance = self.strategy_fn(instance) #the strategies are implemented for torch tensors
+        #however, to speed up, we apply them now as a prepro step still in numpy format (reformat again here)
 
-        if self.ensure_zero_imputation:
+        if self.ensure_zero_imputation and self.strategy != 'GP':
             instance = zero_imputation(instance)
+
+        #Reformat to numpy (since we impute still before data loader as prepro step in numpy )
+        instance = {key: value.squeeze(0).numpy() for key,value in instance.items()}
+        #instance['time'] = instance['time'].squeeze(-1) #to stay consistent with other formats        
 
         return instance
