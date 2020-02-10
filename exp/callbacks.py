@@ -123,7 +123,7 @@ class LogDatasetLoss(Callback):
 
     def __init__(self, dataset_name, dataset, data_format, collate_fn, loss_fn, run, 
                  imputation_params, batch_size=64, early_stopping=None, save_path=None,
-                 device='cpu', print_progress=True):
+                 device='cpu', print_progress=True, num_workers=4):
         """Create logger callback.
 
         Log the training loss using the sacred metrics API.
@@ -146,7 +146,7 @@ class LogDatasetLoss(Callback):
         self.prefix = dataset_name
         self.dataset = dataset
         self.data_loader = torch.utils.data.DataLoader(self.dataset, batch_size=batch_size, collate_fn=collate_fn,
-                                                       pin_memory=True, num_workers=4)
+                                                       pin_memory=True, num_workers=num_workers)
         self.data_format = data_format
         self.loss_fn = loss_fn
         self.run = run

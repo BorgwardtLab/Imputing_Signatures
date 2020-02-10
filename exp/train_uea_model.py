@@ -56,10 +56,9 @@ def cfg():
                          'grid_spacing': 1. # determines n_hours between query points
                         }                              
 
-    subsampler_name = None
+    subsampler_name = 'MissingAtRandomSubsampler'
     subsampler_parameters = {}
-
-    imputation_scheme = None
+    num_workers=1
 
 @EXP.named_config
 def rep1():
@@ -92,7 +91,7 @@ class NewlineCallback(Callback):
         print()
 
 def train_loop(model, dataset, data_format, loss_fn, collate_fn, n_epochs, batch_size, virtual_batch_size,
-               learning_rate, imputation_params, weight_decay=1e-5, device='cuda', callbacks=None):
+               learning_rate, imputation_params, weight_decay=1e-5, device='cuda', callbacks=None, num_workers=0):
     if callbacks is None:
         callbacks = []
 
@@ -101,7 +100,7 @@ def train_loop(model, dataset, data_format, loss_fn, collate_fn, n_epochs, batch
         virtual_scaling = virtual_batch_size / batch_size
 
     train_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, collate_fn=collate_fn, shuffle=True,
-                                               pin_memory=True, num_workers=4)
+                                               pin_memory=True, num_workers=num_workers)
     n_instances = len(dataset)
     n_batches = len(train_loader)
 
@@ -129,7 +128,7 @@ def train_loop(model, dataset, data_format, loss_fn, collate_fn, n_epochs, batch
 @EXP.automain
 def train(n_epochs, batch_size, virtual_batch_size, learning_rate,
         weight_decay, early_stopping, data_format, imputation_params,
-        subsampler_name, subsampler_parameters, imputation_scheme, device, quiet, evaluation, _run, _log, _seed, _rnd):
+        subsampler_name, subsampler_parameters, device, quiet, evaluation, num_workers, _run, _log, _seed, _rnd):
     """Sacred wrapped function to run training of model."""
 
     torch.manual_seed(_seed)
@@ -147,7 +146,8 @@ def train(n_epochs, batch_size, virtual_batch_size, learning_rate,
 
     transforms = [
         get_subsampler(subsampler_name, subsampler_parameters),
-        get_imputation_scheme(imputation_scheme)
+        get_imputation_scheme(data_format),
+        get_input_transform(data_format, imputation_params['grid_spacing']) 
     ]
 
     # Get data, sacred does some magic here so we need to hush the linter
@@ -201,9 +201,9 @@ def train(n_epochs, batch_size, virtual_batch_size, learning_rate,
     callbacks = [
         LogTrainingLoss(_run, print_progress=quiet),
         LogDatasetLoss('validation', validation_dataset, data_format, collate_fn, loss_fn, _run, imputation_params, batch_size,  
-                       early_stopping=early_stopping, save_path=rundir, device=device, print_progress=True),
+                       early_stopping=early_stopping, save_path=rundir, device=device, print_progress=True, num_workers=num_workers),
         LogDatasetLoss('testing', test_dataset, data_format, collate_fn, loss_fn, _run, imputation_params, batch_size, save_path=rundir, 
-                       device=device, print_progress=False)
+                       device=device, print_progress=False, num_workers=num_workers)
     ]
     if quiet:
         # Add newlines between epochs
@@ -212,7 +212,7 @@ def train(n_epochs, batch_size, virtual_batch_size, learning_rate,
         callbacks.append(Progressbar())
 
     train_loop(model, train_dataset, data_format, loss_fn, collate_fn, n_epochs, batch_size, virtual_batch_size,
-               learning_rate, imputation_params, weight_decay, device, callbacks)
+               learning_rate, imputation_params, weight_decay, device, callbacks, num_workers)
 
     if rundir:
         # Save model state (and entire model)
