@@ -133,7 +133,6 @@ class UEADataset(Dataset):
         """
         return self.n_class_types() 
 
-    @property
     def n_class_types(self):
         """
         Given single-label settings, how many classes / class manifestations of this label
@@ -181,15 +180,15 @@ class UEADataset(Dataset):
             else:
                 instance = self._read_and_process_instance(index)
 
-                # Convert back to `numpy` because we have to delete the
-                # first column of the batches.
-                instance = {
-                        k: v.squeeze(0).numpy() for k, v in instance.items()
-                }
+                ## Convert back to `numpy` because we have to delete the
+                ## first column of the batches.
+                #instance = {
+                #        k: v.squeeze(0).numpy() for k, v in instance.items()
+                #}
 
-                # Consistency; need to store file as in the original
-                # data set.
-                instance['time'] = instance['time'].squeeze(-1)
+                ## Consistency; need to store file as in the original
+                ## data set.
+                #instance['time'] = instance['time'].squeeze(-1)
 
                 with open(cached_file, 'wb') as f:
                     pickle.dump(instance, f)
@@ -238,7 +237,10 @@ class UEADataset(Dataset):
             # Note that the index is supplied multiple times because we
             # do not make any assumptions about the underlying functor.
             for transform in self.maybe_transform:
-                instance = transform(instance, index)
+                if any(word in str(transform) for word in ['gpytorch', 'inactive']):
+                    instance = transform(instance)
+                else:
+                    instance = transform(instance, index)
 
         else:
             instance = self.maybe_transform(instance, index)

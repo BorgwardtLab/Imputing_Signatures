@@ -14,7 +14,9 @@ def to_gpytorch_format(d, grid_spacing=1.0):
     """Convert dictionary with data into the gpytorch format.
 
     Args:
-        d: Dictionary with at least the following keys: time, values
+        d: instance dictionary with at least the following keys: time, values
+        index: this argument is not active, it is simply here to conform with stacking multiple transforms (some of which use the instance index)
+        grid_spacing: GP grid spacing for query time points [default = 1.0 hour]
 
     Returns:
         Dictionary where time and values are replaced with inputs, values and
@@ -84,7 +86,7 @@ def dict_collate_fn(instances, padding_values=None):
     if 'n_tasks' in instances[0].keys():
         n_tasks = instances[0]['n_tasks']
     if 'data_format' in instances[0].keys():
-        data_format = instances[0]['data_format']
+        data_format = instances[0]['data_format'] # data_format is only passed in to_gpytorch input transform for the GP
     else:
         data_format = None
 
@@ -194,11 +196,12 @@ def get_input_transform(data_format, grid_spacing):
             'indicator'
         - grid_spacing: number of hours between each query point / or imputed point depending on format
     """
-
+    def inactive(x):
+        return x
     if data_format == 'GP':
         return partial(to_gpytorch_format, grid_spacing=grid_spacing)
     elif data_format in ['zero', 'linear', 'forwardfill', 'causal', 'indicator']:
-        return None
+        return inactive
     else:
         raise ValueError('No valid data format provided!')
 
