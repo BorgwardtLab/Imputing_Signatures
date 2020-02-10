@@ -2,6 +2,7 @@ import os
 import sys 
 import json
 import argparse
+import pandas as pd
 import numpy as np
 from IPython import embed
 
@@ -43,7 +44,7 @@ def get_results(path):
     with open(path, 'r') as f:
         data = json.load(f)
     eval_metric = 'validation.average_precision_score.macro' 
-    test_metrics = ['testing.average_precision_score.macro', 'testing.roc_auc_score.macro']
+    test_metrics = ['testing.average_precision_score.macro', 'testing.roc_auc_score.macro', 'validation.average_precision_score.macro']
     best_step = np.argmax(data[eval_metric]['values'])
     result_dict = defaultdict()
     
@@ -58,7 +59,7 @@ def get_results(path):
 def gather_results_in_dict(base_paths, useful_heads):
     results = defaultdict(list)           
     for base_path in base_paths:
-
+        print(f'Searchin base path: {base_path}')
         for root, dirs, files in os.walk(base_path):
             for name in files:
                 file_path = os.path.join(root, name)
@@ -72,7 +73,9 @@ def gather_results_in_dict(base_paths, useful_heads):
                     experiment = [e for e in experiment_split if e not in base_split]
                     
                     #a valid experiment containing model run info has len of 6
-                    if len(experiment) < 6:
+                    if len(experiment) < 5:
+                        exp_path = '/'.join(experiment)
+                        print(f'Skipping experiment: {exp_path}')
                         continue
                     elif len(experiment) > 6:
                         print('Found experiment with more than 6 levels!')
@@ -88,6 +91,65 @@ def gather_results_in_dict(base_paths, useful_heads):
                         results[exp_path_tail].append(output)
     return results
 
+
+def process_run_dict(result_dict):
+    out_dict = defaultdict(list)  
+    for key, value in result_dict.items():
+        key_split = key.split('/')
+        dataset = key_split[0]
+        method = key_split[1]
+        if dataset not in out_dict.keys():
+            out_dict[dataset] = []
+        out_dict[dataset].append({method: value})
+    return out_dict
+
+
+def count_runs(out_dict):
+    counts = defaultdict(dict)
+    for dataset in out_dict.keys(): #dataset
+        if dataset not in counts.keys():
+            counts[dataset] = defaultdict()
+        for run in out_dict[dataset]: #looping over list of runs
+            for method, result in run.items(): #run is a dict with method as key and dictionary of results as value
+                if method not in counts[dataset].keys():
+                    counts[dataset][method] = 1
+                else:
+                    counts[dataset][method] += len(result)
+    return counts
+
+
+def get_best_runs(out_dict, n_counts=20, metric='validation.average_precision_score.macro'):
+    pilot_test_methods = ['GP_mom_LSTMSignatureModel']     
+        
+    counts = defaultdict(dict) 
+    for dataset in out_dict.keys(): #dataset
+        if dataset not in counts.keys():
+            counts[dataset] = defaultdict()
+        for run in out_dict[dataset]: #looping over list of runs
+            for method, result in run.items(): #run is a dict with method as key and dictionary of results as value
+                if method in pilot_test_methods:
+                    continue
+                if method not in counts[dataset].keys():
+                    counts[dataset][method] = defaultdict()
+                elif 'count' not in counts[dataset][method].keys():
+                    counts[dataset][method]['count'] = 1
+                    best = 0
+                    for res in result: 
+                        if res[metric] > best:
+                            best = res[metric]
+                            best_res = res
+                    counts[dataset][method]['best'] = best_res  
+                elif counts[dataset][method]['count'] > n_counts:
+                    continue
+                else: 
+                    counts[dataset][method]['count'] += len(result)
+                    for res in result: #loop over possible multiple runs
+                        if res[metric] > counts[dataset][method]['best'][metric]:
+                            counts[dataset][method]['best'] = res 
+    return counts
+
+
+     
 if __name__ == "__main__":
     
     # Parameters:
@@ -101,4 +163,16 @@ if __name__ == "__main__":
     
     with open('gathered_runs.json', 'w') as f:
         json.dump(results, f)
+    
+    out_dict = process_run_dict(results)
+
+    #counts = count_runs(out_dict)
+
+    counts = get_best_runs(out_dict)
+
+    embed()
+    
+    with open('gathered_results.json', 'w') as f:
+        json.dump(results, f)
+    
  
