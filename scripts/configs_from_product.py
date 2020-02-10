@@ -34,7 +34,7 @@ def main():
                 'python', '-m', args.sacred_experiment, 'save_config', 'with',
                 f'config_filename={output_filename}'
         ] + list(possible_parameters)
-
+        print(command)
         subprocess.call(command)
 
 
