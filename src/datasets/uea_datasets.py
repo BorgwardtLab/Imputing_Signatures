@@ -129,9 +129,9 @@ class UEADataset(Dataset):
     @property
     def n_classes(self):
         """
-        Refering to multi-label settings (conforming with other pipelines)
+        N of different classes, determining classifier output dimension (if binary, use 1) otherwise n_classes
         """
-        return 1
+        return n_class_types() 
 
     @property
     def n_class_types(self):
