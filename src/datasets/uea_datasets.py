@@ -117,7 +117,7 @@ class UEADataset(Dataset):
         # Sets a default transformation that only returns the first
         # argument. This ensures that later on, if no transform has
         # been set, only the *instance* is returned.
-        self.maybe_transform = transform if transform else lambda a: a[0]
+        self.maybe_transform = transform if transform else lambda a: a
 
     def _set_properties(self):
         self.has_unaligned_measurements = False
@@ -131,7 +131,7 @@ class UEADataset(Dataset):
         """
         N of different classes, determining classifier output dimension (if binary, use 1) otherwise n_classes
         """
-        return n_class_types() 
+        return self.n_class_types() 
 
     @property
     def n_class_types(self):
@@ -215,11 +215,10 @@ class UEADataset(Dataset):
         instance = self.reader.read_example(index)
         features = self.normalizer.transform(instance['X'])
         label = instance['y']
-        if self.n_classes == 1:
-            # Add an additional dimension to the label if it is only a scalar.
-            # This makes it confirm more to the treatment of multi-class
-            # targets.
-            label = [label]
+        # Add an additional dimension to the label if it is only a scalar.
+        # This makes it confirm more to the treatment of multi-class
+        # targets.
+        label = [label]
         label = np.array(label, dtype=np.float32)
         time = np.array(np.arange(features.shape[0]), dtype=np.float32)[:, None]
         features = np.array(features, dtype=np.float32)
