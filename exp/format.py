@@ -7,7 +7,7 @@ from src.imputation import (zero_imputation,
                             linear_imputation,
                             forward_fill_imputation,
                             causal_imputation,
-                            indictator_imputation)
+                            indicator_imputation)
 
 
 def to_gpytorch_format(d, grid_spacing=1.0):
@@ -222,7 +222,7 @@ def get_collate_fn(data_format, n_input_dims):
         'linear':       linear_imputation,
         'forwardfill':  forward_fill_imputation, 
         'causal':       causal_imputation, 
-        'indicator':    indictator_imputation 
+        'indicator':    indicator_imputation 
     } 
     if data_format == 'GP':
         return partial(dict_collate_fn, padding_values={'indices': n_input_dims, 'test_indices': n_input_dims})

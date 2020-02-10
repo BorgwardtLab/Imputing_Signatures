@@ -242,7 +242,7 @@ def causal_imputation(batch):
     return batch
 
 
-def indictator_imputation(batch):
+def indicator_imputation(batch):
     """Simple indicator "imputation"; mark the missing values in a separate channel, and set the missing value to zero.
 
     Returns:
@@ -297,7 +297,7 @@ class ImputationStrategy:
             'forward_fill': forward_fill_imputation,
             'backward_fill': backward_fill_imputation,
             'causal': causal_imputation,
-            'indicator': indictator_imputation,  # FIXME: typo; impact?
+            'indicator': indicator_imputation
         }
 
         # Report available strategies in order to make this class
