@@ -104,5 +104,8 @@ def compute_loss(d, data_format, device, model, loss_fn, callbacks, imputation_p
     y_true = y_true.flatten().to(device)
     if logits.shape[1] == 1:
         logits = logits.squeeze(-1)
+    #in case of multi-class setting (using CrossEntropyLoss), make sure we use long()
+    if 'CrossEntropyLoss' in str(loss_fn):
+        y_true = y_true.long()
     loss = loss_fn(logits, y_true)
     return loss, logits, y_true
