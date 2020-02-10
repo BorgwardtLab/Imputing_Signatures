@@ -31,6 +31,15 @@ def PenDigits():
         'use_disk_cache': True
     }
 
+@ingredient.named_config
+def LSST():
+    """LSST Dataset."""
+    name = 'UEADataset'
+    parameters = {
+        'dataset_name': 'LSST',
+        'use_disk_cache': True
+    }
+
 
 
 @ingredient.capture
