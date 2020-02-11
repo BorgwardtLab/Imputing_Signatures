@@ -13,7 +13,7 @@ from src.imputation import (zero_imputation,
                             indicator_imputation)
 import torch
 
-# from ..tasks import BinaryClassification
+from src.tasks import BinaryClassification
 from .dataset import Dataset
 from .mimic_benchmarks_utils import Normalizer
 from .utils import DATA_DIR
@@ -252,6 +252,6 @@ class Physionet2012Dataset(Dataset):
         return self.maybe_transform(
             {'time': time, 'values': features, 'label': label})
 
-    # @property
-    # def task(self):
-    #     return BinaryClassification()
+    @property
+    def task(self):
+        return BinaryClassification()

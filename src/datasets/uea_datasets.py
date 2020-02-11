@@ -9,7 +9,7 @@ from .dataset import Dataset
 from .utils import DATA_DIR
 import uea_ucr_datasets # >>>>> requires the input data in ~/.data/UEA_UCR <<<<<<
 
-# from ..tasks import BinaryClassification
+from src.tasks import MulticlassClassification 
 from .mimic_benchmarks_utils import Normalizer
 from .utils import DATA_DIR
 
@@ -246,7 +246,10 @@ class UEADataset(Dataset):
             instance = self.maybe_transform(instance, index)
 
         return instance
-
+    
+    @property
+    def task(self):
+        return MulticlassClassification(self.n_classes)
 
 def _to_array(data):
         """
