@@ -177,7 +177,7 @@ class LogDatasetLoss(Callback):
             if full_eval:
                 with torch.no_grad():
                     y_true = y_true.detach().cpu().numpy()
-                    y_score = logits.flatten().detach().cpu().numpy() 
+                    y_score = logits.detach().cpu().numpy() 
                     y_true_total.append(y_true)
                     y_score_total.append(y_score)
         return_dict = {}
@@ -188,9 +188,10 @@ class LogDatasetLoss(Callback):
         if full_eval: 
             y_true_total = np.concatenate(y_true_total)
             y_score_total = np.concatenate(y_score_total)
-            for measure in [auc, auprc]:
-                for mode in ['macro', 'micro', 'weighted']:
-                    return_dict[measure.__name__ + '.' + mode] = measure(y_true_total, y_score_total, average=mode)
+            if y_score_total.shape[-1] == 1:
+                y_score_total = y_score_total.squeeze(-1)
+            for measure_name, measure in self.dataset.task.metrics.items():
+                return_dict[measure_name] = measure(y_true_total, y_score_total)
         return return_dict
  
     def _progress_string(self, epoch, losses):
