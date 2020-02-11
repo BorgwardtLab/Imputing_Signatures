@@ -105,7 +105,7 @@ def dict_collate_fn(instances, padding_values=None):
             if key == 'values':
                 # determine and append valid length
                 valid_len = instance_shape[0] # this correct in all cases other than GP format
-
+                valid_len_key = key # sanity check to ensure the correct key was used
             if 'test_' in key:
                 # for GP format test inputs, test indices, put padded/invalid points
                 # directly in the time series between the channel switches for easier reshaping later
@@ -118,6 +118,7 @@ def dict_collate_fn(instances, padding_values=None):
                     # test_indices and test_inputs only occur in GP format. As they set fewer query times, 
                     # we overwrite valid length of instance here:
                     valid_len = time_len
+                    valid_len_key = key # sanity check to ensure the correct key was used
                     # Next do the padding of the query points (do some rearranging, as it saves us from 
                     # doing it in tensor reshapes after the GP draw 
                     padding = np.repeat(padding_values[key], to_pad / n_tasks)  # as to_pad counts all
@@ -140,6 +141,10 @@ def dict_collate_fn(instances, padding_values=None):
                         padded = padded.astype(int)
                 else:
                     padded = instance
+                    #have to compute valid_len in this case too!
+                    instance_len = instance_shape[0]
+                    valid_len = int(instance_len / n_tasks)  # time_length of valid observation of current instance
+                    valid_len_key = key #sanity check to ensure that the correct key was used!
             else:
                 # perform standard padding
                 padding = np.stack(
@@ -155,10 +160,16 @@ def dict_collate_fn(instances, padding_values=None):
             #Determine which valid len to append (depending on imputation scheme):
             if not data_format: #if GP format not specified use values valid length 
                 if key == 'values':
-                    padded_output['valid_lengths'].append(valid_len)
+                    if valid_len_key != 'values':
+                        raise ValueError(f'Wrong key was used to determine valid len! Here, {valid_len_key} was used instead of values')
+                    else:
+                        padded_output['valid_lengths'].append(valid_len)
             elif data_format == 'GP':
                 if key == 'test_indices': #make sure to append GP valid length only once, per instance
-                    padded_output['valid_lengths'].append(valid_len)
+                    if valid_len_key != 'test_indices':
+                        raise ValueError(f'Wrong key was used to determine valid len! Here, {valid_len_key} was used instead of test_indices')
+                    else:
+                        padded_output['valid_lengths'].append(valid_len)
 
     # Combine instances into individual arrays
     combined = {
