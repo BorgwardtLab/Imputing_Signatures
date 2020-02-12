@@ -76,16 +76,20 @@ class UEADataset(Dataset):
         split,
         transform=None,
         data_path=DATASET_BASE_PATH,
-        use_disk_cache=False):
+        use_disk_cache=False,
+        data_format='GP'):
         """Initialize dataset.
 
         Args:
-            dataset_name: Name of UEA dataset to load.
+            -dataset_name: Name of UEA dataset to load.
                 [ PenDigits, .. ]
-            split: Name of split. One of `training`, `validation`, `testing`.
-            data_path: Path to data. Default:
+            -split: Name of split. One of `training`, `validation`, `testing`.
+            -data_path: Path to data. Default:
                 {project_root_dir}/data/UEA
-
+            -use_disk_cache: writes imputations to disk for faster training
+            -data_format: this is a dummy argument to conform with other dataset classes! 
+                For the UEA datasets which involve more transforms (subsampling, imputation), 
+                those transforms are handled outside of the dataset class in the input transforms
         """
         self.data_path = os.path.join(data_path, dataset_name)
         self.split = split
@@ -113,11 +117,18 @@ class UEADataset(Dataset):
             self.normalizer.load_params(self.normalizer_config)
 
         self.use_disk_cache = use_disk_cache
-
+        self.transforms_not_to_cache =  ['gpytorch', 'no_transform'] # dataset independent transforms
         # Sets a default transformation that only returns the first
         # argument. This ensures that later on, if no transform has
         # been set, only the *instance* is returned.
         self.maybe_transform = transform if transform else lambda a: a
+        # if using disk_cache: split the transforms into those that are cached and those that are not
+        # this step is useful to ensure that all methods (GP or not) use the exact same subsampling        
+        if use_disk_cache:
+            self.maybe_transform_to_cache = [t for t in self.maybe_transform if all(
+                [word not in str(t) for word in self.transforms_not_to_cache]) ]        
+            self.maybe_transform_not_to_cache = [t for t in self.maybe_transform if any(
+                [word in str(t) for word in self.transforms_not_to_cache]) ]        
 
     def _set_properties(self):
         self.has_unaligned_measurements = False
@@ -154,8 +165,9 @@ class UEADataset(Dataset):
         if self.use_disk_cache:
 
             # Create proper mode string depending on the transformations
-            # that are set. We use this to check the disk cache.
-            mode = '__'.join(repr(t) for t in self.maybe_transform)
+            # that are set. We use this to check the disk cache, and skip
+            # transforms that were requested not to be cached
+            mode = '__'.join(repr(t) for t in self.maybe_transform_to_cache)
 
             path = os.path.join(
                 self.data_path,
@@ -170,45 +182,46 @@ class UEADataset(Dataset):
             if os.path.exists(cached_file):
                 with open(cached_file, 'rb') as f:
                     instance = pickle.load(f)
-
-                # TODO: check whether the data format is sufficient and
-                # contains all information.
+                
+                #if available, apply remaining transforms which were not cached:
+                if len(self.maybe_transform_not_to_cache) > 0:
+                    for transform in self.maybe_transform_not_to_cache:
+                        instance = transform(instance)
                 return instance
 
-            # File does not exist; perform all transformations and write
-            # it out later.
+            # File does not exist; perform all transformations that are required to be cached
+            # and write it out later.
             else:
-                instance = self._read_and_process_instance(index)
-
-                ## Convert back to `numpy` because we have to delete the
-                ## first column of the batches.
-                #instance = {
-                #        k: v.squeeze(0).numpy() for k, v in instance.items()
-                #}
-
-                ## Consistency; need to store file as in the original
-                ## data set.
-                #instance['time'] = instance['time'].squeeze(-1)
+                instance = self._read_and_process_instance(index, self.use_disk_cache)
 
                 with open(cached_file, 'wb') as f:
                     pickle.dump(instance, f)
+                
+                #if available, apply remaining transforms which were not cached:
+                if len(self.maybe_transform_not_to_cache) > 0:
+                    for transform in self.maybe_transform_not_to_cache:
+                        instance = transform(instance)
 
                 return instance
 
-        # Just load the existing file
+        # Just load the existing file. When not using disk_cache, all transforms are performed 
+        # inside _read_and_process_instance
         else:
-            return self._read_and_process_instance(index)
+            return self._read_and_process_instance(index, self.use_disk_cache)
 
-    def _read_and_process_instance(self, index):
+    def _read_and_process_instance(self, index, use_disk_cache=False):
         '''
         Internal reading and processing function. Loads a single example
         from a raw dataset and applies all [optional] transformations.
-
+        
         Parameters
         ----------
 
-            index: Index of the instance to load. Should be supplied by
+            - index: Index of the instance to load. Should be supplied by
             the caller, e.g. by `__getitem__`.
+            - use_disk_cache: if True, only the transforms which ought to be cached are applied
+                              while the remaining transforms are applied in __getitem__ after loading
+                              if False, all transforms in maybe_transform are applied here
         '''
 
         instance = self.reader.read_example(index)
@@ -237,13 +250,24 @@ class UEADataset(Dataset):
             # Note that the index is supplied multiple times because we
             # do not make any assumptions about the underlying functor.
             for transform in self.maybe_transform:
-                if any(word in str(transform) for word in ['gpytorch', 'inactive']):
-                    instance = transform(instance)
+                if any(word in str(transform) for word in self.transforms_not_to_cache):
+                    if not use_disk_cache:
+                        instance = transform(instance)
+                    else:
+                        #apply these transforms only in __getitem__ to circumvent caching of them
+                        pass
                 else:
                     instance = transform(instance, index)
-
-        else:
-            instance = self.maybe_transform(instance, index)
+        
+        else: #in case maybe_transform consist of only 1 transform
+            if any(word in str(self.maybe_transform) for word in self.transforms_not_to_cache):
+                if not use_disk_cache:
+                    instance = self.maybe_transform(instance)
+                else:
+                    #apply these transforms only in __getitem__ to circumvent caching of them
+                    pass
+            else:
+                instance = self.maybe_transform(instance, index)
 
         return instance
     

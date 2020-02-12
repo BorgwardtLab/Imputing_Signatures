@@ -207,12 +207,12 @@ def get_input_transform(data_format, grid_spacing):
             'indicator'
         - grid_spacing: number of hours between each query point / or imputed point depending on format
     """
-    def inactive(x):
+    def no_transform(x):
         return x
     if data_format == 'GP':
         return partial(to_gpytorch_format, grid_spacing=grid_spacing)
     elif data_format in ['zero', 'linear', 'forwardfill', 'causal', 'indicator']:
-        return inactive
+        return no_transform
     else:
         raise ValueError('No valid data format provided!')
 
@@ -244,3 +244,27 @@ def get_collate_fn(data_format, n_input_dims):
         return dict_collate_fn
     else:
         raise ValueError('No valid data format provided!')
+
+
+
+##########################
+# UEA specific transforms:
+##########################
+
+def get_subsampler(subsampler_name, subsampler_parameters):
+    import src.datasets.subsampling
+
+    subsampling_cls = getattr(src.datasets.subsampling, subsampler_name)
+    instance = subsampling_cls(**subsampler_parameters)
+    return instance
+
+def get_imputation_scheme(imputation_scheme):
+    from src.imputation import ImputationStrategy
+
+    instance = ImputationStrategy(imputation_scheme)
+    return instance
+
+
+
+
+
