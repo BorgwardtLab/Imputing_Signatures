@@ -283,12 +283,18 @@ class ImputationStrategy:
         ----------
 
             strategy: One value of ['zero', 'linear', 'forward_fill',
-                      'backward_fill', 'causal', 'indicator']. This
-                      determines the imputation strategy.
+                      'backward_fill', 'causal', 'indicator', 'GP']. This
+                      determines the imputation strategy. For GP we want 
+                      no preprocessed imputation, so we set the strategy 
+                      to 'inactive' in this case.
 
             ensure_zero_imputation: If set, will always apply zero-based
             imputation after any scheme, thus ensuring that no NaNs will
             remain in the data (except for inactive GP mode!).
+            
+            CAVE: the variable ensure_zero_imputation is by default True
+            and for readibility not included in the cache file path. When 
+            setting it to false, all the cached files have to be recomputed! 
         '''
         def inactive(x):
             return x
@@ -296,17 +302,18 @@ class ImputationStrategy:
         strategy_to_fn = {
             'zero': zero_imputation,
             'linear': linear_imputation,
-            'forward_fill': forward_fill_imputation,
-            'backward_fill': backward_fill_imputation,
+            'forwardfill': forward_fill_imputation,
+            'backwardfill': backward_fill_imputation,
             'causal': causal_imputation,
             'indicator': indicator_imputation,
-            'GP' : inactive  #here we don't want any preprocessing imputation
+            'inactive' : inactive  #here we don't want any preprocessing imputation
         }
 
         # Report available strategies in order to make this class
         # configurable from outside.
         self.available_strategies = sorted(strategy_to_fn.keys())
-
+        if strategy == 'GP':
+            strategy = 'inactive' #map the GP format to an inactive imputation (for preprocessing) 
         self.strategy = strategy
         self.strategy_fn = strategy_to_fn[strategy]
 
@@ -331,7 +338,7 @@ class ImputationStrategy:
         instance = self.strategy_fn(instance) #the strategies are implemented for torch tensors
         #however, to speed up, we apply them now as a prepro step still in numpy format (reformat again here)
 
-        if self.ensure_zero_imputation and self.strategy != 'GP':
+        if self.ensure_zero_imputation and self.strategy != 'inactive':
             instance = zero_imputation(instance)
 
         #Reformat to numpy (since we impute still before data loader as prepro step in numpy )
