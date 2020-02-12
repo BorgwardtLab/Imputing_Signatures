@@ -156,7 +156,10 @@ class PhysionetFeatureTransform():
 
 
 class Physionet2012Dataset(Dataset):
-    """Dataset of the PhysioNet 2012 Computing in Cardiology challenge."""
+    """ Dataset of the PhysioNet 2012 Computing in Cardiology challenge.
+        As this dataset is irregularly spaced, we assume that only one input transform is applied 
+        (to_gpytorch_format or no_transform) as subsampling etc is not needed.
+    """
 
     normalizer_config = os.path.join(
         os.path.dirname(__file__),
