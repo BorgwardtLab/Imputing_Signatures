@@ -10,13 +10,14 @@ import torch
 sys.path.append(os.getcwd())
 
 from exp.callbacks import Callback, Progressbar, LogDatasetLoss, LogTrainingLoss
-from exp.format import get_input_transform, get_collate_fn
+from exp.format import get_input_transform, get_collate_fn, get_subsampler, get_imputation_scheme
 from exp.ingredients import dataset_config, model_config
 from exp.utils import count_parameters, plot_losses, execute_callbacks, compute_loss
 
 
 # Test for debugging sacred read-only error
 SETTINGS.CONFIG.READ_ONLY_CONFIG = False
+SETTINGS['CAPTURE_MODE'] = 'sys' #workaround for sdtout timeout
 
 EXP = Experiment('training', ingredients=[model_config.ingredient, dataset_config.ingredient])
 EXP.captured_out_filter = apply_backspaces_and_linefeeds
@@ -38,6 +39,9 @@ def cfg():
                          'max_root': 25, #max_root_decomposition_size for MGP lanczos iters
                          'grid_spacing': 1. # determines n_hours between query points
                         }                              
+    subsampler_name = None 
+    subsampler_parameters = {}
+    num_workers=1
 
 @EXP.named_config
 def zero():
@@ -96,7 +100,7 @@ class NewlineCallback(Callback):
         print()
 
 def train_loop(model, dataset, data_format, loss_fn, collate_fn, n_epochs, batch_size, virtual_batch_size,
-               learning_rate, imputation_params, weight_decay=1e-4, device='cuda', callbacks=None):
+               learning_rate, imputation_params, weight_decay=1e-4, device='cuda', callbacks=None, num_workers=0):
     if callbacks is None:
         callbacks = []
 
@@ -105,7 +109,7 @@ def train_loop(model, dataset, data_format, loss_fn, collate_fn, n_epochs, batch
         virtual_scaling = virtual_batch_size / batch_size
 
     train_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, collate_fn=collate_fn, shuffle=True,
-                                               pin_memory=True, num_workers=4)
+                                               pin_memory=True, num_workers=num_workers)
     n_instances = len(dataset)
     n_batches = len(train_loader)
 
@@ -132,7 +136,8 @@ def train_loop(model, dataset, data_format, loss_fn, collate_fn, n_epochs, batch
 
 @EXP.automain
 def train(n_epochs, batch_size, virtual_batch_size, learning_rate, weight_decay, early_stopping, data_format,
-          imputation_params, device, quiet, evaluation, _run, _log, _seed, _rnd):
+          imputation_params, device, quiet, evaluation, subsampler_name, subsampler_parameters, num_workers,
+          _run, _log, _seed, _rnd):
     """Sacred wrapped function to run training of model."""
 
     torch.manual_seed(_seed)
@@ -145,10 +150,19 @@ def train(n_epochs, batch_size, virtual_batch_size, learning_rate, weight_decay,
     # Check if virtual batch size is defined and valid:
     if virtual_batch_size is not None:
         if virtual_batch_size % batch_size != 0:
-            raise ValueError(f'Virtual batch size {virtual_batch_size} has to be a multiple of batch size {batch_size}') 
+            raise ValueError(f'Virtual batch size {virtual_batch_size} has to be a multiple of batch size {batch_size}')  
     
-    # Define dataset transform:
-    input_transform = get_input_transform(data_format, imputation_params['grid_spacing'])
+    # In case we have a subsampling scenario (UEA), stack all input transforms:
+    if subsampler_name is not None: 
+        input_transform = [
+            get_subsampler(subsampler_name, subsampler_parameters),
+            get_imputation_scheme(data_format),
+            get_input_transform(data_format, imputation_params['grid_spacing']) 
+        ]
+    else:
+        # Using a non-UEA dataset (where we only need the data format input transform 
+        # (as imputation is already handled in the dataset class)
+        input_transform = get_input_transform(data_format, imputation_params['grid_spacing'])
 
     # Get data, sacred does some magic here so we need to hush the linter
     # pylint: disable=E1120,E1123
@@ -179,17 +193,15 @@ def train(n_epochs, batch_size, virtual_batch_size, learning_rate, weight_decay,
     elif model.sampling_type != 'monte_carlo':
         imputation_params['n_mc_smps'] = 1 
 
-    if out_dimension == 1:
-        loss_fn = torch.nn.BCEWithLogitsLoss()
-    else:
-        loss_fn = torch.nn.CrossEntropyLoss()
+    loss_fn = train_dataset.task.loss 
+    print(f'Using the following loss fn: {str(loss_fn)}')
 
     callbacks = [
         LogTrainingLoss(_run, print_progress=quiet),
         LogDatasetLoss('validation', validation_dataset, data_format, collate_fn, loss_fn, _run, imputation_params, batch_size,  
-                       early_stopping=early_stopping, save_path=rundir, device=device, print_progress=True),
+                       early_stopping=early_stopping, save_path=rundir, device=device, print_progress=True, num_workers=num_workers),
         LogDatasetLoss('testing', test_dataset, data_format, collate_fn, loss_fn, _run, imputation_params, batch_size, save_path=rundir, 
-                       device=device, print_progress=False)
+                       device=device, print_progress=False, num_workers=num_workers)
     ]
     if quiet:
         # Add newlines between epochs
@@ -198,7 +210,7 @@ def train(n_epochs, batch_size, virtual_batch_size, learning_rate, weight_decay,
         callbacks.append(Progressbar())
 
     train_loop(model, train_dataset, data_format, loss_fn, collate_fn, n_epochs, batch_size, virtual_batch_size,
-               learning_rate, imputation_params, weight_decay, device, callbacks)
+               learning_rate, imputation_params, weight_decay, device, callbacks, num_workers)
 
     if rundir:
         # Save model state (and entire model)
