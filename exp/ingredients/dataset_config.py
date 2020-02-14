@@ -40,6 +40,16 @@ def LSST():
         'use_disk_cache': True
     }
 
+@ingredient.named_config
+def CharacterTrajectories():
+    """CharacterTrajectories Dataset."""
+    name = 'UEADataset'
+    parameters = {
+        'dataset_name': 'CharacterTrajectories',
+        'use_disk_cache': True
+    }
+
+
 
 
 @ingredient.capture

@@ -1,8 +1,21 @@
 def Physionet2012():
     overrides = {'dataset__name': 'Physionet2012'}
 
+def PenDigits():
+    overrides = {'dataset__name': 'PenDigits'}
+
+def LSST():
+    overrides = {'dataset__name': 'LSST'}
+
+def CharacterTrajectories():
+    overrides = {'dataset__name': 'CharacterTrajectories'}
+
+
 def add_datasets(experiment):
     experiment.named_config(Physionet2012)
+    experiment.named_config(PenDigits)
+    experiment.named_config(LSST)
+    experiment.named_config(CharacterTrajectories)
 
 #######################################
 # GP-Based Models
