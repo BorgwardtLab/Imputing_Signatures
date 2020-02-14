@@ -58,6 +58,7 @@ class MulticlassClassification(Task):
     def metrics(self):
         return {
             'auroc_weighted': metrics_module.auroc_weighted,
-            'balanced_accuracy': metrics_module.balanced_accuracy
+            'balanced_accuracy': metrics_module.balanced_accuracy,
+            'accuracy': metrics_module.accuracy
         }
 

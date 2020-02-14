@@ -3,7 +3,7 @@ import numpy as np
 from functools import partial
 
 from sklearn.metrics import average_precision_score, roc_auc_score,\
-    balanced_accuracy_score 
+    balanced_accuracy_score, accuracy_score 
 
 def to_one_hot(a, num_classes):
     return np.squeeze(np.eye(num_classes)[a.reshape(-1)])
@@ -53,6 +53,6 @@ auprc = average_precision_score
 auroc_weighted = probability_wrapper(roc_auc_score, average='weighted', multi_class='ovo') #wrapper converts scores to probabilities, 
 # which is required for multiclass auroc implementation 
 balanced_accuracy = prediction_wrapper(balanced_accuracy_score)
-
+accuracy = prediction_wrapper(accuracy_score)
 
 
