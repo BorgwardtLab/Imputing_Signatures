@@ -3,6 +3,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
+dataset_to_classes = {
+    'PenDigits': 10,
+    'LSST': 14,
+    'CharacterTrajectories': 20 
+}
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
