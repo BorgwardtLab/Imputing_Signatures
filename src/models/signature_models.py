@@ -228,7 +228,7 @@ class RNNSignatureModel(nn.Module):
 
 class DeepSignatureModel(nn.Module):
     def __init__(self, in_channels, hidden_channels1, hidden_channels2, kernel_size, include_original, include_time,
-                 sig_depth, out_channels):
+                 sig_depth, out_channels, use_constant_trick=True):
         """
         Inputs:
             in_channels: As SignatureModel.
@@ -241,6 +241,7 @@ class DeepSignatureModel(nn.Module):
             out_channels: As SignatureModel.
         """
         super().__init__()
+        self.use_constant_trick = use_constant_trick
         self.kernel_size = kernel_size
         self.augment1 = signatory.Augment(in_channels=in_channels,
                                           layer_sizes=(hidden_channels1, hidden_channels1, hidden_channels2),
@@ -273,15 +274,16 @@ class DeepSignatureModel(nn.Module):
         # `x` should be a three dimensional tensor (batch, stream, channel)
         # `lengths` should be a one dimensional tensor (batch,) giving the true length of each batch element along the
         # stream dimension
-        
-        adjusted_lengths = lengths - 2 * self.kernel_size + 2
-        if (adjusted_lengths < 0).any():
-            raise ValueError('The kernel size is too large top operate this model on a stream this short.')
+        if self.use_constant_trick: 
+            adjusted_lengths = lengths - 2 * self.kernel_size + 2
+            if (adjusted_lengths < 1).any():
+                raise ValueError('The kernel size is too large top operate this model on a stream this short.')
 
         x = self.augment1(x)
         x = self.signature1(x, basepoint=True)
         x = self.augment2(x)
-        x = become_constant_trick(x, adjusted_lengths)
+        if self.use_constant_trick:
+            x = become_constant_trick(x, adjusted_lengths)
         x = self.signature2(x, basepoint=True)
         x = self.linear(x)
         return x
