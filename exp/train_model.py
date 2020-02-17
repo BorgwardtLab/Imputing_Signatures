@@ -12,7 +12,7 @@ sys.path.append(os.getcwd())
 from exp.callbacks import Callback, Progressbar, LogDatasetLoss, LogTrainingLoss
 from exp.format import get_input_transform, get_collate_fn, get_subsampler, get_imputation_scheme
 from exp.ingredients import dataset_config, model_config
-from exp.utils import count_parameters, plot_losses, execute_callbacks, compute_loss
+from exp.utils import count_parameters, plot_losses, execute_callbacks, compute_loss, dataset_to_classes
 
 
 # Test for debugging sacred read-only error
@@ -21,7 +21,6 @@ SETTINGS['CAPTURE_MODE'] = 'sys' #workaround for sdtout timeout
 
 EXP = Experiment('training', ingredients=[model_config.ingredient, dataset_config.ingredient])
 EXP.captured_out_filter = apply_backspaces_and_linefeeds
-
 
 @EXP.config
 def cfg():
@@ -43,6 +42,23 @@ def cfg():
     subsampler_parameters = {}
     num_workers=1
 
+# Named configs for Subsampling schemes (only for UEA)
+@EXP.named_config
+def MissingAtRandomSubsampler():
+    subsampler_name = 'MissingAtRandomSubsampler' 
+    subsampler_parameters = {
+        'probability': 0.5
+    }
+
+@EXP.named_config
+def LabelBasedSubsampler():
+    subsampler_name = 'LabelBasedSubsampler' 
+    subsampler_parameters = {
+        'probability_ranges': [0.4, 0.6]
+    }
+
+
+# Named configs for setting imputation scheme of train module:
 @EXP.named_config
 def zero():
     data_format = 'zero'
@@ -63,31 +79,22 @@ def indicator():
 def linear():
     data_format = 'linear'
 
-
-
-
-
-
-
+# Named configs for running repetitions with fixed seeds
 @EXP.named_config
 def rep1():
     seed = 249040430
-
 
 @EXP.named_config
 def rep2():
     seed = 621965744
 
-
 @EXP.named_config
 def rep3():
     seed = 771860110
 
-
 @EXP.named_config
 def rep4():
     seed = 775293950
-
 
 @EXP.named_config
 def rep5():
@@ -137,7 +144,7 @@ def train_loop(model, dataset, data_format, loss_fn, collate_fn, n_epochs, batch
 @EXP.automain
 def train(n_epochs, batch_size, virtual_batch_size, learning_rate, weight_decay, early_stopping, data_format,
           imputation_params, device, quiet, evaluation, subsampler_name, subsampler_parameters, num_workers,
-          _run, _log, _seed, _rnd):
+          _run, _log, _seed, _rnd, dataset):
     """Sacred wrapped function to run training of model."""
 
     torch.manual_seed(_seed)
@@ -153,7 +160,13 @@ def train(n_epochs, batch_size, virtual_batch_size, learning_rate, weight_decay,
             raise ValueError(f'Virtual batch size {virtual_batch_size} has to be a multiple of batch size {batch_size}')  
     
     # In case we have a subsampling scenario (UEA), stack all input transforms:
-    if subsampler_name is not None: 
+    if subsampler_name is not None:
+        if subsampler_name == 'LabelBasedSubsampler':
+            # chicken and egg problem: we need n_classes of dataset to specify the subsampling 
+            # to initialize the dataset, currently solved with a dictionary that maps the current dataset
+            # name to its number of classes 
+            subsampler_parameters['n_classes'] = dataset_to_classes[dataset['parameters']['dataset_name']]
+            print(f'Subsampler_parameters: {subsampler_parameters}') 
         input_transform = [
             get_subsampler(subsampler_name, subsampler_parameters),
             get_imputation_scheme(data_format),
