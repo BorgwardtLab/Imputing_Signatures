@@ -8,6 +8,8 @@ Please install the dependencies as indicated in the Pipfile
 ```> pipenv install --skip-lock```  
 ```> pipenv shell```
 
+Note, that the newer GPytorch versions ( >1.0.0 ) tend to overwrite the torch version in pipenv. If this happens (e.g. with GPytorch 1.0.1), a working solution was to just >pip intall torch==1.2.0 
+after the pipenv install
 
 ## Train a end-to-end, posterior moments GP-imputed Signature Model, specifying signature depth (truncation level) to 3
 
