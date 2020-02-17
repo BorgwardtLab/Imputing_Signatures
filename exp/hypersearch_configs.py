@@ -95,7 +95,7 @@ def GP_mom_GRUSignatureModel():
     }
 
 ## Deep Signature Models
-
+##TODO: overrides: use_constant_trick=False?
 def GP_mc_DeepSignatureModel():
     train_module = 'train_model'
     hyperparameter_space = {
@@ -133,7 +133,7 @@ def GP_mom_DeepSignatureModel():
 def GP_mom_GRUModel():
     train_module = 'train_model'
     hyperparameter_space = {   
-        'model__parameters__hidden_size': ('Categorical', [16,32,64,128]) 
+        'model__parameters__hidden_size': ('Categorical', [16,32,64,128,256,512]) 
     }
     overrides = {
         'model__name': 'GPRNNModel',
@@ -147,7 +147,7 @@ def GP_mom_GRUModel():
 def GP_mc_GRUModel():
     train_module = 'train_model'
     hyperparameter_space = {   
-        'model__parameters__hidden_size': ('Categorical', [16,32,64,128]) 
+        'model__parameters__hidden_size': ('Categorical', [16,32,64,128,256,512]) 
     }
     overrides = {
         'model__name': 'GPRNNModel',
@@ -209,7 +209,7 @@ def ImputedDeepSignatureModel():
 def ImputedRNNModel():
     train_module = 'train_model'
     hyperparameter_space = {   
-        'model__parameters__hidden_size': ('Categorical', [16,32,64,128]),
+        'model__parameters__hidden_size': ('Categorical', [16,32,64,128,256,512]),
         'batch_size': ('Categorical', [32,64,128,256]) 
     }
     overrides = {
@@ -233,6 +233,23 @@ def indicator():
     overrides = {'data_format': 'indicator'}
 
 
+####################
+#Subsampling schemes
+####################
+
+def MissingAtRandomSubsampler():
+    overrides = {
+    'subsampler_name': 'MissingAtRandomSubsampler',
+    'subsampler_parameters': { 'probability': 0.5  }
+    }
+
+def LabelBasedSubsampler():
+    overrides = {
+    'subsampler_name': 'LabelBasedSubsampler',
+    'subsampler_parameters': { 'probability_ranges': [0.4, 0.6] }
+    }
+
+
 def add_models(experiment):
     experiment.named_config(GP_mom_SignatureModel)
     experiment.named_config(GP_mc_SignatureModel)
@@ -242,13 +259,19 @@ def add_models(experiment):
     experiment.named_config(GP_mc_GRUModel)
     experiment.named_config(GP_mc_DeepSignatureModel)
     experiment.named_config(GP_mom_DeepSignatureModel)
+
     experiment.named_config(ImputedSignatureModel)
     experiment.named_config(ImputedRNNSignatureModel)
     experiment.named_config(ImputedRNNModel)
     experiment.named_config(ImputedDeepSignatureModel)
+
     experiment.named_config(zero)
     experiment.named_config(linear)
     experiment.named_config(forwardfill)
     experiment.named_config(causal)
     experiment.named_config(indicator)
+
+    experiment.named_config(MissingAtRandomSubsampler)
+    experiment.named_config(LabelBasedSubsampler)
+
 
