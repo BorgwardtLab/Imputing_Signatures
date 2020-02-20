@@ -2,14 +2,22 @@ def Physionet2012():
     overrides = {'dataset__name': 'Physionet2012'}
 
 def PenDigits():
-    overrides = {'dataset__name': 'PenDigits'}
+    overrides = {
+            'dataset__name': 'UEADataset',
+            'dataset__parameters__dataset_name': 'PenDigits',
+            'dataset__parameters__use_disk_cache': True }
 
 def LSST():
-    overrides = {'dataset__name': 'LSST'}
+    overrides = {
+            'dataset__name': 'UEADataset',
+            'dataset__parameters__dataset_name': 'LSST',
+            'dataset__parameters__use_disk_cache': True }
 
 def CharacterTrajectories():
-    overrides = {'dataset__name': 'CharacterTrajectories'}
-
+    overrides = {
+            'dataset__name': 'UEADataset',
+            'dataset__parameters__dataset_name': 'CharacterTrajectories',
+            'dataset__parameters__use_disk_cache': True }
 
 def add_datasets(experiment):
     experiment.named_config(Physionet2012)
