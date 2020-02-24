@@ -31,7 +31,7 @@ def cfg():
     weight_decay = 1e-4
     early_stopping = 20
     data_format = 'GP'
-    device = 'cuda'
+    device = 'cuda:0'
     quiet = False
     evaluation = {'active': False, 'evaluate_on': 'validation'}
     imputation_params = {'n_mc_smps': 10, #number of monte carlo samples
@@ -107,7 +107,7 @@ class NewlineCallback(Callback):
         print()
 
 def train_loop(model, dataset, data_format, loss_fn, collate_fn, n_epochs, batch_size, virtual_batch_size,
-               learning_rate, imputation_params, weight_decay=1e-4, device='cuda', callbacks=None, num_workers=0):
+               learning_rate, imputation_params, weight_decay=1e-4, device='cuda:0', callbacks=None, num_workers=0):
     if callbacks is None:
         callbacks = []
 
