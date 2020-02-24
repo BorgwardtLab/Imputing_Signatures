@@ -43,7 +43,7 @@ def GP_mc_SignatureModel():
         'model__parameters__sampling_type': 'monte_carlo',
         'model__parameters__n_mc_smps': 10,
         'model__parameters__n_devices': 1,
-        'model__parameters__output_device': 'cuda',
+        'model__parameters__output_device': 'cuda:0',
         'model__parameters__final_network': [30,30]
     }
 
@@ -59,7 +59,7 @@ def GP_mom_SignatureModel():
         'model__parameters__sampling_type': 'moments',
         'model__parameters__n_mc_smps': 1,
         'model__parameters__n_devices': 1,
-        'model__parameters__output_device': 'cuda',
+        'model__parameters__output_device': 'cuda:0',
         'model__parameters__final_network': [30,30]
     }
 
@@ -81,7 +81,7 @@ def GP_mc_GRUSignatureModel():
         'model__parameters__sampling_type': 'monte_carlo',
         'model__parameters__n_mc_smps': 10,
         'model__parameters__n_devices': 1,
-        'model__parameters__output_device': 'cuda'
+        'model__parameters__output_device': 'cuda:0'
     }
 
 def GP_mom_GRUSignatureModel():
@@ -99,7 +99,7 @@ def GP_mom_GRUSignatureModel():
         'model__parameters__sampling_type': 'moments',
         'model__parameters__n_mc_smps': 1,
         'model__parameters__n_devices': 1,
-        'model__parameters__output_device': 'cuda'
+        'model__parameters__output_device': 'cuda:0'
     }
 
 ## Deep Signature Models
@@ -118,7 +118,7 @@ def GP_mc_DeepSignatureModel():
         'model__parameters__sampling_type': 'monte_carlo',
         'model__parameters__n_mc_smps': 10,
         'model__parameters__n_devices': 1,
-        'model__parameters__output_device': 'cuda'
+        'model__parameters__output_device': 'cuda:0'
     }
 
 def GP_mom_DeepSignatureModel():
@@ -134,7 +134,7 @@ def GP_mom_DeepSignatureModel():
         'model__parameters__sampling_type': 'moments',
         'model__parameters__n_mc_smps': 1,
         'model__parameters__n_devices': 1,
-        'model__parameters__output_device': 'cuda'
+        'model__parameters__output_device': 'cuda:0'
     }
 
 ## RNN Models
@@ -149,7 +149,7 @@ def GP_mom_GRUModel():
         'model__parameters__sampling_type': 'moments',
         'model__parameters__n_mc_smps': 1,
         'model__parameters__n_devices': 1,
-        'model__parameters__output_device': 'cuda'
+        'model__parameters__output_device': 'cuda:0'
     }
 
 def GP_mc_GRUModel():
@@ -163,7 +163,7 @@ def GP_mc_GRUModel():
         'model__parameters__sampling_type': 'monte_carlo',
         'model__parameters__n_mc_smps': 10,
         'model__parameters__n_devices': 1,
-        'model__parameters__output_device': 'cuda'
+        'model__parameters__output_device': 'cuda:0'
     }
 
 ###################################################
@@ -257,6 +257,21 @@ def LabelBasedSubsampler():
     'subsampler_parameters': { 'probability_ranges': [0.4, 0.6] }
     }
 
+################################################################
+# Due to very short series, use custom subsampling for PenDigits:
+################################################################
+def MissingAtRandomSubsamplerPenDigits():
+    overrides = {
+    'subsampler_name': 'MissingAtRandomSubsampler',
+    'subsampler_parameters': { 'probability': 0.3  }
+    }
+
+def LabelBasedSubsamplerPenDigits():
+    overrides = {
+    'subsampler_name': 'LabelBasedSubsampler',
+    'subsampler_parameters': { 'probability_ranges': [0.2, 0.4] }
+    }
+
 
 def add_models(experiment):
     experiment.named_config(GP_mom_SignatureModel)
@@ -281,5 +296,7 @@ def add_models(experiment):
 
     experiment.named_config(MissingAtRandomSubsampler)
     experiment.named_config(LabelBasedSubsampler)
+    experiment.named_config(MissingAtRandomSubsamplerPenDigits)
+    experiment.named_config(LabelBasedSubsamplerPenDigits)
 
 
