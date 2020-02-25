@@ -11,6 +11,7 @@ data_formats=(zero linear forwardfill causal indicator) #only for imputed models
 subsamplers=(LabelBasedSubsampler MissingAtRandomSubsampler)
 model_types=(GP imputed) #we distinguish between those two types of models
 preprocessing=false
+resubmit_failed_jobs=true
 
 # Create command files for both model types seperately, GP and imputed models
 for model_type in ${model_types[*]}; do
@@ -36,7 +37,6 @@ for model_type in ${model_types[*]}; do
             models=${gp_models[*]}
         else
             models=${imputed_models[*]}
-            
         fi
 
         echo 'Looping over' ${model_type} 'models:'
