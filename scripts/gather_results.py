@@ -12,7 +12,7 @@ def process_experiment(base_path, exp_path, heads):
     metrics_path = os.path.join(base_path, exp_path, heads[0])
     run_path = os.path.join(base_path, exp_path, heads[1])
     if not all(os.path.exists(path) for path in [metrics_path, run_path]):
-        print(f'Either run oder metrics missing in {exp_path}')
+        print(f'Either run or metrics missing in {exp_path}')
         return False, None
     try:
         valid_run = get_run_validity(run_path)
@@ -43,27 +43,40 @@ def get_run_validity(path):
 def get_results(path):
     with open(path, 'r') as f:
         data = json.load(f)
-    eval_metric = 'validation.average_precision_score.macro' 
-    test_metrics = ['testing.average_precision_score.macro', 'testing.roc_auc_score.macro', 'validation.average_precision_score.macro']
+    eval_metrics = ['validation.balanced_accuracy', 'validation.auprc'] 
+    found_metric = False
+    for metric in eval_metrics:
+        if metric in data.keys():
+            eval_metric = metric
+            found_metric = True
+            break
+    if not found_metric:
+        raise ValueError(f'None of the specified eval metrics available in the following path: {path}')
+     
+    test_metric_dict = { eval_metrics[0]: ['testing.balanced_accuracy', 'testing.auroc_weighted', 'testing.accuracy', eval_metrics[0] ], 
+                         eval_metrics[1]: ['testing.auprc', 'testing.auroc', eval_metrics[1] ]
+    }
     best_step = np.argmax(data[eval_metric]['values'])
     result_dict = defaultdict()
     
     valid = True
-    for metric in test_metrics:
+    for metric in test_metric_dict[eval_metric]:
         result_dict[metric] = data[metric]['values'][best_step]
         if result_dict[metric] is None:
             valid = False
+            print(f'{metric} not found in {path}')
     return result_dict, valid
 
 
 def gather_results_in_dict(base_paths, useful_heads):
-    results = defaultdict(list)           
+    results = defaultdict(list)
+    counter = 0            
     for base_path in base_paths:
         print(f'Searchin base path: {base_path}')
         for root, dirs, files in os.walk(base_path):
             for name in files:
                 file_path = os.path.join(root, name)
-                
+
                 #only focus on useful files: 
                 if name == useful_heads[0]:
                     #get full experiment path:
@@ -72,13 +85,15 @@ def gather_results_in_dict(base_paths, useful_heads):
                     #list of subdirs containing experiment (without basepath)
                     experiment = [e for e in experiment_split if e not in base_split]
                     
+                    valid_depth = 6 if experiment[0] == 'Physionet2012' else 7
+                    
                     #a valid experiment containing model run info has len of 6
-                    if len(experiment) < 5:
+                    if len(experiment) < valid_depth:
                         exp_path = '/'.join(experiment)
                         print(f'Skipping experiment: {exp_path}')
                         continue
-                    elif len(experiment) > 6:
-                        print('Found experiment with more than 6 levels!')
+                    elif len(experiment) > valid_depth:
+                        print('Found experiment with more than the expected {valid_depth} levels!')
                     exp_path = '/'.join(experiment)
                     exp_path_split = os.path.split(exp_path)
                     exp_path_tail = exp_path_split[0] 
@@ -96,8 +111,14 @@ def process_run_dict(result_dict):
     out_dict = defaultdict(list)  
     for key, value in result_dict.items():
         key_split = key.split('/')
-        dataset = key_split[0]
-        method = key_split[1]
+        #in case we have subsampling, key_split has len 6, otherwise 5
+        if len(key_split) == 6:
+            dataset = os.path.join(key_split[0], key_split[1])
+            method = key_split[2]
+        else:
+            dataset = key_split[0]
+            method = key_split[1]
+
         if dataset not in out_dict.keys():
             out_dict[dataset] = []
         out_dict[dataset].append({method: value})
@@ -119,7 +140,7 @@ def count_runs(out_dict):
 
 
 def get_best_runs(out_dict, n_counts=20, metric='validation.average_precision_score.macro'):
-    pilot_test_methods = ['GP_mom_LSTMSignatureModel']     
+    #pilot_test_methods = ['GP_mom_LSTMSignatureModel']     
         
     counts = defaultdict(dict) 
     for dataset in out_dict.keys(): #dataset
@@ -127,8 +148,8 @@ def get_best_runs(out_dict, n_counts=20, metric='validation.average_precision_sc
             counts[dataset] = defaultdict()
         for run in out_dict[dataset]: #looping over list of runs
             for method, result in run.items(): #run is a dict with method as key and dictionary of results as value
-                if method in pilot_test_methods:
-                    continue
+                #if method in pilot_test_methods:
+                #    continue
                 if method not in counts[dataset].keys():
                     counts[dataset][method] = defaultdict()
                 elif 'count' not in counts[dataset][method].keys():
@@ -153,26 +174,31 @@ def get_best_runs(out_dict, n_counts=20, metric='validation.average_precision_sc
 if __name__ == "__main__":
     
     # Parameters:
-    base_paths = ['exp_runs/hyperparameter_search', 
-                  'exp_runs/batched_runs/batch0/hyperparameter_search',
-                  'hypersearch_runs'] 
+    base_paths = ['experiments/hyperparameter_search'] 
     useful_heads = ['metrics.json', 'run.json']
 
 
+    #raw results (only selecting the best stage of run --> without selecting the best run per method!)
     results = gather_results_in_dict(base_paths, useful_heads)
-    
-    with open('gathered_runs.json', 'w') as f:
-        json.dump(results, f)
-    
+   
+       
     out_dict = process_run_dict(results)
 
-    #counts = count_runs(out_dict)
+    #Simply count which method has how many completed runs
+    counts = count_runs(out_dict)
+   
+    with open('scripts/completed_run_counts.json', 'w') as f:
+        json.dump(counts, f)
+ 
+    embed(); sys.exit()
 
+    
+    #TODO: adjust get_best_runs!
     counts = get_best_runs(out_dict)
 
     embed()
     
-    with open('gathered_results.json', 'w') as f:
+    with open('scripts/gathered_results.json', 'w') as f:
         json.dump(results, f)
     
  
