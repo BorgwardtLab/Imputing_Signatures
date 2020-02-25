@@ -15,7 +15,10 @@ from exp.ingredients import dataset_config, model_config
 from exp.utils import count_parameters, plot_losses, execute_callbacks, compute_loss, dataset_to_classes
 
 
-# Test for debugging sacred read-only error
+# Testing to overwrite cudnn backend:
+torch.backends.cudnn.benchmark = False
+
+# Workaround for sacred read-only error
 SETTINGS.CONFIG.READ_ONLY_CONFIG = False
 SETTINGS['CAPTURE_MODE'] = 'sys' #workaround for sdtout timeout
 
@@ -41,6 +44,7 @@ def cfg():
     subsampler_name = None 
     subsampler_parameters = {}
     num_workers=1
+    drop_last=False
 
 # Named configs for Subsampling schemes (only for UEA)
 @EXP.named_config
@@ -107,7 +111,7 @@ class NewlineCallback(Callback):
         print()
 
 def train_loop(model, dataset, data_format, loss_fn, collate_fn, n_epochs, batch_size, virtual_batch_size,
-               learning_rate, imputation_params, weight_decay=1e-4, device='cuda:0', callbacks=None, num_workers=0):
+               learning_rate, imputation_params, weight_decay=1e-4, device='cuda:0', callbacks=None, num_workers=0, drop_last=False):
     if callbacks is None:
         callbacks = []
 
@@ -116,7 +120,7 @@ def train_loop(model, dataset, data_format, loss_fn, collate_fn, n_epochs, batch
         virtual_scaling = virtual_batch_size / batch_size
 
     train_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, collate_fn=collate_fn, shuffle=True,
-                                               pin_memory=True, num_workers=num_workers)
+                                               pin_memory=True, num_workers=num_workers, drop_last=drop_last)
     n_instances = len(dataset)
     n_batches = len(train_loader)
 
@@ -144,7 +148,7 @@ def train_loop(model, dataset, data_format, loss_fn, collate_fn, n_epochs, batch
 @EXP.automain
 def train(n_epochs, batch_size, virtual_batch_size, learning_rate, weight_decay, early_stopping, data_format,
           imputation_params, device, quiet, evaluation, subsampler_name, subsampler_parameters, num_workers,
-          _run, _log, _seed, _rnd, dataset):
+          drop_last, _run, _log, _seed, _rnd, dataset):
     """Sacred wrapped function to run training of model."""
 
     torch.manual_seed(_seed)
@@ -212,9 +216,9 @@ def train(n_epochs, batch_size, virtual_batch_size, learning_rate, weight_decay,
     callbacks = [
         LogTrainingLoss(_run, print_progress=quiet),
         LogDatasetLoss('validation', validation_dataset, data_format, collate_fn, loss_fn, _run, imputation_params, batch_size,  
-                       early_stopping=early_stopping, save_path=rundir, device=device, print_progress=True, num_workers=num_workers),
+                       early_stopping=early_stopping, save_path=rundir, device=device, print_progress=True, num_workers=num_workers, drop_last=drop_last),
         LogDatasetLoss('testing', test_dataset, data_format, collate_fn, loss_fn, _run, imputation_params, batch_size, save_path=rundir, 
-                       device=device, print_progress=False, num_workers=num_workers)
+                       device=device, print_progress=False, num_workers=num_workers, drop_last=drop_last)
     ]
     if quiet:
         # Add newlines between epochs
@@ -223,7 +227,7 @@ def train(n_epochs, batch_size, virtual_batch_size, learning_rate, weight_decay,
         callbacks.append(Progressbar())
 
     train_loop(model, train_dataset, data_format, loss_fn, collate_fn, n_epochs, batch_size, virtual_batch_size,
-               learning_rate, imputation_params, weight_decay, device, callbacks, num_workers)
+               learning_rate, imputation_params, weight_decay, device, callbacks, num_workers, drop_last)
 
     if rundir:
         # Save model state (and entire model)
