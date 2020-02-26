@@ -247,7 +247,8 @@ class DeepSignatureModel(nn.Module):
                                           layer_sizes=(hidden_channels1, hidden_channels1, hidden_channels2),
                                           kernel_size=kernel_size,
                                           include_original=include_original,
-                                          include_time=include_time)
+                                          include_time=include_time,
+                                          padding=(kernel_size-1, 0))
         self.signature1 = signatory.Signature(depth=sig_depth,
                                               stream=True)
 
@@ -262,7 +263,8 @@ class DeepSignatureModel(nn.Module):
                                           layer_sizes=(hidden_channels1, hidden_channels1, hidden_channels2),
                                           kernel_size=kernel_size,
                                           include_original=False,
-                                          include_time=False)
+                                          include_time=False,
+                                          padding=(kernel_size-1, 0))
         self.signature2 = signatory.Signature(depth=sig_depth,
                                               stream=False)
 
@@ -275,15 +277,13 @@ class DeepSignatureModel(nn.Module):
         # `lengths` should be a one dimensional tensor (batch,) giving the true length of each batch element along the
         # stream dimension
         if self.use_constant_trick: 
-            adjusted_lengths = lengths - 2 * self.kernel_size + 2
-            if (adjusted_lengths < 1).any():
+            if (lengths <= 1).any():
                 raise ValueError('The kernel size is too large top operate this model on a stream this short.')
-
         x = self.augment1(x)
         x = self.signature1(x, basepoint=True)
         x = self.augment2(x)
         if self.use_constant_trick:
-            x = become_constant_trick(x, adjusted_lengths)
+            x = become_constant_trick(x, lengths)
         x = self.signature2(x, basepoint=True)
         x = self.linear(x)
         return x
