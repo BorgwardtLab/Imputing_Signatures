@@ -40,10 +40,24 @@ def get_run_validity(path):
     else: 
         return False
 
+def determine_metric(metrics, data):
+    """
+    Util function to check which of the provided eval metrics is available in the current data dictionary
+    """
+    found = False
+    eval_metric = None
+    for metric in metrics:
+        if metric in data.keys():
+            eval_metric = metric
+            found = True
+            break
+    return found, eval_metric
+    
 def get_results(path):
     with open(path, 'r') as f:
         data = json.load(f)
     eval_metrics = ['validation.balanced_accuracy', 'validation.auprc'] 
+    found_metric, eval_metric = determine_metric(eval_metrics, data)
     found_metric = False
     for metric in eval_metrics:
         if metric in data.keys():
@@ -102,7 +116,7 @@ def gather_results_in_dict(base_paths, useful_heads):
                     valid, output = process_experiment(base_path, exp_path_tail, useful_heads) 
                     if valid:
                         if exp_path_tail not in results.keys():
-                            results[exp_path_tail] = []
+                            results[exp_path_tail] = [] #this list is simply a safety measure if for some reason two jobs receive the same path name
                         results[exp_path_tail].append(output)
     return results
 
@@ -139,23 +153,26 @@ def count_runs(out_dict):
     return counts
 
 
-def get_best_runs(out_dict, n_counts=20, metric='validation.average_precision_score.macro'):
+def get_best_runs(out_dict, n_counts=20, metrics = ['validation.balanced_accuracy', 'validation.auprc']):
     #pilot_test_methods = ['GP_mom_LSTMSignatureModel']     
-        
+ 
     counts = defaultdict(dict) 
     for dataset in out_dict.keys(): #dataset
         if dataset not in counts.keys():
             counts[dataset] = defaultdict()
         for run in out_dict[dataset]: #looping over list of runs
             for method, result in run.items(): #run is a dict with method as key and dictionary of results as value
-                #if method in pilot_test_methods:
-                #    continue
+                #first determine current eval metric:
+                found, metric = determine_metric(metrics, result[0])
+                if not found:
+                    raise ValueError(f'No valid eval metric found for the following job: {run}')
                 if method not in counts[dataset].keys():
                     counts[dataset][method] = defaultdict()
-                elif 'count' not in counts[dataset][method].keys():
-                    counts[dataset][method]['count'] = 1
+                if 'count' not in counts[dataset][method].keys():
+                    counts[dataset][method]['count'] = 0
                     best = 0
-                    for res in result: 
+                    for res in result:
+                        counts[dataset][method]['count'] += 1 
                         if res[metric] > best:
                             best = res[metric]
                             best_res = res
@@ -163,8 +180,8 @@ def get_best_runs(out_dict, n_counts=20, metric='validation.average_precision_sc
                 elif counts[dataset][method]['count'] > n_counts:
                     continue
                 else: 
-                    counts[dataset][method]['count'] += len(result)
                     for res in result: #loop over possible multiple runs
+                        counts[dataset][method]['count'] += 1
                         if res[metric] > counts[dataset][method]['best'][metric]:
                             counts[dataset][method]['best'] = res 
     return counts
@@ -190,15 +207,15 @@ if __name__ == "__main__":
     with open('scripts/completed_run_counts.json', 'w') as f:
         json.dump(counts, f)
  
-    embed(); sys.exit()
-
-    
-    #TODO: adjust get_best_runs!
-    counts = get_best_runs(out_dict)
+    best_runs = get_best_runs(out_dict)
 
     embed()
     
-    with open('scripts/gathered_results.json', 'w') as f:
+    #Dump raw results: 
+    with open('results/raw_results.json', 'w') as f:
         json.dump(results, f)
     
+    #Dump best runs: 
+    with open('results/best_runs.json', 'w') as f:
+        json.dump(best_runs, f)
  
