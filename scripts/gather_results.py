@@ -5,7 +5,7 @@ import argparse
 import pandas as pd
 import numpy as np
 from IPython import embed
-
+from tabulate import tabulate
 from collections import defaultdict
 
 def process_experiment(base_path, exp_path, heads):
@@ -186,8 +186,82 @@ def get_best_runs(out_dict, n_counts=20, metrics = ['validation.balanced_accurac
                             counts[dataset][method]['best'] = res 
     return counts
 
+def get_best_runs_dict(data):
+    """
+    Extract a dictionary which can be directly processed to tex via pandas
+    which is a nested dict of the following structure:
+    {dataset1: 
+        { method1: 
+            { metric1: 0.99,
+                .. 
+             } 
+        } .. 
+    }
+    """
+    out = defaultdict()
+    for dataset in data.keys():
+        out[dataset] = defaultdict()
+        for method in data[dataset].keys():
+            out[dataset][method] = defaultdict()
+            for metric in data[dataset][method]['best'].keys():
+                out[dataset][method][metric] = data[dataset][method]['best'][metric] 
+    return out
 
-     
+def pivot_df(df):
+    df_out = df.pivot_table(index=['subsampling', 'model'], columns='metric', values='value')
+    return df_out
+
+def extract_and_tex_single_datasets(df):
+    """ return dict of dataset-wise results in df format"""
+    dfs = defaultdict()
+    datasets = df['dataset'].unique()
+    for dat in datasets:
+        curr_df = df.query("dataset == @dat")
+        curr_piv = pivot_df(curr_df)
+        dfs[dat] = curr_piv
+        #Write table to result folder
+        curr_piv.to_latex(f'results/tables/{dat}.tex')
+    return dfs
+
+def convert_to_df(data):
+    """Convert best runs dictionary to pd dataframe which can be transformed to tex table """
+    out_df = pd.DataFrame() 
+    for dataset in data.keys():
+        if '/' in dataset:
+            split = dataset.split('/')
+            dataset_name = split[0]
+            subsampling = split[1]
+        else:
+            subsampling = ''
+            dataset_name = dataset
+        #convert nested dictionary to df with redundant records (easier to group by)
+        for model in data[dataset].keys():
+            for metric in data[dataset][model].keys():
+                record = {  'dataset':      dataset_name,
+                            'subsampling':  subsampling,
+                            'model':        model,
+                            'metric':       metric, 
+                            'value':       [ data[dataset][model][metric] ]
+                         }
+                record_df = pd.DataFrame(record)
+                out_df = out_df.append(record_df) 
+    
+    df = out_df.sort_values(['dataset','subsampling', 'metric']) 
+    #extract irregularly spaced and regularly spaced datasets:
+    irregular = ['Physionet2012']
+    is_irregular = df['dataset'].isin(irregular)
+    df_irregular = df[is_irregular]
+    df_regular = df[~is_irregular]
+    
+    dfs_irr = extract_and_tex_single_datasets(df_irregular)
+    dfs_reg = extract_and_tex_single_datasets(df_regular)   
+    
+    #df_irregular = df_irregular.reset_index(drop=True)
+    #df_irr_pivoted = pivot_df(df_irregular)
+    #df_reg_pivoted = pivot_df(df_regular)  
+    
+    return dfs_irr, dfs_reg
+ 
 if __name__ == "__main__":
     
     # Parameters:
@@ -207,10 +281,16 @@ if __name__ == "__main__":
     with open('scripts/completed_run_counts.json', 'w') as f:
         json.dump(counts, f)
  
+    #Find the test performance of the best run per method
     best_runs = get_best_runs(out_dict)
+    #Convert this output into a dictionary directly usable for tex via pandas
+    best_runs_dict = get_best_runs_dict(best_runs)
 
-    embed()
-    
+    #Convert best run dict to df for tex table
+    dfs = convert_to_df(best_runs_dict)
+
+    #Write each dataset result to tex table:
+    embed()  
     #Dump raw results: 
     with open('results/raw_results.json', 'w') as f:
         json.dump(results, f)
