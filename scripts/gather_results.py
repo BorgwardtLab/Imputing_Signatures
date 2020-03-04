@@ -8,6 +8,46 @@ from IPython import embed
 from tabulate import tabulate
 from collections import defaultdict
 
+#Renaming dictionaries:
+
+model_names = {
+    'GP_mc_GRUModel': 'GP-RNN',
+    'GP_mc_GRUSignatureModel': 'GP-RNNSig',
+    'GP_mc_SignatureModel': 'GP-Sig',
+    'GP_mom_GRUModel': 'GP-RNN (PoM)',
+    'GP_mom_GRUSignatureModel': 'GP-RNNSig (PoM)',
+    'GP_mom_SignatureModel': 'GP-Sig (PoM)',
+    'causalImputedRNNModel': 'causal-RNN',
+    'causalImputedRNNSignatureModel': 'causal-RNNSig',
+    'causalImputedSignatureModel': 'causal-Sig',
+    'forwardfillImputedRNNModel': 'ff-RNN',
+    'forwardfillImputedRNNSignatureModel': 'ff-RNNSig',
+    'forwardfillImputedSignatureModel': 'ff-Sig',
+    'indicatorImputedRNNModel': 'ind-RNN',
+    'indicatorImputedRNNSignatureModel': 'ind-RNNSig',
+    'indicatorImputedSignatureModel': 'ind-Sig',
+    'linearImputedRNNModel': 'lin-RNN',
+    'linearImputedRNNSignatureModel': 'lin-RNNSig',
+    'linearImputedSignatureModel': 'lin-Sig',
+    'zeroImputedRNNModel': 'zero-RNN',
+    'zeroImputedRNNSignatureModel': 'zero-RNNSig',
+    'zeroImputedSignatureModel': 'zero-Sig'
+}
+subsampling_names = {
+    'LabelBasedSubsampler': 'Label-based',
+    'MissingAtRandomSubsampler': 'Random',
+    '': ''
+} 
+metric_names = {
+    'testing.accuracy': 'Accuracy',
+    'testing.auroc_weighted': 'w-AUROC',
+    'testing.balanced_accuracy': 'BAC',
+    'validation.balanced_accuracy': 'val-BAC',
+    'testing.auprc': 'Average Precision', #average precision 
+    'testing.auroc': 'AUROC',
+    'validation.auprc': 'val-AP'  
+}
+
 def process_experiment(base_path, exp_path, heads):
     metrics_path = os.path.join(base_path, exp_path, heads[0])
     run_path = os.path.join(base_path, exp_path, heads[1])
@@ -211,16 +251,58 @@ def pivot_df(df):
     df_out = df.pivot_table(index=['subsampling', 'model'], columns='metric', values='value')
     return df_out
 
+def highlight_best(df, top=3): #actually operates on df series 
+    formats = [ [r' \mathbf{ \underline{ ',    ' }}'],
+        [r' \mathbf{ ',               ' }'],
+        [r' \underline{ ',            ' }']]
+
+    top_n = df.nlargest(top).index.tolist()
+    #best = df.idxmax()
+    #df[best] = f'$ \mathbf{{ {df[best]:.5g} }} $'
+    rest = list(df.index)
+    for i, best in enumerate(top_n):
+        df[best] = '$ ' + formats[i][0] + f'{df[best]:.5g}' + formats[i][1] + ' $'
+        rest.remove(best)
+    #this manual step was trying to get conistently 5 decimals as df.round did not do it.
+    #however, there is the same issue here as well.. 
+    df[rest] = df[rest].apply(lambda x: '$ {:g} $'.format(float('{:.5g}'.format(float(x))))) 
+    return df
+
 def extract_and_tex_single_datasets(df):
     """ return dict of dataset-wise results in df format"""
     dfs = defaultdict()
     datasets = df['dataset'].unique()
     for dat in datasets:
         curr_df = df.query("dataset == @dat")
+        #round values:
+        #curr_df['value'] = curr_df['value'].round(5)
+        #pivot df to compact format (metrics as columns)
         curr_piv = pivot_df(curr_df)
+        if curr_piv.index[0][0] == '':
+            curr_piv = curr_piv.reset_index(level='subsampling', drop=True)
+            curr_piv = curr_piv.iloc[:,:].apply(highlight_best)
+        else: #using subsampling, split dfs for bolding the winners
+            curr_piv = pd.DataFrame() #initialize the concatenated df of all subsamplings
+            subsamplings = curr_df['subsampling'].unique()
+            for subsampling in subsamplings:
+                df_sub = curr_df.query("subsampling == @subsampling")
+                df_sub_piv = pivot_df(df_sub)
+                df_sub_piv = df_sub_piv.iloc[:,:].apply(highlight_best)
+                curr_piv = curr_piv.append(df_sub_piv)
+        #drop validation metrics:
+        cols = list(curr_piv.columns)
+        cols_to_drop = [col for col in cols if 'val' in col]
+        print(cols_to_drop)
+        curr_piv = curr_piv.drop(columns=cols_to_drop)
+        #rearrange columns (show hypersearch obj first)
+        cols = list(curr_piv.columns)
+        if 'Accuracy' in cols: #multivariate dataset
+            new_order = [2,1,0]
+            curr_piv = curr_piv[curr_piv.columns[new_order]] 
         dfs[dat] = curr_piv
+
         #Write table to result folder
-        curr_piv.to_latex(f'results/tables/{dat}.tex')
+        curr_piv.to_latex(f'results/tables/{dat}.tex', escape=False)
     return dfs
 
 def convert_to_df(data):
@@ -238,15 +320,18 @@ def convert_to_df(data):
         for model in data[dataset].keys():
             for metric in data[dataset][model].keys():
                 record = {  'dataset':      dataset_name,
-                            'subsampling':  subsampling,
-                            'model':        model,
-                            'metric':       metric, 
+                            'subsampling':  subsampling_names[subsampling],
+                            'model':        model_names[model],
+                            'metric':       metric_names[metric], 
                             'value':       [ data[dataset][model][metric] ]
                          }
                 record_df = pd.DataFrame(record)
                 out_df = out_df.append(record_df) 
-    
+    # rename models:
+     
     df = out_df.sort_values(['dataset','subsampling', 'metric']) 
+    #if df.index[0][0] == '':
+    #    df = df.drop(index=['subsampling'])
     #extract irregularly spaced and regularly spaced datasets:
     irregular = ['Physionet2012']
     is_irregular = df['dataset'].isin(irregular)
@@ -290,7 +375,7 @@ if __name__ == "__main__":
     dfs = convert_to_df(best_runs_dict)
 
     #Write each dataset result to tex table:
-    embed()  
+    #embed()  
     #Dump raw results: 
     with open('results/raw_results.json', 'w') as f:
         json.dump(results, f)
