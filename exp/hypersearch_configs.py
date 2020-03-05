@@ -1,8 +1,29 @@
 def Physionet2012():
     overrides = {'dataset__name': 'Physionet2012'}
 
+def PenDigits():
+    overrides = {
+            'dataset__name': 'UEADataset',
+            'dataset__parameters__dataset_name': 'PenDigits',
+            'dataset__parameters__use_disk_cache': True }
+
+def LSST():
+    overrides = {
+            'dataset__name': 'UEADataset',
+            'dataset__parameters__dataset_name': 'LSST',
+            'dataset__parameters__use_disk_cache': True }
+
+def CharacterTrajectories():
+    overrides = {
+            'dataset__name': 'UEADataset',
+            'dataset__parameters__dataset_name': 'CharacterTrajectories',
+            'dataset__parameters__use_disk_cache': True }
+
 def add_datasets(experiment):
     experiment.named_config(Physionet2012)
+    experiment.named_config(PenDigits)
+    experiment.named_config(LSST)
+    experiment.named_config(CharacterTrajectories)
 
 #######################################
 # GP-Based Models
@@ -22,7 +43,7 @@ def GP_mc_SignatureModel():
         'model__parameters__sampling_type': 'monte_carlo',
         'model__parameters__n_mc_smps': 10,
         'model__parameters__n_devices': 1,
-        'model__parameters__output_device': 'cuda',
+        'model__parameters__output_device': 'cuda:0',
         'model__parameters__final_network': [30,30]
     }
 
@@ -38,7 +59,7 @@ def GP_mom_SignatureModel():
         'model__parameters__sampling_type': 'moments',
         'model__parameters__n_mc_smps': 1,
         'model__parameters__n_devices': 1,
-        'model__parameters__output_device': 'cuda',
+        'model__parameters__output_device': 'cuda:0',
         'model__parameters__final_network': [30,30]
     }
 
@@ -60,7 +81,7 @@ def GP_mc_GRUSignatureModel():
         'model__parameters__sampling_type': 'monte_carlo',
         'model__parameters__n_mc_smps': 10,
         'model__parameters__n_devices': 1,
-        'model__parameters__output_device': 'cuda'
+        'model__parameters__output_device': 'cuda:0'
     }
 
 def GP_mom_GRUSignatureModel():
@@ -78,11 +99,11 @@ def GP_mom_GRUSignatureModel():
         'model__parameters__sampling_type': 'moments',
         'model__parameters__n_mc_smps': 1,
         'model__parameters__n_devices': 1,
-        'model__parameters__output_device': 'cuda'
+        'model__parameters__output_device': 'cuda:0'
     }
 
 ## Deep Signature Models
-
+##TODO: overrides: use_constant_trick=False?
 def GP_mc_DeepSignatureModel():
     train_module = 'train_model'
     hyperparameter_space = {
@@ -97,7 +118,7 @@ def GP_mc_DeepSignatureModel():
         'model__parameters__sampling_type': 'monte_carlo',
         'model__parameters__n_mc_smps': 10,
         'model__parameters__n_devices': 1,
-        'model__parameters__output_device': 'cuda'
+        'model__parameters__output_device': 'cuda:0'
     }
 
 def GP_mom_DeepSignatureModel():
@@ -113,14 +134,14 @@ def GP_mom_DeepSignatureModel():
         'model__parameters__sampling_type': 'moments',
         'model__parameters__n_mc_smps': 1,
         'model__parameters__n_devices': 1,
-        'model__parameters__output_device': 'cuda'
+        'model__parameters__output_device': 'cuda:0'
     }
 
 ## RNN Models
 def GP_mom_GRUModel():
     train_module = 'train_model'
     hyperparameter_space = {   
-        'model__parameters__hidden_size': ('Categorical', [16,32,64,128]) 
+        'model__parameters__hidden_size': ('Categorical', [16,32,64,128,256,512]) 
     }
     overrides = {
         'model__name': 'GPRNNModel',
@@ -128,13 +149,13 @@ def GP_mom_GRUModel():
         'model__parameters__sampling_type': 'moments',
         'model__parameters__n_mc_smps': 1,
         'model__parameters__n_devices': 1,
-        'model__parameters__output_device': 'cuda'
+        'model__parameters__output_device': 'cuda:0'
     }
 
 def GP_mc_GRUModel():
     train_module = 'train_model'
     hyperparameter_space = {   
-        'model__parameters__hidden_size': ('Categorical', [16,32,64,128]) 
+        'model__parameters__hidden_size': ('Categorical', [16,32,64,128,256,512]) 
     }
     overrides = {
         'model__name': 'GPRNNModel',
@@ -142,7 +163,7 @@ def GP_mc_GRUModel():
         'model__parameters__sampling_type': 'monte_carlo',
         'model__parameters__n_mc_smps': 10,
         'model__parameters__n_devices': 1,
-        'model__parameters__output_device': 'cuda'
+        'model__parameters__output_device': 'cuda:0'
     }
 
 ###################################################
@@ -196,7 +217,7 @@ def ImputedDeepSignatureModel():
 def ImputedRNNModel():
     train_module = 'train_model'
     hyperparameter_space = {   
-        'model__parameters__hidden_size': ('Categorical', [16,32,64,128]),
+        'model__parameters__hidden_size': ('Categorical', [16,32,64,128,256,512]),
         'batch_size': ('Categorical', [32,64,128,256]) 
     }
     overrides = {
@@ -220,6 +241,38 @@ def indicator():
     overrides = {'data_format': 'indicator'}
 
 
+####################
+#Subsampling schemes
+####################
+
+def MissingAtRandomSubsampler():
+    overrides = {
+    'subsampler_name': 'MissingAtRandomSubsampler',
+    'subsampler_parameters': { 'probability': 0.5  }
+    }
+
+def LabelBasedSubsampler():
+    overrides = {
+    'subsampler_name': 'LabelBasedSubsampler',
+    'subsampler_parameters': { 'probability_ranges': [0.4, 0.6] }
+    }
+
+################################################################
+# Due to very short series, use custom subsampling for PenDigits:
+################################################################
+def MissingAtRandomSubsamplerPenDigits():
+    overrides = {
+    'subsampler_name': 'MissingAtRandomSubsampler',
+    'subsampler_parameters': { 'probability': 0.3  }
+    }
+
+def LabelBasedSubsamplerPenDigits():
+    overrides = {
+    'subsampler_name': 'LabelBasedSubsampler',
+    'subsampler_parameters': { 'probability_ranges': [0.2, 0.4] }
+    }
+
+
 def add_models(experiment):
     experiment.named_config(GP_mom_SignatureModel)
     experiment.named_config(GP_mc_SignatureModel)
@@ -229,13 +282,21 @@ def add_models(experiment):
     experiment.named_config(GP_mc_GRUModel)
     experiment.named_config(GP_mc_DeepSignatureModel)
     experiment.named_config(GP_mom_DeepSignatureModel)
+
     experiment.named_config(ImputedSignatureModel)
     experiment.named_config(ImputedRNNSignatureModel)
     experiment.named_config(ImputedRNNModel)
     experiment.named_config(ImputedDeepSignatureModel)
+
     experiment.named_config(zero)
     experiment.named_config(linear)
     experiment.named_config(forwardfill)
     experiment.named_config(causal)
     experiment.named_config(indicator)
+
+    experiment.named_config(MissingAtRandomSubsampler)
+    experiment.named_config(LabelBasedSubsampler)
+    experiment.named_config(MissingAtRandomSubsamplerPenDigits)
+    experiment.named_config(LabelBasedSubsamplerPenDigits)
+
 

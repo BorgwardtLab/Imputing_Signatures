@@ -13,6 +13,7 @@ def main():
                         action='append')
     parser.add_argument('--output-pattern', required=True, type=str)
     parser.add_argument('--overwrite', action='store_true', default=False)
+    parser.add_argument('--separator', type=str, default=None)
 
     args = parser.parse_args()
     assert len(args.name) == len(args.set)
@@ -20,16 +21,21 @@ def main():
     for possible_parameters in itertools.product(*args.set):
         parameter_mapping = dict(zip(args.name, possible_parameters))
         output_filename = args.output_pattern.format(**parameter_mapping)
+
+        if args.separator is not None:
+            output_filename = output_filename.replace('=', '/')
+
         if not args.overwrite and os.path.exists(output_filename):
             print(f'Skipping... {output_filename} already exists.')
             continue
         os.makedirs(os.path.dirname(output_filename), exist_ok=True)
-        subprocess.call(
-            [
+
+        command = [
                 'python', '-m', args.sacred_experiment, 'save_config', 'with',
                 f'config_filename={output_filename}'
-            ] + list(possible_parameters)
-        )
+        ] + list(possible_parameters)
+        print(command)
+        subprocess.call(command)
 
 
 if __name__ == '__main__':

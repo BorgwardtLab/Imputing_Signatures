@@ -15,6 +15,166 @@ def cfg():
     }
 
 
+
+#@ingredient.named_config
+#def GP_mc_SignatureModel():
+#    """MGP Adapter with Signature Model (using Monte-carlo sampling)."""
+#    name = 'GPSignatureModel'
+#    parameters = {
+#        'sampling_type': 'monte_carlo' ,
+#        'n_mc_smps': 10,
+#        'n_devices': 1,
+#        'output_device': 'cuda',
+#        'sig_depth': 3,
+#        'extra_channels': 5,
+#        'channel_groups': 3,
+#        'final_network': [30,30]
+#    }
+#
+#@ingredient.named_config
+#def GP_mom_SignatureModel():
+#    """MGP Adapter with Signature Model (using Posterio Moments)."""
+#    name = 'GPSignatureModel'
+#    parameters = {
+#        'sampling_type': 'moments' ,
+#        'n_mc_smps': 1,
+#        'n_devices': 1,
+#        'output_device': 'cuda',
+#        'sig_depth': 3,
+#        'extra_channels': 5,
+#        'channel_groups': 3,
+#        'final_network': [30,30]
+#    }
+#
+#@ingredient.named_config
+#def GP_mc_GRUSignatureModel():
+#    name = 'GPRNNSignatureModel'
+#    parameters = {
+#            'sampling_type': 'monte_carlo',
+#            'n_mc_smps': 10,
+#            'n_devices': 1,
+#            'output_device': 'cuda',
+#            'sig_depth': 2,
+#            'extra_channels': 5,
+#            'channel_groups': 3,
+#            'rnn_channels': 32 
+#    }
+#
+#@ingredient.named_config
+#def GP_mom_GRUSignatureModel():
+#    name = 'GPRNNSignatureModel'
+#    parameters = {
+#            'sampling_type': 'moments',
+#            'n_mc_smps': 1,
+#            'n_devices': 1,
+#            'output_device': 'cuda',
+#            'sig_depth': 2,
+#            'extra_channels': 5,
+#            'channel_groups': 3,
+#            'rnn_channels': 32 
+#    }
+#
+#@ingredient.named_config
+#def GP_mc_DeepSignatureModel():
+#    """MGP Adapter with Deep Signature Model (using Monte-carlo sampling)."""
+#    name = 'GPDeepSignatureModel'
+#    parameters = {
+#        'sampling_type': 'monte_carlo',
+#        'n_mc_smps': 10,
+#        'n_devices': 1,
+#        'output_device': 'cuda',
+#        'hidden_channels1': 8, 
+#        'hidden_channels2': 4,
+#        'kernel_size': 1,
+#        'sig_depth': 2
+#    }
+#
+#@ingredient.named_config
+#def GP_mom_DeepSignatureModel():
+#    """MGP Adapter with Deep Signature Model (using moments)."""
+#    name = 'GPDeepSignatureModel'
+#    parameters = {
+#        'sampling_type': 'moments',
+#        'n_mc_smps': 1,
+#        'n_devices': 1,
+#        'output_device': 'cuda',
+#        'hidden_channels1': 8, 
+#        'hidden_channels2': 4,
+#        'kernel_size': 1,
+#        'sig_depth': 2
+#    }
+#
+#@ingredient.named_config
+#def GP_mom_GRUModel():
+#    """MGP Adapter with RNN Model (using moments)."""
+#    name = 'GPRNNModel'
+#    parameters = {
+#        'sampling_type': 'moments',
+#        'n_mc_smps': 1,
+#        'n_devices': 1,
+#        'output_device': 'cuda',
+#        'hidden_size': 32 
+#    }
+#
+#@ingredient.named_config
+#def GP_mc_GRUModel():
+#    """MGP Adapter with RNN Model (MC)."""
+#    name = 'GPRNNModel'
+#    parameters = {
+#        'sampling_type': 'monte_carlo',
+#        'n_mc_smps': 10,
+#        'n_devices': 1,
+#        'output_device': 'cuda',
+#        'hidden_size': 32 
+#        
+#    }
+#
+#
+#@ingredient.named_config
+#def ImputedSignatureModel():
+#    """Signature Model (requiring imputation!)."""
+#    name = 'ImputedSignatureModel'
+#    parameters = {
+#        'sig_depth': 2,
+#        'extra_channels': 5,
+#        'channel_groups': 3,
+#        'final_network': [30,30]
+#    }
+#
+#@ingredient.named_config
+#def ImputedRNNSignatureModel():
+#    name = 'ImputedRNNSignatureModel'
+#    parameters = {
+#        'sig_depth': 2, 
+#        'extra_channels': 5,
+#        'channel_groups': 3,
+#        'length': 5,
+#        'rnn_channels': 32,
+#        'rnn_type': 'gru'
+#    } 
+#
+#@ingredient.named_config
+#def ImputedDeepSignatureModel():
+#    name = 'ImputedDeepSignatureModel'
+#    parameters = {
+#        'sig_depth': 2, 
+#        'hidden_channels1': 8,
+#        'hidden_channels2': 4,
+#        'kernel_size': 1
+#    }
+#
+#@ingredient.named_config
+#def ImputedRNNModel():
+#    name = 'ImputedRNNModel'
+#    parameters = {
+#        'hidden_size': 32,
+#        'rnn_type': 'gru'
+#    }
+#    
+
+
+#######################
+
 @ingredient.named_config
 def GPSignatureModel():
     """MGP Adapter with Signature Model (using Monte-carlo sampling)."""

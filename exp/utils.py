@@ -3,6 +3,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
+dataset_to_classes = {
+    'PenDigits': 10,
+    'LSST': 14,
+    'CharacterTrajectories': 20 
+}
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -94,7 +99,7 @@ def compute_loss(d, data_format, device, model, loss_fn, callbacks, imputation_p
     model.train()
 
     if data_format == 'GP':
-        with gpytorch.settings.fast_pred_var(), gpytorch.settings.max_root_decomposition_size(max_root):
+        with gpytorch.settings.fast_pred_var(), gpytorch.settings.max_root_decomposition_size(max_root), gpytorch.settings.max_cholesky_size(40): #use this to strictly enforce lanczos
             logits = model(inputs, indices, values, test_inputs, test_indices, valid_lengths)
     elif data_format in ('zero', 'linear', 'forwardfill', 'causal', 'indicator'):
         logits = model(values, valid_lengths)
@@ -104,5 +109,8 @@ def compute_loss(d, data_format, device, model, loss_fn, callbacks, imputation_p
     y_true = y_true.flatten().to(device)
     if logits.shape[1] == 1:
         logits = logits.squeeze(-1)
+    #in case of multi-class setting (using CrossEntropyLoss), make sure we use long()
+    if 'CrossEntropyLoss' in str(loss_fn):
+        y_true = y_true.long()
     loss = loss_fn(logits, y_true)
     return loss, logits, y_true

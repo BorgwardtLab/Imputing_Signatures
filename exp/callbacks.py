@@ -123,7 +123,7 @@ class LogDatasetLoss(Callback):
 
     def __init__(self, dataset_name, dataset, data_format, collate_fn, loss_fn, run, 
                  imputation_params, batch_size=64, early_stopping=None, save_path=None,
-                 device='cpu', print_progress=True):
+                 device='cpu', print_progress=True, num_workers=4, drop_last=False):
         """Create logger callback.
 
         Log the training loss using the sacred metrics API.
@@ -146,7 +146,7 @@ class LogDatasetLoss(Callback):
         self.prefix = dataset_name
         self.dataset = dataset
         self.data_loader = torch.utils.data.DataLoader(self.dataset, batch_size=batch_size, collate_fn=collate_fn,
-                                                       pin_memory=True, num_workers=4)
+                                                       pin_memory=True, num_workers=num_workers, drop_last=drop_last)
         self.data_format = data_format
         self.loss_fn = loss_fn
         self.run = run
@@ -177,7 +177,7 @@ class LogDatasetLoss(Callback):
             if full_eval:
                 with torch.no_grad():
                     y_true = y_true.detach().cpu().numpy()
-                    y_score = logits.flatten().detach().cpu().numpy() 
+                    y_score = logits.detach().cpu().numpy() 
                     y_true_total.append(y_true)
                     y_score_total.append(y_score)
         return_dict = {}
@@ -188,9 +188,10 @@ class LogDatasetLoss(Callback):
         if full_eval: 
             y_true_total = np.concatenate(y_true_total)
             y_score_total = np.concatenate(y_score_total)
-            for measure in [auc, auprc]:
-                for mode in ['macro', 'micro', 'weighted']:
-                    return_dict[measure.__name__ + '.' + mode] = measure(y_true_total, y_score_total, average=mode)
+            if y_score_total.shape[-1] == 1:
+                y_score_total = y_score_total.squeeze(-1)
+            for measure_name, measure in self.dataset.task.metrics.items():
+                return_dict[measure_name] = measure(y_true_total, y_score_total)
         return return_dict
  
     def _progress_string(self, epoch, losses):

@@ -10,20 +10,34 @@ import torch
 sys.path.append(os.getcwd())
 
 from exp.callbacks import Callback, Progressbar, LogDatasetLoss, LogTrainingLoss
-from exp.format import get_input_transform, get_collate_fn, get_subsampler, get_imputation_scheme
+from exp.format import get_input_transform, get_collate_fn
 from exp.ingredients import dataset_config, model_config
-from exp.utils import count_parameters, plot_losses, execute_callbacks, compute_loss, dataset_to_classes
+from exp.utils import count_parameters, plot_losses, execute_callbacks, compute_loss
 
 
-# Testing to overwrite cudnn backend:
-torch.backends.cudnn.benchmark = False
-
-# Workaround for sacred read-only error
+# Test for debugging sacred read-only error
 SETTINGS.CONFIG.READ_ONLY_CONFIG = False
-SETTINGS['CAPTURE_MODE'] = 'sys' #workaround for sdtout timeout
 
 EXP = Experiment('training', ingredients=[model_config.ingredient, dataset_config.ingredient])
 EXP.captured_out_filter = apply_backspaces_and_linefeeds
+
+
+@EXP.capture
+def get_subsampler(subsampler_name, subsampler_parameters):
+    import src.datasets.subsampling
+
+    subsampling_cls = getattr(src.datasets.subsampling, subsampler_name)
+    instance = subsampling_cls(**subsampler_parameters)
+    return instance
+
+
+@EXP.capture
+def get_imputation_scheme(imputation_scheme):
+    from src.imputation import ImputationStrategy
+
+    instance = ImputationStrategy(imputation_scheme)
+    return instance
+
 
 @EXP.config
 def cfg():
@@ -31,74 +45,40 @@ def cfg():
     batch_size = 32
     virtual_batch_size = None
     learning_rate = 5e-4
-    weight_decay = 1e-4
+    weight_decay = 1e-3
     early_stopping = 20
     data_format = 'GP'
-    device = 'cuda:0'
+    device = 'cuda'
     quiet = False
     evaluation = {'active': False, 'evaluate_on': 'validation'}
     imputation_params = {'n_mc_smps': 10, #number of monte carlo samples
                          'max_root': 25, #max_root_decomposition_size for MGP lanczos iters
                          'grid_spacing': 1. # determines n_hours between query points
                         }                              
-    subsampler_name = None 
+
+    subsampler_name = 'MissingAtRandomSubsampler'
     subsampler_parameters = {}
     num_workers=1
-    drop_last=False
 
-# Named configs for Subsampling schemes (only for UEA)
-@EXP.named_config
-def MissingAtRandomSubsampler():
-    subsampler_name = 'MissingAtRandomSubsampler' 
-    subsampler_parameters = {
-        'probability': 0.5
-    }
-
-@EXP.named_config
-def LabelBasedSubsampler():
-    subsampler_name = 'LabelBasedSubsampler' 
-    subsampler_parameters = {
-        'probability_ranges': [0.4, 0.6]
-    }
-
-
-# Named configs for setting imputation scheme of train module:
-@EXP.named_config
-def zero():
-    data_format = 'zero'
-
-@EXP.named_config
-def forwardfill():
-    data_format = 'forwardfill'
-
-@EXP.named_config
-def causal():
-    data_format = 'causal'
-
-@EXP.named_config
-def indicator():
-    data_format = 'indicator'
-
-@EXP.named_config
-def linear():
-    data_format = 'linear'
-
-# Named configs for running repetitions with fixed seeds
 @EXP.named_config
 def rep1():
     seed = 249040430
+
 
 @EXP.named_config
 def rep2():
     seed = 621965744
 
+
 @EXP.named_config
 def rep3():
     seed = 771860110
 
+
 @EXP.named_config
 def rep4():
     seed = 775293950
+
 
 @EXP.named_config
 def rep5():
@@ -111,7 +91,7 @@ class NewlineCallback(Callback):
         print()
 
 def train_loop(model, dataset, data_format, loss_fn, collate_fn, n_epochs, batch_size, virtual_batch_size,
-               learning_rate, imputation_params, weight_decay=1e-4, device='cuda:0', callbacks=None, num_workers=0, drop_last=False):
+               learning_rate, imputation_params, weight_decay=1e-5, device='cuda', callbacks=None, num_workers=0):
     if callbacks is None:
         callbacks = []
 
@@ -120,7 +100,7 @@ def train_loop(model, dataset, data_format, loss_fn, collate_fn, n_epochs, batch
         virtual_scaling = virtual_batch_size / batch_size
 
     train_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, collate_fn=collate_fn, shuffle=True,
-                                               pin_memory=True, num_workers=num_workers, drop_last=drop_last)
+                                               pin_memory=True, num_workers=num_workers)
     n_instances = len(dataset)
     n_batches = len(train_loader)
 
@@ -146,9 +126,9 @@ def train_loop(model, dataset, data_format, loss_fn, collate_fn, n_epochs, batch
     execute_callbacks(callbacks, 'on_train_end', locals())
 
 @EXP.automain
-def train(n_epochs, batch_size, virtual_batch_size, learning_rate, weight_decay, early_stopping, data_format,
-          imputation_params, device, quiet, evaluation, subsampler_name, subsampler_parameters, num_workers,
-          drop_last, _run, _log, _seed, _rnd, dataset):
+def train(n_epochs, batch_size, virtual_batch_size, learning_rate,
+        weight_decay, early_stopping, data_format, imputation_params,
+        subsampler_name, subsampler_parameters, device, quiet, evaluation, num_workers, _run, _log, _seed, _rnd):
     """Sacred wrapped function to run training of model."""
 
     torch.manual_seed(_seed)
@@ -161,32 +141,35 @@ def train(n_epochs, batch_size, virtual_batch_size, learning_rate, weight_decay,
     # Check if virtual batch size is defined and valid:
     if virtual_batch_size is not None:
         if virtual_batch_size % batch_size != 0:
-            raise ValueError(f'Virtual batch size {virtual_batch_size} has to be a multiple of batch size {batch_size}')  
+            raise ValueError(f'Virtual batch size {virtual_batch_size} has to be a multiple of batch size {batch_size}') 
     
-    # In case we have a subsampling scenario (UEA), stack all input transforms:
-    if subsampler_name is not None:
-        if subsampler_name == 'LabelBasedSubsampler':
-            # chicken and egg problem: we need n_classes of dataset to specify the subsampling 
-            # to initialize the dataset, currently solved with a dictionary that maps the current dataset
-            # name to its number of classes 
-            subsampler_parameters['n_classes'] = dataset_to_classes[dataset['parameters']['dataset_name']]
-            print(f'Subsampler_parameters: {subsampler_parameters}') 
-        input_transform = [
-            get_subsampler(subsampler_name, subsampler_parameters),
-            get_imputation_scheme(data_format),
-            get_input_transform(data_format, imputation_params['grid_spacing']) 
-        ]
-    else:
-        # Using a non-UEA dataset (where we only need the data format input transform 
-        # (as imputation is already handled in the dataset class)
-        input_transform = get_input_transform(data_format, imputation_params['grid_spacing'])
+
+    transforms = [
+        get_subsampler(subsampler_name, subsampler_parameters),
+        get_imputation_scheme(data_format),
+        get_input_transform(data_format, imputation_params['grid_spacing']) 
+    ]
 
     # Get data, sacred does some magic here so we need to hush the linter
     # pylint: disable=E1120,E1123
-    train_dataset = dataset_config.get_instance(split='training', transform=input_transform, data_format=data_format)
-    validation_dataset = dataset_config.get_instance(split='validation', transform=input_transform, data_format=data_format)
-    test_dataset = dataset_config.get_instance(split='testing', transform=input_transform, data_format=data_format)
-    
+    train_dataset = dataset_config.get_instance(
+            split='training',
+            transform=transforms,
+            use_disk_cache=True
+    )
+
+    validation_dataset = dataset_config.get_instance(
+            split='validation',
+            transform=transforms,
+            use_disk_cache=True
+    )
+
+    test_dataset = dataset_config.get_instance(
+            split='testing',
+            transform=transforms,
+            use_disk_cache=True
+    )
+
     # Determine number of input dimensions as GP-Sig models requires this parameter for initialisation
     n_input_dims = train_dataset.measurement_dims
     out_dimension = train_dataset.n_classes
@@ -216,9 +199,9 @@ def train(n_epochs, batch_size, virtual_batch_size, learning_rate, weight_decay,
     callbacks = [
         LogTrainingLoss(_run, print_progress=quiet),
         LogDatasetLoss('validation', validation_dataset, data_format, collate_fn, loss_fn, _run, imputation_params, batch_size,  
-                       early_stopping=early_stopping, save_path=rundir, device=device, print_progress=True, num_workers=num_workers, drop_last=drop_last),
+                       early_stopping=early_stopping, save_path=rundir, device=device, print_progress=True, num_workers=num_workers),
         LogDatasetLoss('testing', test_dataset, data_format, collate_fn, loss_fn, _run, imputation_params, batch_size, save_path=rundir, 
-                       device=device, print_progress=False, num_workers=num_workers, drop_last=drop_last)
+                       device=device, print_progress=False, num_workers=num_workers)
     ]
     if quiet:
         # Add newlines between epochs
@@ -227,7 +210,7 @@ def train(n_epochs, batch_size, virtual_batch_size, learning_rate, weight_decay,
         callbacks.append(Progressbar())
 
     train_loop(model, train_dataset, data_format, loss_fn, collate_fn, n_epochs, batch_size, virtual_batch_size,
-               learning_rate, imputation_params, weight_decay, device, callbacks, num_workers, drop_last)
+               learning_rate, imputation_params, weight_decay, device, callbacks, num_workers)
 
     if rundir:
         # Save model state (and entire model)

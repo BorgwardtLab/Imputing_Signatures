@@ -7,14 +7,16 @@ from src.imputation import (zero_imputation,
                             linear_imputation,
                             forward_fill_imputation,
                             causal_imputation,
-                            indictator_imputation)
+                            indicator_imputation)
 
 
 def to_gpytorch_format(d, grid_spacing=1.0):
     """Convert dictionary with data into the gpytorch format.
 
     Args:
-        d: Dictionary with at least the following keys: time, values
+        d: instance dictionary with at least the following keys: time, values
+        index: this argument is not active, it is simply here to conform with stacking multiple transforms (some of which use the instance index)
+        grid_spacing: GP grid spacing for query time points [default = 1.0 hour]
 
     Returns:
         Dictionary where time and values are replaced with inputs, values and
@@ -84,7 +86,7 @@ def dict_collate_fn(instances, padding_values=None):
     if 'n_tasks' in instances[0].keys():
         n_tasks = instances[0]['n_tasks']
     if 'data_format' in instances[0].keys():
-        data_format = instances[0]['data_format']
+        data_format = instances[0]['data_format'] # data_format is only passed in to_gpytorch input transform for the GP
     else:
         data_format = None
 
@@ -103,7 +105,7 @@ def dict_collate_fn(instances, padding_values=None):
             if key == 'values':
                 # determine and append valid length
                 valid_len = instance_shape[0] # this correct in all cases other than GP format
-
+                valid_len_key = key # sanity check to ensure the correct key was used
             if 'test_' in key:
                 # for GP format test inputs, test indices, put padded/invalid points
                 # directly in the time series between the channel switches for easier reshaping later
@@ -116,6 +118,7 @@ def dict_collate_fn(instances, padding_values=None):
                     # test_indices and test_inputs only occur in GP format. As they set fewer query times, 
                     # we overwrite valid length of instance here:
                     valid_len = time_len
+                    valid_len_key = key # sanity check to ensure the correct key was used
                     # Next do the padding of the query points (do some rearranging, as it saves us from 
                     # doing it in tensor reshapes after the GP draw 
                     padding = np.repeat(padding_values[key], to_pad / n_tasks)  # as to_pad counts all
@@ -138,6 +141,10 @@ def dict_collate_fn(instances, padding_values=None):
                         padded = padded.astype(int)
                 else:
                     padded = instance
+                    #have to compute valid_len in this case too!
+                    instance_len = instance_shape[0]
+                    valid_len = int(instance_len / n_tasks)  # time_length of valid observation of current instance
+                    valid_len_key = key #sanity check to ensure that the correct key was used!
             else:
                 # perform standard padding
                 padding = np.stack(
@@ -153,10 +160,16 @@ def dict_collate_fn(instances, padding_values=None):
             #Determine which valid len to append (depending on imputation scheme):
             if not data_format: #if GP format not specified use values valid length 
                 if key == 'values':
-                    padded_output['valid_lengths'].append(valid_len)
+                    if valid_len_key != 'values':
+                        raise ValueError(f'Wrong key was used to determine valid len! Here, {valid_len_key} was used instead of values')
+                    else:
+                        padded_output['valid_lengths'].append(valid_len)
             elif data_format == 'GP':
                 if key == 'test_indices': #make sure to append GP valid length only once, per instance
-                    padded_output['valid_lengths'].append(valid_len)
+                    if valid_len_key != 'test_indices':
+                        raise ValueError(f'Wrong key was used to determine valid len! Here, {valid_len_key} was used instead of test_indices')
+                    else:
+                        padded_output['valid_lengths'].append(valid_len)
 
     # Combine instances into individual arrays
     combined = {
@@ -194,11 +207,12 @@ def get_input_transform(data_format, grid_spacing):
             'indicator'
         - grid_spacing: number of hours between each query point / or imputed point depending on format
     """
-
+    def no_transform(x):
+        return x
     if data_format == 'GP':
         return partial(to_gpytorch_format, grid_spacing=grid_spacing)
     elif data_format in ['zero', 'linear', 'forwardfill', 'causal', 'indicator']:
-        return None
+        return no_transform
     else:
         raise ValueError('No valid data format provided!')
 
@@ -222,7 +236,7 @@ def get_collate_fn(data_format, n_input_dims):
         'linear':       linear_imputation,
         'forwardfill':  forward_fill_imputation, 
         'causal':       causal_imputation, 
-        'indicator':    indictator_imputation 
+        'indicator':    indicator_imputation 
     } 
     if data_format == 'GP':
         return partial(dict_collate_fn, padding_values={'indices': n_input_dims, 'test_indices': n_input_dims})
@@ -230,3 +244,27 @@ def get_collate_fn(data_format, n_input_dims):
         return dict_collate_fn
     else:
         raise ValueError('No valid data format provided!')
+
+
+
+##########################
+# UEA specific transforms:
+##########################
+
+def get_subsampler(subsampler_name, subsampler_parameters):
+    import src.datasets.subsampling
+
+    subsampling_cls = getattr(src.datasets.subsampling, subsampler_name)
+    instance = subsampling_cls(**subsampler_parameters)
+    return instance
+
+def get_imputation_scheme(imputation_scheme):
+    from src.imputation import ImputationStrategy
+
+    instance = ImputationStrategy(imputation_scheme)
+    return instance
+
+
+
+
+

@@ -34,9 +34,10 @@ def cfg():
         'evaluation__active': True,
         'evaluation__evaluate_on': 'validation'
     }
-    evaluation_metric = 'average_precision_score.macro' 
+    evaluation_metric = 'auprc' 
     train_module = 'train_model'
-    nan_replacement = 20.
+    nan_replacement = 20. #this value is just used to overwrite nans 
+    #in performance metric if a run should fail s.t. hypersearch is not terminated 
     n_random_starts = 20 #10
     n_calls = 20
     load_result = None  # load the previous optimization results from here
@@ -53,7 +54,7 @@ def cfg_train_model_defaults(train_module):
 
         }
         overrides = {
-            'n_epochs': 50,
+            'n_epochs': 100,
             'quiet': True
         }
 

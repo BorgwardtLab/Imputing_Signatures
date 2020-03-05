@@ -10,13 +10,14 @@ from src.imputation import (zero_imputation,
                             linear_imputation,
                             forward_fill_imputation,
                             causal_imputation,
-                            indictator_imputation)
+                            indicator_imputation)
 import torch
 
-# from ..tasks import BinaryClassification
+from src.tasks import BinaryClassification
 from .dataset import Dataset
 from .mimic_benchmarks_utils import Normalizer
 from .utils import DATA_DIR
+import os
 
 DATASET_BASE_PATH = os.path.join(DATA_DIR, 'physionet_2012')
 
@@ -46,6 +47,7 @@ class PhysionetDataReader():
 
     def __init__(self, data_path, endpoint_file):
         self.data_path = data_path
+        self.split_file_name = os.path.split(endpoint_file)[1]
         endpoint_data = pd.read_csv(endpoint_file, header=0, sep=',')
         # Drop backlisted records
         self.endpoint_data = endpoint_data[
@@ -81,7 +83,11 @@ class PhysionetDataReader():
                 return read_raw_example(index)            
         elif mode in ['zero', 'linear', 'forwardfill', 'causal', 'indicator']:
             #check for imputed data path:
-            imputed_path = os.path.join(self.data_path, mode + '_imputations')
+            if 'val_' in self.split_file_name: #doing validation 
+                outpath = os.path.join( os.path.split(self.data_path)[0], 'validation') 
+            else:
+                outpath = self.data_path
+            imputed_path = os.path.join(outpath, mode + '_imputations')
             imputed_file = os.path.join(imputed_path, str(index) + '.pkl')
             if os.path.exists(imputed_file) and not overwrite:
                 # read imputed data
@@ -94,7 +100,7 @@ class PhysionetDataReader():
                     'linear':       linear_imputation,
                     'forwardfill':  forward_fill_imputation, 
                     'causal':       causal_imputation, 
-                    'indicator':    indictator_imputation 
+                    'indicator':    indicator_imputation 
                 }
                 imputation_fn = imputation_dict[mode]
                 time, features, label = read_raw_example(index)
@@ -150,7 +156,10 @@ class PhysionetFeatureTransform():
 
 
 class Physionet2012Dataset(Dataset):
-    """Dataset of the PhysioNet 2012 Computing in Cardiology challenge."""
+    """ Dataset of the PhysioNet 2012 Computing in Cardiology challenge.
+        As this dataset is irregularly spaced, we assume that only one input transform is applied 
+        (to_gpytorch_format or no_transform) as subsampling etc is not needed.
+    """
 
     normalizer_config = os.path.join(
         os.path.dirname(__file__),
@@ -246,6 +255,6 @@ class Physionet2012Dataset(Dataset):
         return self.maybe_transform(
             {'time': time, 'values': features, 'label': label})
 
-    # @property
-    # def task(self):
-    #     return BinaryClassification()
+    @property
+    def task(self):
+        return BinaryClassification()

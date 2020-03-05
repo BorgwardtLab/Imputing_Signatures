@@ -242,7 +242,7 @@ def causal_imputation(batch):
     return batch
 
 
-def indictator_imputation(batch):
+def indicator_imputation(batch):
     """Simple indicator "imputation"; mark the missing values in a separate channel, and set the missing value to zero.
 
     Returns:
@@ -265,3 +265,84 @@ def indictator_imputation(batch):
     batch = dict(batch)  # copy
     batch['values'] = imputed_values
     return batch
+
+
+class ImputationStrategy:
+    """
+    Main class for encapsulating different imputation strategies and
+    making them mesh well with a dataset class.
+    """
+
+    def __init__(self, strategy='zero', ensure_zero_imputation=True):
+        '''
+        Creates a new imputation scheme based on a pre-defined strategy
+        that can be applied to individual instances of a data set class
+        on demand.
+
+        Parameters
+        ----------
+
+            strategy: One value of ['zero', 'linear', 'forward_fill',
+                      'backward_fill', 'causal', 'indicator', 'GP']. This
+                      determines the imputation strategy. For GP we want 
+                      no preprocessed imputation, so we set the strategy 
+                      to 'inactive' in this case.
+
+            ensure_zero_imputation: If set, will always apply zero-based
+            imputation after any scheme, thus ensuring that no NaNs will
+            remain in the data (except for inactive GP mode!).
+            
+            CAVE: the variable ensure_zero_imputation is by default True
+            and for readibility not included in the cache file path. When 
+            setting it to false, all the cached files have to be recomputed! 
+        '''
+        def inactive(x):
+            return x
+
+        strategy_to_fn = {
+            'zero': zero_imputation,
+            'linear': linear_imputation,
+            'forwardfill': forward_fill_imputation,
+            'backwardfill': backward_fill_imputation,
+            'causal': causal_imputation,
+            'indicator': indicator_imputation,
+            'inactive' : inactive  #here we don't want any preprocessing imputation
+        }
+
+        # Report available strategies in order to make this class
+        # configurable from outside.
+        self.available_strategies = sorted(strategy_to_fn.keys())
+        if strategy == 'GP':
+            strategy = 'inactive' #map the GP format to an inactive imputation (for preprocessing) 
+        self.strategy = strategy
+        self.strategy_fn = strategy_to_fn[strategy]
+
+        self.ensure_zero_imputation = ensure_zero_imputation
+
+    def __repr__(self):
+        '''
+        Returns a string-based representation of the class, which will
+        be useful when creating output filenames.
+        '''
+
+        return __name__ + '_' + self.strategy
+
+    def __call__(self, instance, index):
+
+        # Apply conversions to tensors because the imputation strategies
+        # require this. This should be a no-op for tensors.
+        instance['time'] = torch.Tensor(instance['time']).unsqueeze(0)
+        instance['values'] = torch.Tensor(instance['values']).unsqueeze(0)
+        instance['label'] = torch.Tensor(instance['label']).unsqueeze(0)
+
+        instance = self.strategy_fn(instance) #the strategies are implemented for torch tensors
+        #however, to speed up, we apply them now as a prepro step still in numpy format (reformat again here)
+
+        if self.ensure_zero_imputation and self.strategy != 'inactive':
+            instance = zero_imputation(instance)
+
+        #Reformat to numpy (since we impute still before data loader as prepro step in numpy )
+        instance = {key: value.squeeze(0).numpy() for key,value in instance.items()}
+        #instance['time'] = instance['time'].squeeze(-1) #to stay consistent with other formats        
+
+        return instance
