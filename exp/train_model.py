@@ -45,7 +45,7 @@ def cfg():
     subsampler_parameters = {}
     num_workers=1
     drop_last=False
-    n_params_limit=1e6
+    n_params_limit=1.5e6
 
 # Named configs for Subsampling schemes (only for UEA)
 @EXP.named_config
