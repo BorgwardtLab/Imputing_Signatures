@@ -36,7 +36,7 @@ def GP_mc_SignatureModel():
     hyperparameter_space = {   
         'model__parameters__sig_depth': ('Integer', 2, 4),
         'model__parameters__extra_channels': ('Integer', 5, 10),
-        'model__parameters__channel_groups': ('Integer', 1, 10)
+        'model__parameters__channel_groups': ('Integer', 1, 5)
     }
     overrides = {
         'model__name': 'GPSignatureModel',
@@ -52,7 +52,7 @@ def GP_mom_SignatureModel():
     hyperparameter_space = {   
         'model__parameters__sig_depth': ('Integer', 2, 4),
         'model__parameters__extra_channels': ('Integer', 5, 10),
-        'model__parameters__channel_groups': ('Integer', 1, 10)
+        'model__parameters__channel_groups': ('Integer', 1, 5)
     }
     overrides = {
         'model__name': 'GPSignatureModel',
@@ -70,7 +70,7 @@ def GP_mc_GRUSignatureModel():
     hyperparameter_space = {   
         'model__parameters__sig_depth': ('Integer', 2, 4),
         'model__parameters__extra_channels': ('Integer', 5, 10),
-        'model__parameters__channel_groups': ('Integer', 1, 10),
+        'model__parameters__channel_groups': ('Integer', 1, 5),
         'model__parameters__length': ('Integer', 3, 10),
         'model__parameters__rnn_channels': ('Categorical', [16,32,64,128]),
         'weight_decay': ('Real', 10**-4, 10**-3, 'uniform')
@@ -89,7 +89,7 @@ def GP_mom_GRUSignatureModel():
     hyperparameter_space = {   
         'model__parameters__sig_depth': ('Integer', 2, 4),
         'model__parameters__extra_channels': ('Integer', 5, 10),
-        'model__parameters__channel_groups': ('Integer', 1, 10),
+        'model__parameters__channel_groups': ('Integer', 1, 5),
         'model__parameters__length': ('Integer', 3, 10),
         'model__parameters__rnn_channels': ('Categorical', [16,32,64,128]) 
     }
@@ -107,13 +107,13 @@ def GP_mom_GRUSignatureModel():
 def GP_mc_DeepSignatureModel():
     train_module = 'train_model'
     hyperparameter_space = {
-        'model__parameters__hidden_channels1': ('Integer', 8, 32),
-        'model__parameters__hidden_channels2': ('Integer', 4, 8),
+        'model__parameters__sig_depth': ('Integer', 2, 4),
+        'model__parameters__hidden_channels1': ('Integer', 4, 12),
+        'model__parameters__hidden_channels2': ('Integer', 4, 12),
         'model__parameters__kernel_size': ('Integer', 3, 6),
         'weight_decay': ('Real', 10**-4, 10**-3, 'uniform')
     }
     overrides = {
-        'model__parameters__sig_depth': 2,
         'model__name': 'GPDeepSignatureModel',
         'model__parameters__sampling_type': 'monte_carlo',
         'model__parameters__n_mc_smps': 10,
@@ -124,12 +124,12 @@ def GP_mc_DeepSignatureModel():
 def GP_mom_DeepSignatureModel():
     train_module = 'train_model'
     hyperparameter_space = {
-        'model__parameters__hidden_channels1': ('Integer', 8, 32),
-        'model__parameters__hidden_channels2': ('Integer', 4, 8),
+        'model__parameters__sig_depth': ('Integer', 2, 4),
+        'model__parameters__hidden_channels1': ('Integer', 4, 12),
+        'model__parameters__hidden_channels2': ('Integer', 4, 12,
         'model__parameters__kernel_size': ('Integer', 3, 6),
     }
     overrides = {
-        'model__parameters__sig_depth': 2,
         'model__name': 'GPDeepSignatureModel',
         'model__parameters__sampling_type': 'moments',
         'model__parameters__n_mc_smps': 1,
@@ -175,7 +175,7 @@ def ImputedSignatureModel():
     hyperparameter_space = {   
         'model__parameters__sig_depth': ('Integer', 2, 4),
         'model__parameters__extra_channels': ('Integer', 5, 10),
-        'model__parameters__channel_groups': ('Integer', 1, 10),
+        'model__parameters__channel_groups': ('Integer', 1, 5),
         'batch_size': ('Categorical', [32,64,128,256]) 
     }
     overrides = {
@@ -189,7 +189,7 @@ def ImputedRNNSignatureModel():
     hyperparameter_space = {   
         'model__parameters__sig_depth': ('Integer', 2, 4),
         'model__parameters__extra_channels': ('Integer', 5, 10),
-        'model__parameters__channel_groups': ('Integer', 1, 10),
+        'model__parameters__channel_groups': ('Integer', 1, 5),
         'model__parameters__length': ('Integer', 3, 10),
         'model__parameters__rnn_channels': ('Categorical', [16,32,64,128]),
         'batch_size': ('Categorical', [32,64,128,256]) 
@@ -203,14 +203,14 @@ def ImputedRNNSignatureModel():
 def ImputedDeepSignatureModel():
     train_module = 'train_model'
     hyperparameter_space = {
-        'model__parameters__hidden_channels1': ('Integer', 8, 32),
-        'model__parameters__hidden_channels2': ('Integer', 4, 8),
+        'model__parameters__sig_depth': ('Integer', 2, 4),
+        'model__parameters__hidden_channels1': ('Integer', 4, 12),
+        'model__parameters__hidden_channels2': ('Integer', 4, 12),
         'model__parameters__kernel_size': ('Integer', 3, 6),
         'batch_size': ('Categorical', [32,64,128,256])
     }
     overrides = {
         'model__name': 'ImputedDeepSignatureModel',
-        'model__parameters__sig_depth': 2,
         'virtual_batch_size': None
     }
 
