@@ -99,7 +99,7 @@ def compute_loss(d, data_format, device, model, loss_fn, callbacks, imputation_p
     model.train()
 
     if data_format == 'GP':
-        with gpytorch.settings.fast_pred_var(), gpytorch.settings.max_root_decomposition_size(max_root), gpytorch.settings.max_cholesky_size(40): #use this to strictly enforce lanczos
+        with gpytorch.settings.fast_pred_var(), gpytorch.settings.max_root_decomposition_size(max_root), gpytorch.settings.max_cholesky_size(20): #use this to strictly enforce lanczos
             logits = model(inputs, indices, values, test_inputs, test_indices, valid_lengths)
     elif data_format in ('zero', 'linear', 'forwardfill', 'causal', 'indicator'):
         logits = model(values, valid_lengths)
