@@ -108,7 +108,7 @@ class GPDeepSignatureModel(nn.Module):
 
     def __init__(self, n_input_dims, out_dimension, sampling_type, n_mc_smps, n_devices, output_device, sig_depth=2,
                  kernel='rbf', mode='normal', hidden_channels1=8, hidden_channels2=4, kernel_size=4,
-                 include_original=True):
+                 include_original=True, batch_norm=False):
         super(GPDeepSignatureModel, self).__init__()
 
         # safety guard:
@@ -129,7 +129,8 @@ class GPDeepSignatureModel(nn.Module):
                                         include_original=include_original,
                                         include_time=True,
                                         sig_depth=sig_depth,
-                                        out_channels=out_dimension
+                                        out_channels=out_dimension,
+                                        batch_norm=batch_norm
                                         )
 
         self.model = GPAdapter(clf,
