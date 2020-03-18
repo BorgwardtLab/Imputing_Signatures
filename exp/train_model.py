@@ -45,6 +45,7 @@ def cfg():
     subsampler_parameters = {}
     num_workers=1
     drop_last=False
+    n_params_limit=1e6
 
 # Named configs for Subsampling schemes (only for UEA)
 @EXP.named_config
@@ -148,7 +149,7 @@ def train_loop(model, dataset, data_format, loss_fn, collate_fn, n_epochs, batch
 @EXP.automain
 def train(n_epochs, batch_size, virtual_batch_size, learning_rate, weight_decay, early_stopping, data_format,
           imputation_params, device, quiet, evaluation, subsampler_name, subsampler_parameters, num_workers,
-          drop_last, _run, _log, _seed, _rnd, dataset):
+          drop_last, n_params_limit, _run, _log, _seed, _rnd, dataset):
     """Sacred wrapped function to run training of model."""
 
     torch.manual_seed(_seed)
@@ -200,7 +201,11 @@ def train(n_epochs, batch_size, virtual_batch_size, learning_rate, weight_decay,
     # pylint: disable=E1120
     
     model = model_config.get_instance(n_input_dims, out_dimension)
-    print(f'Number of trainable Parameters: {count_parameters(model)}')
+    n_params = count_parameters(model) 
+    print(f'Number of trainable Parameters: {n_params}')
+    if n_params > n_params_limit: 
+        raise ValueError(f'Number of parameters {n_params} exceeds upper limit {n_params_limit} ')
+        
     model.to(device)
    
     # Safety guard, ensure that if mc_sampling is inactive that n_mc_smps are 1 to
