@@ -228,7 +228,7 @@ class RNNSignatureModel(nn.Module):
 
 class DeepSignatureModel(nn.Module):
     def __init__(self, in_channels, hidden_channels1, hidden_channels2, kernel_size, include_original, include_time,
-                 sig_depth, out_channels):
+                 sig_depth, out_channels, batch_norm=False):
         """
         Inputs:
             in_channels: As SignatureModel.
@@ -242,6 +242,7 @@ class DeepSignatureModel(nn.Module):
         """
         super().__init__()
         self.kernel_size = kernel_size
+        self.batch_norm = batch_norm
         self.padding1 = torch.nn.ConstantPad1d((kernel_size - 1, 0), 0)
         self.augment1 = signatory.Augment(in_channels=in_channels,
                                           layer_sizes=(hidden_channels1, hidden_channels1, hidden_channels2),
@@ -270,7 +271,11 @@ class DeepSignatureModel(nn.Module):
         sig_channels2 = signatory.signature_channels(channels=hidden_channels2,
                                                      depth=sig_depth)
         self.linear = torch.nn.Linear(sig_channels2, out_channels)
-
+        
+        if self.batch_norm:
+            self.bn1 = nn.BatchNorm1d(num_features=sig_channels1)
+            self.bn2 = nn.BatchNorm1d(num_features=sig_channels2)
+ 
     def forward(self, x, lengths):
         # `x` should be a three dimensional tensor (batch, stream, channel)
         # `lengths` should be a one dimensional tensor (batch,) giving the true length of each batch element along the
@@ -278,9 +283,14 @@ class DeepSignatureModel(nn.Module):
         x = self.padding1(x.transpose(-1, -2)).transpose(-1, -2)
         x = self.augment1(x)
         x = self.signature1(x, basepoint=True)
+        if self.batch_norm:
+            #as bn expects feature dim in the middle of the 3 dims, and sig has stream true, reshape on the fly
+            x = self.bn1(x.transpose(-1,-2)).transpose(-1,-2)
         x = self.padding2(x.transpose(-1, -2)).transpose(-1, -2)
         x = self.augment2(x)
         x = become_constant_trick(x, lengths)
         x = self.signature2(x, basepoint=True)
+        if self.batch_norm:
+            x = self.bn2(x)
         x = self.linear(x)
         return x
