@@ -23,7 +23,7 @@ class GPSignatureModel(nn.Module):
         else:
             clf_input_dims = n_input_dims
 
-        likelihood = gpytorch.likelihoods.GaussianLikelihood().to(output_device, non_blocking=True)
+        likelihood = gpytorch.likelihoods.GaussianLikelihood().to(output_device, non_blocking=True) 
 
         clf = SignatureModel(in_channels=clf_input_dims,
                              extra_channels=extra_channels,
@@ -108,7 +108,7 @@ class GPDeepSignatureModel(nn.Module):
 
     def __init__(self, n_input_dims, out_dimension, sampling_type, n_mc_smps, n_devices, output_device, sig_depth=2,
                  kernel='rbf', mode='normal', hidden_channels1=8, hidden_channels2=4, kernel_size=4,
-                 include_original=True, use_constant_trick=True):
+                 include_original=True):
         super(GPDeepSignatureModel, self).__init__()
 
         # safety guard:
@@ -129,8 +129,7 @@ class GPDeepSignatureModel(nn.Module):
                                         include_original=include_original,
                                         include_time=True,
                                         sig_depth=sig_depth,
-                                        out_channels=out_dimension,
-                                        use_constant_trick=use_constant_trick
+                                        out_channels=out_dimension
                                         )
 
         self.model = GPAdapter(clf,
