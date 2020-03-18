@@ -44,8 +44,8 @@ if __name__ == '__main__':
     fit_module_path = os.path.join(exp_dir, fit_module + '.py')
 
     datasets = ['PenDigits', 'LSST', 'CharacterTrajectories', 'Physionet2012']
-    gp_models = ['GP_mc_SignatureModel', 'GP_mom_SignatureModel', 'GP_mc_GRUSignatureModel', 'GP_mom_GRUSignatureModel', 'GP_mom_GRUModel', 'GP_mc_GRUModel' ] #GP_mom_DeepSignatureModel GP_mc_DeepSignatureModel
-    imputed_models = ['ImputedSignatureModel', 'ImputedRNNSignatureModel', 'ImputedRNNModel' ]
+    gp_models = ['GP_mc_SignatureModel', 'GP_mom_SignatureModel', 'GP_mc_GRUSignatureModel', 'GP_mom_GRUSignatureModel', 'GP_mom_GRUModel', 'GP_mc_GRUModel', 'GP_mom_DeepSignatureModel', 'GP_mc_DeepSignatureModel' ]
+    imputed_models = ['ImputedSignatureModel', 'ImputedRNNSignatureModel', 'ImputedRNNModel', 'ImputedDeepSignatureModel']
      
     data_formats = ['zero', 'linear', 'forwardfill', 'causal', 'indicator' ] #only for imputed models
     subsamplers = ['LabelBasedSubsampler', 'MissingAtRandomSubsampler']
