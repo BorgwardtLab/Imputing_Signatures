@@ -231,6 +231,8 @@ def GPDeepSignatureModel():
         'output_device': 'cuda'
     }
 
+    
+
 @ingredient.named_config
 def GPRNNModel():
     """MGP Adapter with RNN Model (using Monte-carlo sampling)."""
@@ -241,6 +243,22 @@ def GPRNNModel():
         'n_devices': 1,
         'output_device': 'cuda'
     }
+
+# a fully specified gp mom deep signature model for quick testing:
+@ingredient.named_config
+def GP_mom_DeepSignatureModel():
+    name = 'GPDeepSignatureModel'
+    parameters = {
+        'hidden_channels1': 8,
+        'hidden_channels2': 4,
+        'kernel_size': 4,
+        'sampling_type': 'moments',
+        'n_mc_smps': 1,
+        'n_devices': 1,
+        'output_device': 'cuda:0'
+}
+
+
 
 @ingredient.capture
 def get_instance(n_input_dims, out_dimension, name, parameters, _log, _seed):
