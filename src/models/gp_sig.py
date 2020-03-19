@@ -11,7 +11,7 @@ class GPSignatureModel(nn.Module):
     """
 
     def __init__(self, n_input_dims, out_dimension, sampling_type, n_mc_smps, n_devices, output_device, sig_depth=2,
-                 kernel='rbf', mode='normal', extra_channels=10, channel_groups=2, include_original=False, final_network=(30,30)):
+                 kernel='rbf', mode='normal', keops=False, extra_channels=10, channel_groups=2, include_original=False, final_network=(30,30)):
         super(GPSignatureModel, self).__init__()
         
         #safety guard:
@@ -44,7 +44,8 @@ class GPSignatureModel(nn.Module):
                                n_devices,
                                output_device,
                                kernel,
-                               mode
+                               mode,
+                               keops
                                )
 
     def forward(self, *data):
@@ -57,7 +58,7 @@ class GPRNNSignatureModel(nn.Module):
     """
 
     def __init__(self, n_input_dims, out_dimension, sampling_type, n_mc_smps, n_devices, output_device, sig_depth=2,
-                 kernel='rbf', mode='normal', extra_channels=10, channel_groups=2, include_original=False, step=1,
+                 kernel='rbf', mode='normal', keops=False, extra_channels=10, channel_groups=2, include_original=False, step=1,
                  length=6, rnn_channels=32, rnn_type='gru'):
         super(GPRNNSignatureModel, self).__init__()
         
@@ -94,7 +95,8 @@ class GPRNNSignatureModel(nn.Module):
                                n_devices,
                                output_device,
                                kernel,
-                               mode
+                               mode,
+                               keops
                                )
 
     def forward(self, *data):
@@ -107,7 +109,7 @@ class GPDeepSignatureModel(nn.Module):
     """
 
     def __init__(self, n_input_dims, out_dimension, sampling_type, n_mc_smps, n_devices, output_device, sig_depth=2,
-                 kernel='rbf', mode='normal', hidden_channels1=8, hidden_channels2=4, kernel_size=4,
+                 kernel='rbf', mode='normal', keops=False, hidden_channels1=8, hidden_channels2=4, kernel_size=4,
                  include_original=True, batch_norm=False):
         super(GPDeepSignatureModel, self).__init__()
 
@@ -142,7 +144,8 @@ class GPDeepSignatureModel(nn.Module):
                                n_devices,
                                output_device,
                                kernel,
-                               mode
+                               mode,
+                               keops
                                )
 
     def forward(self, *data):
@@ -156,7 +159,7 @@ class GPRNNModel(nn.Module):
     """
 
     def __init__(self, n_input_dims, out_dimension, sampling_type, n_mc_smps, n_devices, output_device, sig_depth=2,
-                 kernel='rbf', mode='normal', hidden_size=32, rnn_type='gru'):
+                 kernel='rbf', mode='normal', keops=False, hidden_size=32, rnn_type='gru'):
         super(GPRNNModel, self).__init__()
         
         #safety guard:
@@ -190,7 +193,8 @@ class GPRNNModel(nn.Module):
                                n_devices,
                                output_device,
                                kernel,
-                               mode
+                               mode,
+                               keops
         )
 
     def forward(self, *data):

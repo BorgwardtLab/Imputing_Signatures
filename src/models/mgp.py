@@ -5,7 +5,7 @@ import torch.nn as nn
 
 # Exact Hadamard Multi-task Gaussian Process Model
 class MultitaskGPModel(gpytorch.models.ExactGP):
-    def __init__(self, train_x, train_y, likelihood, output_device, num_tasks=2, n_devices=1, kernel='rbf', mode='normal'):
+    def __init__(self, train_x, train_y, likelihood, output_device, num_tasks=2, n_devices=1, kernel='rbf', mode='normal', keops=False):
         super(MultitaskGPModel, self).__init__(train_x, train_y, likelihood)
         self.output_device = output_device
         self.mean_module = gpytorch.means.ConstantMean()
@@ -13,9 +13,15 @@ class MultitaskGPModel(gpytorch.models.ExactGP):
         if kernel not in valid_kernels:
             raise ValueError(f'parsed kernel: {kernel} not among implemented kernels: {valid_kernels}')
         elif kernel == 'rbf':
-            base_covar_module = gpytorch.kernels.RBFKernel()
+            if keops:
+                base_covar_module = gpytorch.kernels.keops.RBFKernel()
+            else:
+                base_covar_module = gpytorch.kernels.RBFKernel()
         elif kernel == 'ou':
-            base_covar_module = gpytorch.kernels.MaternKernel(nu=0.5)
+            if keops:
+                base_covar_module = gpytorch.kernels.keops.MaternKernel(nu=0.5)
+            else:
+                base_covar_module = gpytorch.kernels.MaternKernel(nu=0.5)
 
         if n_devices > 1: #in multi-gpu setting
             if mode != 'normal':
@@ -55,8 +61,8 @@ class MultitaskGPModel(gpytorch.models.ExactGP):
 
 # MGP Layer for Neural Network using MultitaskGPModel
 class MGP_Layer(MultitaskGPModel):
-    def __init__(self,likelihood, num_tasks, n_devices, output_device, kernel, mode):
-        super().__init__(None, None, likelihood, output_device, num_tasks, n_devices, kernel, mode)
+    def __init__(self,likelihood, num_tasks, n_devices, output_device, kernel, mode, keops=False):
+        super().__init__(None, None, likelihood, output_device, num_tasks, n_devices, kernel, mode, keops)
         #we don't intialize with train data for more flexibility
         likelihood.train()
 
