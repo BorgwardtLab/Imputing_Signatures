@@ -74,7 +74,7 @@ def GP_mc_GRUSignatureModel():
         'model__parameters__extra_channels': ('Integer', 5, 10),
         'model__parameters__channel_groups': ('Integer', 1, 5),
         'model__parameters__length': ('Integer', 3, 10),
-        'model__parameters__rnn_channels': ('Categorical', [16,32,64,128]),
+        'model__parameters__rnn_channels': ('Categorical', [16,32,64,128])
     }
     overrides = {
         'model__name': 'GPRNNSignatureModel',
@@ -113,7 +113,7 @@ def GP_mc_DeepSignatureModel():
         'model__parameters__sig_depth': ('Integer', 2, 4),
         'model__parameters__hidden_channels1': ('Integer', 4, 12),
         'model__parameters__hidden_channels2': ('Integer', 4, 12),
-        'model__parameters__kernel_size': ('Integer', 3, 6),
+        'model__parameters__kernel_size': ('Integer', 3, 6)
     }
     overrides = {
         'model__name': 'GPDeepSignatureModel',
@@ -130,8 +130,8 @@ def GP_mom_DeepSignatureModel():
     hyperparameter_space = {
         'model__parameters__sig_depth': ('Integer', 2, 4),
         'model__parameters__hidden_channels1': ('Integer', 4, 12),
-        'model__parameters__hidden_channels2': ('Integer', 4, 12,
-        'model__parameters__kernel_size': ('Integer', 3, 6),
+        'model__parameters__hidden_channels2': ('Integer', 4, 12),
+        'model__parameters__kernel_size': ('Integer', 3, 6)
     }
     overrides = {
         'model__name': 'GPDeepSignatureModel',
@@ -155,7 +155,7 @@ def GP_mom_GRUModel():
         'model__parameters__sampling_type': 'moments',
         'model__parameters__n_mc_smps': 1,
         'model__parameters__n_devices': 1,
-        'model__parameters__output_device': 'cuda:0',
+        'model__parameters__output_device': 'cuda:0'
     }
 
 def GP_mc_GRUModel():
