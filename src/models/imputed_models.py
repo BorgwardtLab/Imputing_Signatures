@@ -57,7 +57,7 @@ class ImputedDeepSignatureModel(nn.Module):
     """
 
     def __init__(self, n_input_dims, out_dimension, sig_depth=2, hidden_channels1=8, hidden_channels2=4, kernel_size=4,
-                 include_original=True, batch_norm=False):
+                 include_original=False, batch_norm=False):
         super(ImputedDeepSignatureModel, self).__init__()
 
         self.model = DeepSignatureModel(in_channels=n_input_dims + 1,  # as we feed time also
