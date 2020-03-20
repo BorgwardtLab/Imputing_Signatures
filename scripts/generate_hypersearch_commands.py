@@ -51,14 +51,14 @@ if __name__ == '__main__':
     subsamplers = ['LabelBasedSubsampler', 'MissingAtRandomSubsampler']
     model_types = ['GP', 'imputed'] #we distinguish between those two types of models
     preprocessing = False
-    resubmit_failed_jobs = True
+    resubmit_failed_jobs = False #True
 
     # In case we resubmit failed jobs, read dictionary listing the counts of completed jobs:
     if resubmit_failed_jobs:
         with open('scripts/completed_run_counts.json', 'r') as f:
             counts = json.load(f) #dict that contains {dataset: { model: count, .. }, .. } 
     else:
-        raise NotImplementedError('Currently only resubmit mode implemented') 
+        count = n_total
 
     # Create command files for both model types seperately, GP and imputed models
     commands = []
@@ -104,7 +104,8 @@ if __name__ == '__main__':
                                 #define output directory of current hypersearch experiment
                                 outdir = os.path.join('experiments', fit_module, dataset, data_format + model)
                                 #count to resubmit:
-                                count = get_count_to_submit(counts, n_total, dataset, model, data_format=data_format)
+                                if resubmit_failed_jobs:
+                                    count = get_count_to_submit(counts, n_total, dataset, model, data_format=data_format)
                                 if count == 0: #dont add invalid commands
                                     continue 
                                 count_f = format_counts(count)
@@ -115,7 +116,8 @@ if __name__ == '__main__':
                             outdir = os.path.join('experiments', fit_module, dataset, model)
                             
                             #count to resubmit:
-                            count = get_count_to_submit(counts, n_total, dataset, model)
+                            if resubmit_failed_jobs:
+                                count = get_count_to_submit(counts, n_total, dataset, model)
                             if count == 0: #dont add invalid commands
                                     continue 
                             count_f = format_counts(count)
@@ -146,7 +148,8 @@ if __name__ == '__main__':
                                     outdir = os.path.join('experiments', fit_module, dataset, subsampler, data_format + model)
                                     
                                     #count to resubmit:
-                                    count = get_count_to_submit(counts, n_total, dataset, model, subsampler, data_format)
+                                    if resubmit_failed_jobs:
+                                        count = get_count_to_submit(counts, n_total, dataset, model, subsampler, data_format)
                                     if count == 0: #dont add invalid commands
                                         continue 
                                     count_f = format_counts(count)
@@ -164,7 +167,8 @@ if __name__ == '__main__':
                                 outdir = os.path.join('experiments', fit_module, dataset, subsampler, model)
                                 
                                 #count to resubmit:
-                                count = get_count_to_submit(counts, n_total, dataset, model, subsampler)
+                                if resubmit_failed_jobs:
+                                    count = get_count_to_submit(counts, n_total, dataset, model, subsampler)
                                 if count == 0: #dont add invalid commands
                                         continue 
                                 count_f = format_counts(count)
