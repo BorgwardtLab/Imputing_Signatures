@@ -44,7 +44,8 @@ def GP_mc_SignatureModel():
         'model__parameters__n_mc_smps': 10,
         'model__parameters__n_devices': 1,
         'model__parameters__output_device': 'cuda:0',
-        'model__parameters__final_network': [30,30]
+        'model__parameters__final_network': [30,30],
+        'model__parameters__include_original': False
     }
 
 def GP_mom_SignatureModel():
@@ -60,7 +61,8 @@ def GP_mom_SignatureModel():
         'model__parameters__n_mc_smps': 1,
         'model__parameters__n_devices': 1,
         'model__parameters__output_device': 'cuda:0',
-        'model__parameters__final_network': [30,30]
+        'model__parameters__final_network': [30,30],
+        'model__parameters__include_original': False
     }
 
 ## RNN Signature Models
@@ -73,7 +75,6 @@ def GP_mc_GRUSignatureModel():
         'model__parameters__channel_groups': ('Integer', 1, 5),
         'model__parameters__length': ('Integer', 3, 10),
         'model__parameters__rnn_channels': ('Categorical', [16,32,64,128]),
-        'weight_decay': ('Real', 10**-4, 10**-3, 'uniform')
     }
     overrides = {
         'model__name': 'GPRNNSignatureModel',
@@ -81,7 +82,8 @@ def GP_mc_GRUSignatureModel():
         'model__parameters__sampling_type': 'monte_carlo',
         'model__parameters__n_mc_smps': 10,
         'model__parameters__n_devices': 1,
-        'model__parameters__output_device': 'cuda:0'
+        'model__parameters__output_device': 'cuda:0',
+        'model__parameters__include_original': False
     }
 
 def GP_mom_GRUSignatureModel():
@@ -99,7 +101,8 @@ def GP_mom_GRUSignatureModel():
         'model__parameters__sampling_type': 'moments',
         'model__parameters__n_mc_smps': 1,
         'model__parameters__n_devices': 1,
-        'model__parameters__output_device': 'cuda:0'
+        'model__parameters__output_device': 'cuda:0',
+        'model__parameters__include_original': False
     }
 
 ## Deep Signature Models
@@ -111,14 +114,15 @@ def GP_mc_DeepSignatureModel():
         'model__parameters__hidden_channels1': ('Integer', 4, 12),
         'model__parameters__hidden_channels2': ('Integer', 4, 12),
         'model__parameters__kernel_size': ('Integer', 3, 6),
-        'weight_decay': ('Real', 10**-4, 10**-3, 'uniform')
     }
     overrides = {
         'model__name': 'GPDeepSignatureModel',
         'model__parameters__sampling_type': 'monte_carlo',
         'model__parameters__n_mc_smps': 10,
         'model__parameters__n_devices': 1,
-        'model__parameters__output_device': 'cuda:0'
+        'model__parameters__output_device': 'cuda:0',
+        'model__parameters__include_original': False,
+        'model__parameters__batch_norm': True 
     }
 
 def GP_mom_DeepSignatureModel():
@@ -134,7 +138,9 @@ def GP_mom_DeepSignatureModel():
         'model__parameters__sampling_type': 'moments',
         'model__parameters__n_mc_smps': 1,
         'model__parameters__n_devices': 1,
-        'model__parameters__output_device': 'cuda:0'
+        'model__parameters__output_device': 'cuda:0',
+        'model__parameters__include_original': False,
+        'model__parameters__batch_norm': True 
     }
 
 ## RNN Models
@@ -149,7 +155,7 @@ def GP_mom_GRUModel():
         'model__parameters__sampling_type': 'moments',
         'model__parameters__n_mc_smps': 1,
         'model__parameters__n_devices': 1,
-        'model__parameters__output_device': 'cuda:0'
+        'model__parameters__output_device': 'cuda:0',
     }
 
 def GP_mc_GRUModel():
@@ -181,7 +187,8 @@ def ImputedSignatureModel():
     overrides = {
         'model__name': 'ImputedSignatureModel',
         'model__parameters__final_network': [30,30],
-        'virtual_batch_size': None
+        'virtual_batch_size': None,
+        'model__parameters__include_original': False
     }
 
 def ImputedRNNSignatureModel():
@@ -197,7 +204,8 @@ def ImputedRNNSignatureModel():
     overrides = {
         'model__name': 'ImputedRNNSignatureModel',
         'model__parameters__rnn_type': 'gru',
-        'virtual_batch_size': None
+        'virtual_batch_size': None,
+        'model__parameters__include_original': False
     }
 
 def ImputedDeepSignatureModel():
@@ -211,7 +219,9 @@ def ImputedDeepSignatureModel():
     }
     overrides = {
         'model__name': 'ImputedDeepSignatureModel',
-        'virtual_batch_size': None
+        'virtual_batch_size': None,
+        'model__parameters__include_original': False,
+        'model__parameters__batch_norm': True 
     }
 
 def ImputedRNNModel():
