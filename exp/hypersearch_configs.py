@@ -122,7 +122,7 @@ def GP_mc_DeepSignatureModel():
         'model__parameters__n_devices': 1,
         'model__parameters__output_device': 'cuda:0',
         'model__parameters__include_original': True,
-        'model__parameters__batch_norm': False 
+        'model__parameters__batch_norm': True 
     }
 
 def GP_mom_DeepSignatureModel():
@@ -140,7 +140,7 @@ def GP_mom_DeepSignatureModel():
         'model__parameters__n_devices': 1,
         'model__parameters__output_device': 'cuda:0',
         'model__parameters__include_original': True,
-        'model__parameters__batch_norm': False 
+        'model__parameters__batch_norm': True 
     }
 
 ## RNN Models
@@ -221,7 +221,7 @@ def ImputedDeepSignatureModel():
         'model__name': 'ImputedDeepSignatureModel',
         'virtual_batch_size': None,
         'model__parameters__include_original': True,
-        'model__parameters__batch_norm': False 
+        'model__parameters__batch_norm': True 
     }
 
 def ImputedRNNModel():
