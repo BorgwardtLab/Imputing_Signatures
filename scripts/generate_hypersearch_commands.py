@@ -52,6 +52,7 @@ if __name__ == '__main__':
     model_types = ['GP', 'imputed'] #we distinguish between those two types of models
     preprocessing = False
     resubmit_failed_jobs = False #True
+    exclude_original = 'overrides.model__parameters__include_original=False'
 
     # In case we resubmit failed jobs, read dictionary listing the counts of completed jobs:
     if resubmit_failed_jobs:
@@ -87,6 +88,7 @@ if __name__ == '__main__':
             print(f'Looping over {model_type} models: {models}')
             if dataset == 'Physionet2012':
                 #process Physionet without subsampling (already irregular sampled)
+                #also drop original channels (due to high dimensionality!)
                 for model in models: 
                     if preprocessing:
                         # only start all imputation schemes as preprocessing (for one model)
@@ -97,6 +99,11 @@ if __name__ == '__main__':
                                 command = f'python {fit_module_path} with {model} {dataset} {data_format} n_calls=1 n_random_starts=1 overrides.n_epochs=1'
                                 commands.append(command)
                     else:
+                        #determine if to exlude_original has to be set (only in signature models)
+                        if 'Signature' in model:
+                            suffix = exclude_original
+                        else:
+                            suffix = ''
                         #actual runs here
                         if model_type == 'imputed':
                             #for imputed models, we need additional loop over imputation strategies
@@ -109,7 +116,7 @@ if __name__ == '__main__':
                                 if count == 0: #dont add invalid commands
                                     continue 
                                 count_f = format_counts(count)
-                                command = f'python {fit_module_path} -F {outdir} with {model} {dataset} {data_format} {count_f}' 
+                                command = f'python {fit_module_path} -F {outdir} with {model} {dataset} {data_format} {count_f} {suffix}' 
                                 commands.append(command)
                         else:
                             #GP models
@@ -121,7 +128,7 @@ if __name__ == '__main__':
                             if count == 0: #dont add invalid commands
                                     continue 
                             count_f = format_counts(count)
-                            command = f'python {fit_module_path} -F {outdir} with {model} {dataset} {count_f}' 
+                            command = f'python {fit_module_path} -F {outdir} with {model} {dataset} {count_f} {suffix}' 
                             commands.append(command)
  
             else: #UEA datasets here ..         
