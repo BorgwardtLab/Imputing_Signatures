@@ -45,7 +45,7 @@ def GP_mc_SignatureModel():
         'model__parameters__n_devices': 1,
         'model__parameters__output_device': 'cuda:0',
         'model__parameters__final_network': [30,30],
-        'model__parameters__include_original': False
+        'model__parameters__include_original': True
     }
 
 def GP_mom_SignatureModel():
@@ -62,7 +62,7 @@ def GP_mom_SignatureModel():
         'model__parameters__n_devices': 1,
         'model__parameters__output_device': 'cuda:0',
         'model__parameters__final_network': [30,30],
-        'model__parameters__include_original': False
+        'model__parameters__include_original': True
     }
 
 ## RNN Signature Models
@@ -83,7 +83,7 @@ def GP_mc_GRUSignatureModel():
         'model__parameters__n_mc_smps': 10,
         'model__parameters__n_devices': 1,
         'model__parameters__output_device': 'cuda:0',
-        'model__parameters__include_original': False
+        'model__parameters__include_original': True
     }
 
 def GP_mom_GRUSignatureModel():
@@ -102,7 +102,7 @@ def GP_mom_GRUSignatureModel():
         'model__parameters__n_mc_smps': 1,
         'model__parameters__n_devices': 1,
         'model__parameters__output_device': 'cuda:0',
-        'model__parameters__include_original': False
+        'model__parameters__include_original': True
     }
 
 ## Deep Signature Models
@@ -121,8 +121,8 @@ def GP_mc_DeepSignatureModel():
         'model__parameters__n_mc_smps': 10,
         'model__parameters__n_devices': 1,
         'model__parameters__output_device': 'cuda:0',
-        'model__parameters__include_original': False,
-        'model__parameters__batch_norm': True 
+        'model__parameters__include_original': True,
+        'model__parameters__batch_norm': False 
     }
 
 def GP_mom_DeepSignatureModel():
@@ -139,8 +139,8 @@ def GP_mom_DeepSignatureModel():
         'model__parameters__n_mc_smps': 1,
         'model__parameters__n_devices': 1,
         'model__parameters__output_device': 'cuda:0',
-        'model__parameters__include_original': False,
-        'model__parameters__batch_norm': True 
+        'model__parameters__include_original': True,
+        'model__parameters__batch_norm': False 
     }
 
 ## RNN Models
@@ -188,7 +188,7 @@ def ImputedSignatureModel():
         'model__name': 'ImputedSignatureModel',
         'model__parameters__final_network': [30,30],
         'virtual_batch_size': None,
-        'model__parameters__include_original': False
+        'model__parameters__include_original': True
     }
 
 def ImputedRNNSignatureModel():
@@ -205,7 +205,7 @@ def ImputedRNNSignatureModel():
         'model__name': 'ImputedRNNSignatureModel',
         'model__parameters__rnn_type': 'gru',
         'virtual_batch_size': None,
-        'model__parameters__include_original': False
+        'model__parameters__include_original': True
     }
 
 def ImputedDeepSignatureModel():
@@ -220,8 +220,8 @@ def ImputedDeepSignatureModel():
     overrides = {
         'model__name': 'ImputedDeepSignatureModel',
         'virtual_batch_size': None,
-        'model__parameters__include_original': False,
-        'model__parameters__batch_norm': True 
+        'model__parameters__include_original': True,
+        'model__parameters__batch_norm': False 
     }
 
 def ImputedRNNModel():
