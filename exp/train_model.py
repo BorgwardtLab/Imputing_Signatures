@@ -133,6 +133,7 @@ def train_loop(model, dataset, data_format, loss_fn, collate_fn, n_epochs, batch
             break
         optimizer.zero_grad()
         for batch, d in enumerate(train_loader):
+            model.train()
             loss, _, _ = compute_loss(d, data_format, device, model, loss_fn, callbacks, imputation_params)
 
             loss = loss / virtual_scaling

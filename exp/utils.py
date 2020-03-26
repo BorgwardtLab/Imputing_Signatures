@@ -96,7 +96,7 @@ def compute_loss(d, data_format, device, model, loss_fn, callbacks, imputation_p
 
     execute_callbacks(callbacks, 'on_batch_begin', locals())
 
-    model.train()
+    #model.train()
 
     if data_format == 'GP':
         with gpytorch.settings.fast_pred_var(), gpytorch.settings.max_root_decomposition_size(max_root), gpytorch.settings.max_cholesky_size(10): #use this to strictly enforce lanczos
