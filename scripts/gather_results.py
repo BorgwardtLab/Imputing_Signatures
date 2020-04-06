@@ -163,8 +163,11 @@ def gather_results_in_dict(base_paths, useful_heads):
                     valid, output = process_experiment(base_path, exp_path_tail, useful_heads) 
                     if valid:
                         if exp_path_tail not in results.keys():
-                            results[exp_path_tail] = [] #this list is simply a safety measure if for some reason two jobs receive the same path name
-                        results[exp_path_tail].append(output)
+                        #    results[exp_path_tail] = [] #this list is simply a safety measure if for some reason two jobs receive the same path name
+                        #results[exp_path_tail].append(output)
+                            results[exp_path_tail] = output
+                        else:
+                            raise ValueError(f'Trying to overwrite existing result with same path! {exp_path_tail}')
     return results
 
 
@@ -182,6 +185,7 @@ def process_run_dict(result_dict):
 
         if dataset not in out_dict.keys():
             out_dict[dataset] = []
+        value.update(path = key) #add base path to restart jobs for repetitions
         out_dict[dataset].append({method: value})
     return out_dict
 
@@ -210,7 +214,8 @@ def get_best_runs(out_dict, n_counts=20, metrics = ['validation.balanced_accurac
         for run in out_dict[dataset]: #looping over list of runs
             for method, result in run.items(): #run is a dict with method as key and dictionary of results as value
                 #first determine current eval metric:
-                found, metric = determine_metric(metrics, result[0])
+                found, metric = determine_metric(metrics, result) #result[0] 
+                print(f'Using {metric}')
                 if not found:
                     raise ValueError(f'No valid eval metric found for the following job: {run}')
                 if method not in counts[dataset].keys():
@@ -218,19 +223,19 @@ def get_best_runs(out_dict, n_counts=20, metrics = ['validation.balanced_accurac
                 if 'count' not in counts[dataset][method].keys():
                     counts[dataset][method]['count'] = 0
                     best = 0
-                    for res in result:
-                        counts[dataset][method]['count'] += 1 
-                        if res[metric] > best:
-                            best = res[metric]
-                            best_res = res
+                    #for res in result: res --> result 
+                    counts[dataset][method]['count'] += 1 
+                    if result[metric] > best:
+                        best = result[metric]
+                        best_res = result
                     counts[dataset][method]['best'] = best_res  
                 elif counts[dataset][method]['count'] > n_counts:
                     continue
                 else: 
-                    for res in result: #loop over possible multiple runs
-                        counts[dataset][method]['count'] += 1
-                        if res[metric] > counts[dataset][method]['best'][metric]:
-                            counts[dataset][method]['best'] = res 
+                    #for res in result: #loop over possible multiple runs
+                    counts[dataset][method]['count'] += 1
+                    if result[metric] > counts[dataset][method]['best'][metric]:
+                        counts[dataset][method]['best'] = result 
     return counts
 
 def get_best_runs_dict(data):
@@ -326,6 +331,8 @@ def convert_to_df(data):
         #convert nested dictionary to df with redundant records (easier to group by)
         for model in data[dataset].keys():
             for metric in data[dataset][model].keys():
+                if metric == 'path':
+                    continue
                 record = {  'dataset':      dataset_name,
                             'subsampling':  subsampling_names[subsampling],
                             'model':        model_names[model],
@@ -375,16 +382,16 @@ if __name__ == "__main__":
     #additionally, print it:
     print(json.dumps(counts, indent=4))
  
-    #Find the test performance of the best run per method
+    #Find the test performance of the best run per method (in terms of validation performance)
     best_runs = get_best_runs(out_dict)
+ 
     #Convert this output into a dictionary directly usable for tex via pandas
     best_runs_dict = get_best_runs_dict(best_runs)
-
+    
     #Convert best run dict to df for tex table
     dfs = convert_to_df(best_runs_dict)
 
     #Write each dataset result to tex table:
-    #embed()  
     #Dump raw results: 
     with open('results/raw_results.json', 'w') as f:
         json.dump(results, f)
