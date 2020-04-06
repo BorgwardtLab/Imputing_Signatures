@@ -372,6 +372,8 @@ if __name__ == "__main__":
    
     with open('scripts/completed_run_counts.json', 'w') as f:
         json.dump(counts, f)
+    #additionally, print it:
+    print(json.dumps(counts, indent=4))
  
     #Find the test performance of the best run per method
     best_runs = get_best_runs(out_dict)
