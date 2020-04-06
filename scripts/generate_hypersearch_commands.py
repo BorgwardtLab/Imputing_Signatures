@@ -34,6 +34,11 @@ def format_counts(count):
     return f' n_calls={count} n_random_starts={count}'
 
 if __name__ == '__main__':
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--resubmit', action='store_true', default=True, 
+        help='whether completed runs should be checked and NOT resubmitted, but only remaining jobs')
+    args = parser.parse_args()
     # number of runs for each method:
     n_total = 20
     eval_str = 'evaluation_metric=balanced_accuracy' #string to set eval metric (necessary for multiclass datasets)
@@ -51,7 +56,7 @@ if __name__ == '__main__':
     subsamplers = ['LabelBasedSubsampler', 'MissingAtRandomSubsampler']
     model_types = ['GP', 'imputed'] #we distinguish between those two types of models
     preprocessing = False
-    resubmit_failed_jobs = False #True
+    resubmit_failed_jobs = args.resubmit #True
     exclude_original = 'overrides.model__parameters__include_original=False'
 
     # In case we resubmit failed jobs, read dictionary listing the counts of completed jobs:
