@@ -16,6 +16,14 @@ seeds = {'1': 249040430,
          '5': 700134501 
 } 
 
+test_metrics = [
+     'testing.balanced_accuracy',
+     'testing.auroc_weighted',
+     'testing.accuracy',
+     'testing.auprc',
+     'testing.auroc'  
+    ] 
+
 model_names = {
     'GP_mc_GRUModel': 'GP-RNN',
     'GP_mc_GRUSignatureModel': 'GP-RNNSig',
@@ -109,6 +117,19 @@ def determine_metric(metrics, data):
             found = True
             break
     return found, eval_metric
+
+def select_test_metrics(metrics, data):
+    """
+    Util function to check which subset of the provided test metrics is available in the current data dictionary
+    """
+    found = False
+    eval_metrics = []
+    for metric in metrics:
+        if metric in data.keys():
+            eval_metrics.append(metric)
+            found = True
+    return found, eval_metrics
+
 
 def get_seed(path):
     with open(path, 'r') as f:
@@ -375,6 +396,33 @@ def convert_to_df(data):
     #df_reg_pivoted = pivot_df(df_regular)  
     
     return dfs_irr, dfs_reg
+
+def aggregate_repetitions(out_dict, n_counts=5):
+    counts = defaultdict(dict) 
+    for dataset in out_dict.keys(): #dataset
+        if dataset not in counts.keys():
+            counts[dataset] = defaultdict()
+        for run in out_dict[dataset]: #looping over list of runs
+            for method, result in run.items(): #run is a dict with method as key and dictionary of results as value
+                #first determine available test metrics to aggregate over:
+                found, metrics = select_test_metrics(test_metrics, result)
+                print(f'Using {metrics}')
+                if not found:
+                    raise ValueError(f'No valid test metric found for the following job: {run}')
+                if method not in counts[dataset].keys():
+                    counts[dataset][method] = defaultdict()
+                    counts[dataset][method]['count'] = 0
+                    for metric in metrics:
+                        counts[dataset][method][metric] = [ result[metric] ]
+                    counts[dataset][method]['count'] += 1
+                elif counts[dataset][method]['count'] > n_counts:
+                    continue
+                else: 
+                    for metric in metrics:
+                        counts[dataset][method][metric].append(result[metric])
+                    counts[dataset][method]['count'] += 1
+    return counts
+
  
 if __name__ == "__main__":
     
@@ -413,6 +461,8 @@ if __name__ == "__main__":
 
     if repetitions:
         #finish after this:
+        agg = aggregate_repetitions(out_dict, n_counts=5)
+        embed()
         sys.exit()
  
     #Find the test performance of the best run per method (in terms of validation performance)
