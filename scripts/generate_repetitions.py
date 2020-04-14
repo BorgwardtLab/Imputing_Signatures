@@ -26,7 +26,7 @@ def grep_config(data, dataset, model, subsampler=None):
         dataset = os.path.join(dataset, subsampler)
     try: 
         path = data[dataset][model]['best']['path']
-        config = os.path.join(path, 'config.json') 
+        config = os.path.join('experiments', 'hyperparameter_search', path, 'config.json')
     except:
         config = 'NaN'
     return config 
@@ -87,9 +87,10 @@ if __name__ == '__main__':
                     if model_type == 'imputed':
                         #for imputed models, we need additional loop over imputation strategies
                         for data_format in data_formats:
+                            imputed_model = data_format + model
                             #define output directory of current hypersearch experiment
-                            outdir = os.path.join('experiments', fit_module, dataset, data_format + model)
-                            config = grep_config(best_runs, dataset, model)
+                            outdir = os.path.join('experiments', fit_module, dataset, imputed_model)
+                            config = grep_config(best_runs, dataset, imputed_model)
                             for r in np.arange(n_repetitions):
                                 command = f'python {fit_module_path} -F {outdir} with {config} rep{r+1}' 
                                 commands.append(command)
@@ -107,14 +108,14 @@ if __name__ == '__main__':
                         if model_type == 'imputed':
                             #for imputed models, we need additional loop over imputation strategies
                             for data_format in data_formats:
+                                imputed_model = data_format + model
                                 #define output directory of current hypersearch experiment
-                                outdir = os.path.join('experiments', fit_module, dataset, subsampler, data_format + model)
-                                config = grep_config(best_runs, dataset, model, subsampler) #here we additionally feed the subsampler!
+                                outdir = os.path.join('experiments', fit_module, dataset, subsampler, imputed_model)
+                                config = grep_config(best_runs, dataset, imputed_model, subsampler) #here we additionally feed the subsampler!
                                 #write python command 
                                 for r in np.arange(n_repetitions):
                                     command = f'python {fit_module_path} -F {outdir} with {config} rep{r+1}' 
                                     commands.append(command)
-                        
                         else:
                             #define output directory of current GP hypersearch experiments
                             outdir = os.path.join('experiments', fit_module, dataset, subsampler, model)

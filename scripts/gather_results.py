@@ -200,7 +200,7 @@ def count_runs(out_dict):
                 if method not in counts[dataset].keys():
                     counts[dataset][method] = 1
                 else:
-                    counts[dataset][method] += len(result)
+                    counts[dataset][method] += 1 #if result is a list of runs: len(result)
     return counts
 
 
