@@ -9,6 +9,12 @@ from tabulate import tabulate
 from collections import defaultdict
 
 #Renaming dictionaries:
+seeds = {'1': 249040430,
+         '2': 621965744,
+         '3': 771860110,
+         '4': 775293950,
+         '5': 700134501 
+} 
 
 model_names = {
     'GP_mc_GRUModel': 'GP-RNN',
@@ -58,6 +64,8 @@ metric_names = {
 def process_experiment(base_path, exp_path, heads):
     metrics_path = os.path.join(base_path, exp_path, heads[0])
     run_path = os.path.join(base_path, exp_path, heads[1])
+    config_path = os.path.join(base_path, exp_path, heads[2])
+
     if not all(os.path.exists(path) for path in [metrics_path, run_path]):
         print(f'Either run or metrics missing in {exp_path}')
         return False, None
@@ -76,6 +84,8 @@ def process_experiment(base_path, exp_path, heads):
     if not valid_results:
         return False, None
     else:
+        seed = get_seed(config_path)
+        output['seed'] = seed #relevant to keep track of repetitions
         return True, output
 
 def get_run_validity(path):
@@ -99,7 +109,13 @@ def determine_metric(metrics, data):
             found = True
             break
     return found, eval_metric
-    
+
+def get_seed(path):
+    with open(path, 'r') as f:
+        data = json.load(f)
+    seed = data['seed']
+    return seed
+
 def get_results(path):
     with open(path, 'r') as f:
         data = json.load(f)
@@ -129,7 +145,7 @@ def get_results(path):
     return result_dict, valid
 
 
-def gather_results_in_dict(base_paths, useful_heads):
+def gather_results_in_dict(base_paths, useful_heads, path_depth=6):
     results = defaultdict(list)
     counter = 0            
     for base_path in base_paths:
@@ -146,8 +162,7 @@ def gather_results_in_dict(base_paths, useful_heads):
                     #list of subdirs containing experiment (without basepath)
                     experiment = [e for e in experiment_split if e not in base_split]
                     
-                    valid_depth = 6 if experiment[0] == 'Physionet2012' else 7
-                    
+                    valid_depth = path_depth if experiment[0] == 'Physionet2012' else path_depth + 1
                     #a valid experiment containing model run info has len of 6
                     if len(experiment) < valid_depth:
                         exp_path = '/'.join(experiment)
@@ -171,12 +186,12 @@ def gather_results_in_dict(base_paths, useful_heads):
     return results
 
 
-def process_run_dict(result_dict):
+def process_run_dict(result_dict, path_depth=6):
     out_dict = defaultdict(list)  
     for key, value in result_dict.items():
         key_split = key.split('/')
         #in case we have subsampling, key_split has len 6, otherwise 5
-        if len(key_split) == 6:
+        if len(key_split) == path_depth: #4 for repetitions
             dataset = os.path.join(key_split[0], key_split[1])
             method = key_split[2]
         else:
@@ -331,7 +346,7 @@ def convert_to_df(data):
         #convert nested dictionary to df with redundant records (easier to group by)
         for model in data[dataset].keys():
             for metric in data[dataset][model].keys():
-                if metric == 'path':
+                if metric in ['path', 'seed']:
                     continue
                 record = {  'dataset':      dataset_name,
                             'subsampling':  subsampling_names[subsampling],
@@ -363,24 +378,42 @@ def convert_to_df(data):
  
 if __name__ == "__main__":
     
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--repetitions', action='store_true', default=False, 
+        help='if true, reptitions are gathered, otherwise hypersearch runs (default: false)')
+    args = parser.parse_args()
+        
+    repetitions = args.repetitions
+ 
     # Parameters:
-    base_paths = ['experiments/hyperparameter_search'] 
-    useful_heads = ['metrics.json', 'run.json']
-
+    if repetitions: #gather and aggregate results of repetitions
+        base_paths = ['experiments/train_model']
+        path_depth = 4
+        run_name = 'repetitions' 
+    else: #gather hyperparameter search runs
+        base_paths = ['experiments/hyperparameter_search']
+        path_depth = 6
+        run_name = 'run' 
+    useful_heads = ['metrics.json', 'run.json', 'config.json']
 
     #raw results (only selecting the best stage of run --> without selecting the best run per method!)
-    results = gather_results_in_dict(base_paths, useful_heads)
+    results = gather_results_in_dict(base_paths, useful_heads, path_depth)
    
-       
-    out_dict = process_run_dict(results)
+    ## TODO: got until here with repetitions! need to count completed repes and dump count dict for generation of repetition jobs
+
+    out_dict = process_run_dict(results, path_depth)
 
     #Simply count which method has how many completed runs
     counts = count_runs(out_dict)
-   
-    with open('scripts/completed_run_counts.json', 'w') as f:
+ 
+    with open(f'scripts/completed_{run_name}_counts.json', 'w') as f:
         json.dump(counts, f)
     #additionally, print it:
     print(json.dumps(counts, indent=4))
+
+    if repetitions:
+        #finish after this:
+        sys.exit()
  
     #Find the test performance of the best run per method (in terms of validation performance)
     best_runs = get_best_runs(out_dict)

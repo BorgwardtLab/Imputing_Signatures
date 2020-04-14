@@ -6,6 +6,7 @@ import sys
 import argparse
 import pandas as pd
 import numpy as np
+from generate_hypersearch_commands import get_count_to_submit
 
 #def get_best_configs(data):
 #    configs = {'GP': [], 'imputed': []}
@@ -17,6 +18,16 @@ import numpy as np
 #            else:
 #                configs['imputed'].append(path)
 #    return configs
+
+def continue_loop(count):
+    if count == 0:
+        print('job already completed, skipping..')
+        return True
+    elif count < 5:
+        print(f'Warning: {count} repetitions missing!') 
+        return False
+    else:
+        return False
 
 def grep_config(data, dataset, model, subsampler=None):
     """
@@ -52,11 +63,19 @@ if __name__ == '__main__':
     data_formats = ['zero', 'linear', 'forwardfill', 'causal', 'indicator' ] #only for imputed models
     subsamplers = ['LabelBasedSubsampler', 'MissingAtRandomSubsampler']
     model_types = ['GP', 'imputed'] #we distinguish between those two types of models
+    resubmit_failed_jobs = args.resubmit #True
 
     #read best configs file:
     with open('results/best_runs.json', 'r') as f:
         best_runs = json.load(f) #dict that contains {dataset: { model: count, .. }, .. } 
     
+    # In case we resubmit failed jobs, read dictionary listing the counts of completed jobs:
+    if resubmit_failed_jobs:
+        with open('scripts/completed_repetitions_counts.json', 'r') as f:
+            counts = json.load(f) #dict that contains {dataset: { model: count, .. }, .. } 
+    else:
+        count = n_repetitions
+ 
     # Create command files for both model types seperately, GP and imputed models
     commands = []
     for model_type in model_types:
@@ -91,6 +110,10 @@ if __name__ == '__main__':
                             #define output directory of current hypersearch experiment
                             outdir = os.path.join('experiments', fit_module, dataset, imputed_model)
                             config = grep_config(best_runs, dataset, imputed_model)
+                            if resubmit_failed_jobs:
+                                count = get_count_to_submit(counts, n_repetitions, dataset, model, data_format=data_format)
+                                if continue_loop(count):
+                                    continue  
                             for r in np.arange(n_repetitions):
                                 command = f'python {fit_module_path} -F {outdir} with {config} rep{r+1}' 
                                 commands.append(command)
@@ -98,6 +121,10 @@ if __name__ == '__main__':
                         #GP models
                         outdir = os.path.join('experiments', fit_module, dataset, model)
                         config = grep_config(best_runs, dataset, model)
+                        if resubmit_failed_jobs:
+                            count = get_count_to_submit(counts, n_repetitions, dataset, model)
+                            if continue_loop(count):
+                                continue  
                         for r in np.arange(n_repetitions):
                             command = f'python {fit_module_path} -F {outdir} with {config} rep{r+1}' 
                             commands.append(command)
@@ -112,6 +139,10 @@ if __name__ == '__main__':
                                 #define output directory of current hypersearch experiment
                                 outdir = os.path.join('experiments', fit_module, dataset, subsampler, imputed_model)
                                 config = grep_config(best_runs, dataset, imputed_model, subsampler) #here we additionally feed the subsampler!
+                                if resubmit_failed_jobs:
+                                    count = get_count_to_submit(counts, n_repetitions, dataset, model, subsampler, data_format)
+                                    if continue_loop(count):
+                                        continue  
                                 #write python command 
                                 for r in np.arange(n_repetitions):
                                     command = f'python {fit_module_path} -F {outdir} with {config} rep{r+1}' 
@@ -120,6 +151,10 @@ if __name__ == '__main__':
                             #define output directory of current GP hypersearch experiments
                             outdir = os.path.join('experiments', fit_module, dataset, subsampler, model)
                             config = grep_config(best_runs, dataset, model, subsampler) #here we additionally feed the subsampler!
+                            if resubmit_failed_jobs:
+                                count = get_count_to_submit(counts, n_repetitions, dataset, model, subsampler)
+                                if continue_loop(count):
+                                    continue  
                             for r in np.arange(n_repetitions):
                                 command = f'python {fit_module_path} -F {outdir} with {config} rep{r+1}' 
                                 commands.append(command)
