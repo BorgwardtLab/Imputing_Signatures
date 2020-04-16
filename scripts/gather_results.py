@@ -7,6 +7,8 @@ import numpy as np
 from IPython import embed
 from tabulate import tabulate
 from collections import defaultdict
+import seaborn as sns
+import matplotlib.pyplot as plt   
 
 #Renaming dictionaries:
 seeds = {'1': 249040430,
@@ -29,10 +31,10 @@ model_names = {
     'GP_mc_GRUSignatureModel': 'GP-RNNSig',
     'GP_mc_SignatureModel': 'GP-Sig',
     'GP_mc_DeepSignatureModel': 'GP-DeepSig',
-    'GP_mom_GRUModel': 'GP-RNN (PoM)',
-    'GP_mom_GRUSignatureModel': 'GP-RNNSig (PoM)',
-    'GP_mom_SignatureModel': 'GP-Sig (PoM)',
-    'GP_mom_DeepSignatureModel': 'GP-DeepSig (PoM)',
+    'GP_mom_GRUModel': 'GP_PoM-RNN',
+    'GP_mom_GRUSignatureModel': 'GP_PoM-RNNSig',
+    'GP_mom_SignatureModel': 'GP_PoM-Sig',
+    'GP_mom_DeepSignatureModel': 'GP_PoM-DeepSig',
     'causalImputedRNNModel': 'causal-RNN',
     'causalImputedRNNSignatureModel': 'causal-RNNSig',
     'causalImputedSignatureModel': 'causal-Sig',
@@ -353,8 +355,10 @@ def extract_and_tex_single_datasets(df):
         curr_piv.to_latex(f'results/tables/{dat}.tex', escape=False)
     return dfs
 
-def convert_to_df(data):
-    """Convert best runs dictionary to pd dataframe which can be transformed to tex table """
+def convert_to_df(data, repetitions=False, n_repetitions=5):
+    """Convert best runs dictionary to pd dataframe which can be transformed to tex table or easy to plot.
+        If repetitions=True, #n_repetitions results are also added as seperate records
+    """
     out_df = pd.DataFrame() 
     for dataset in data.keys():
         if '/' in dataset:
@@ -367,35 +371,59 @@ def convert_to_df(data):
         #convert nested dictionary to df with redundant records (easier to group by)
         for model in data[dataset].keys():
             for metric in data[dataset][model].keys():
-                if metric in ['path', 'seed']:
+                if metric in ['path', 'seed', 'count']:
                     continue
-                record = {  'dataset':      dataset_name,
-                            'subsampling':  subsampling_names[subsampling],
-                            'model':        model_names[model],
-                            'metric':       metric_names[metric], 
-                            'value':       [ data[dataset][model][metric] ]
-                         }
-                record_df = pd.DataFrame(record)
-                out_df = out_df.append(record_df) 
+                if repetitions:
+                    found_reps = len(data[dataset][model][metric]['raw']) 
+                    if found_reps < n_repetitions: 
+                        print(f'For {dataset}{subsampling} {model} found {found_reps} completed repetitions!')    
+                        continue
+                    
+                    model_name = model_names[model]
+                    imputation, model_name = model_name.split('-') 
+                    for rep in np.arange(n_repetitions):
+                        record = {  'long_dataset': os.path.join(dataset_name, subsampling),
+                                    'dataset':      dataset_name,
+                                    'subsampling':  subsampling_names[subsampling],
+                                    'model':        model_name,
+                                    'imputation':   imputation,
+                                    'metric':       metric_names[metric], 
+                                    'value':        [ data[dataset][model][metric]['raw'][rep] ] ,
+                                    'repetition':   rep + 1
+                             }
+                        record_df = pd.DataFrame(record)
+                        out_df = out_df.append(record_df) 
+                else:
+                    record = {  'dataset':      dataset_name,
+                                'subsampling':  subsampling_names[subsampling],
+                                'model':        model_names[model],
+                                'metric':       metric_names[metric], 
+                                'value':       [ data[dataset][model][metric] ]  
+                             }
+                    record_df = pd.DataFrame(record)
+                    out_df = out_df.append(record_df) 
     # rename models:
      
     df = out_df.sort_values(['dataset','subsampling', 'metric']) 
-    #if df.index[0][0] == '':
-    #    df = df.drop(index=['subsampling'])
-    #extract irregularly spaced and regularly spaced datasets:
-    irregular = ['Physionet2012']
-    is_irregular = df['dataset'].isin(irregular)
-    df_irregular = df[is_irregular]
-    df_regular = df[~is_irregular]
-    
-    dfs_irr = extract_and_tex_single_datasets(df_irregular)
-    dfs_reg = extract_and_tex_single_datasets(df_regular)   
-    
-    #df_irregular = df_irregular.reset_index(drop=True)
-    #df_irr_pivoted = pivot_df(df_irregular)
-    #df_reg_pivoted = pivot_df(df_regular)  
-    
-    return dfs_irr, dfs_reg
+    if repetitions:
+        return df
+    else: 
+        #if df.index[0][0] == '':
+        #    df = df.drop(index=['subsampling'])
+        #extract irregularly spaced and regularly spaced datasets:
+        irregular = ['Physionet2012']
+        is_irregular = df['dataset'].isin(irregular)
+        df_irregular = df[is_irregular]
+        df_regular = df[~is_irregular]
+        
+        dfs_irr = extract_and_tex_single_datasets(df_irregular)
+        dfs_reg = extract_and_tex_single_datasets(df_regular)   
+        
+        #df_irregular = df_irregular.reset_index(drop=True)
+        #df_irr_pivoted = pivot_df(df_irregular)
+        #df_reg_pivoted = pivot_df(df_regular)  
+        
+        return dfs_irr, dfs_reg
 
 def aggregate_repetitions(out_dict, n_counts=5):
     counts = defaultdict(dict) 
@@ -413,17 +441,46 @@ def aggregate_repetitions(out_dict, n_counts=5):
                     counts[dataset][method] = defaultdict()
                     counts[dataset][method]['count'] = 0
                     for metric in metrics:
-                        counts[dataset][method][metric] = [ result[metric] ]
+                        counts[dataset][method][metric] = defaultdict() 
+                        counts[dataset][method][metric]['raw'] = [ result[metric] ]
                     counts[dataset][method]['count'] += 1
-                elif counts[dataset][method]['count'] > n_counts:
+                elif counts[dataset][method]['count'] >= n_counts:
                     continue
                 else: 
                     for metric in metrics:
-                        counts[dataset][method][metric].append(result[metric])
+                        counts[dataset][method][metric]['raw'].append(result[metric])
                     counts[dataset][method]['count'] += 1
+                    if counts[dataset][method]['count'] == n_counts:
+                        for metric in metrics:
+                            print(f'Aggregating {dataset} {method} {metric}.. ')
+                            # we finished gathering raw repetition results, and aggregate now
+                            counts[dataset][method][metric]['raw'] = np.array(counts[dataset][method][metric]['raw'])
+                            counts[dataset][method][metric]['mean'] =  counts[dataset][method][metric]['raw'].mean()
+                            counts[dataset][method][metric]['std'] =  counts[dataset][method][metric]['raw'].std()
     return counts
 
- 
+
+def plot_df(df, path='results/plots', hue='model'):
+    """
+    Create nested barplot and save to path/barplot.pdf 
+    """
+    # do plotting here
+    plt.figure(figsize=(5,5))
+    hue_order = ['Sig', 'RNNSig', 'DeepSig', 'RNN']
+    order = ['zero', 'lin', 'ff', 'causal', 'ind', 'GP', 'GP_PoM']
+    if hue == 'model':
+        x = 'imputation'
+    elif hue == 'imputation':
+        x = 'model'
+        tmp = hue_order
+        hue_order = order
+        order = tmp 
+
+    for dataset in df['long_dataset'].unique():
+        g = sns.catplot(x=x, y="value", row="metric", hue=hue, data=df[df['long_dataset'] == dataset], 
+        kind="bar", height=2, aspect=2, order=order, hue_order=hue_order) # palette="muted") 
+        plt.savefig(os.path.join(path, f"barplot_{dataset.replace('/','-')}.pdf"), bbox_inches='tight') 
+
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser()
@@ -462,6 +519,8 @@ if __name__ == "__main__":
     if repetitions:
         #finish after this:
         agg = aggregate_repetitions(out_dict, n_counts=5)
+        df = convert_to_df(agg, repetitions=True) 
+        plot_df(df, hue ='imputation')
         embed()
         sys.exit()
  
