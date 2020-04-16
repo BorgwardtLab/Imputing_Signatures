@@ -18,6 +18,8 @@ pandas = "*"
 sacred = "*"
 requests = "*"
 scikit-optimize = "*"
+ipython = "*"
+tabulate = "*"
 
 [requires]
 python_version = "3.7"
