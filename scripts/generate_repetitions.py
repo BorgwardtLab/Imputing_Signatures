@@ -6,20 +6,46 @@ import sys
 import argparse
 import pandas as pd
 import numpy as np
-from generate_hypersearch_commands import get_count_to_submit
+#from generate_hypersearch_commands import get_reps_to_submit
 
-#def get_best_configs(data):
-#    configs = {'GP': [], 'imputed': []}
-#    for dataset in data.keys():
-#        for model in data[dataset].keys():
-#            path = data[dataset][model]['best']['path']
-#            if 'GP' in path:
-#                configs['GP'].append(path)
-#            else:
-#                configs['imputed'].append(path)
-#    return configs
+seed_to_rep = { 249040430: 0,
+                621965744: 1,
+                771860110: 2,
+                775293950: 3,
+                700134501: 4 
+} 
 
-def continue_loop(count):
+def get_reps_to_submit(counts, seed_counts, n_total, dataset, method, subsampling=None, data_format=None):
+    """
+    Function that takes info about job and checks in 
+    counts dictionary how many runs/seeds are still missing
+    (= less than n_total)
+    """
+    count = None #initialization 
+
+    if subsampling is not None:
+        # append subsampling type to dataset. chose this format to prevent varying
+        # levels of hierarchies
+        dataset = dataset + '/' + subsampling
+    if data_format is not None:
+        # same for imputation scheme here
+        method = data_format + method
+    if dataset in counts.keys():
+        if method in counts[dataset].keys():
+            count = counts[dataset][method]
+    if count is None: 
+        count = 0 # if we don't find any count, we assume there is no completed job 
+        missing_reps = list(seed_to_rep.keys())
+    else:
+        #we need to resubmit
+        seeds = seed_counts[dataset][method]
+        missing_seeds = [seed for seed in seed_to_rep.keys() if seed not in seeds ]
+        missing_reps =  [seed_to_rep[seed] for seed in missing_seeds]
+    #return list of missing repetitions
+    return missing_reps   
+
+def continue_loop(reps):
+    count = len(reps)
     if count == 0:
         print('job already completed, skipping..')
         return True
@@ -73,6 +99,8 @@ if __name__ == '__main__':
     if resubmit_failed_jobs:
         with open('scripts/completed_repetitions_counts.json', 'r') as f:
             counts = json.load(f) #dict that contains {dataset: { model: count, .. }, .. } 
+        with open('scripts/completed_repetitions_seed_counts.json', 'r') as f:
+            seed_counts = json.load(f) #dict that contains {dataset: { model: count, .. }, .. } 
     else:
         count = n_repetitions
  
@@ -111,10 +139,13 @@ if __name__ == '__main__':
                             outdir = os.path.join('experiments', fit_module, dataset, imputed_model)
                             config = grep_config(best_runs, dataset, imputed_model)
                             if resubmit_failed_jobs:
-                                count = get_count_to_submit(counts, n_repetitions, dataset, model, data_format=data_format)
-                                if continue_loop(count):
-                                    continue  
-                            for r in np.arange(n_repetitions):
+                                reps = get_reps_to_submit(counts, seed_counts, n_repetitions, dataset, model, data_format=data_format)
+                                if continue_loop(reps):
+                                    continue 
+                                curr_reps = reps
+                            else: 
+                                curr_reps = np.arange(n_repetitions) 
+                            for r in curr_reps:
                                 command = f'python {fit_module_path} -F {outdir} with {config} rep{r+1}' 
                                 commands.append(command)
                     else:
@@ -122,10 +153,13 @@ if __name__ == '__main__':
                         outdir = os.path.join('experiments', fit_module, dataset, model)
                         config = grep_config(best_runs, dataset, model)
                         if resubmit_failed_jobs:
-                            count = get_count_to_submit(counts, n_repetitions, dataset, model)
-                            if continue_loop(count):
+                            reps = get_reps_to_submit(counts, seed_counts, n_repetitions, dataset, model)
+                            if continue_loop(reps):
                                 continue  
-                        for r in np.arange(n_repetitions):
+                            curr_reps = reps
+                        else: 
+                            curr_reps = np.arange(n_repetitions) 
+                        for r in curr_reps:
                             command = f'python {fit_module_path} -F {outdir} with {config} rep{r+1}' 
                             commands.append(command)
                         
@@ -140,11 +174,13 @@ if __name__ == '__main__':
                                 outdir = os.path.join('experiments', fit_module, dataset, subsampler, imputed_model)
                                 config = grep_config(best_runs, dataset, imputed_model, subsampler) #here we additionally feed the subsampler!
                                 if resubmit_failed_jobs:
-                                    count = get_count_to_submit(counts, n_repetitions, dataset, model, subsampler, data_format)
-                                    if continue_loop(count):
+                                    reps = get_reps_to_submit(counts, seed_counts, n_repetitions, dataset, model, subsampler, data_format)
+                                    if continue_loop(reps):
                                         continue  
-                                #write python command 
-                                for r in np.arange(n_repetitions):
+                                    curr_reps = reps
+                                else: 
+                                    curr_reps = np.arange(n_repetitions)
+                                for r in curr_reps: 
                                     command = f'python {fit_module_path} -F {outdir} with {config} rep{r+1}' 
                                     commands.append(command)
                         else:
@@ -152,10 +188,13 @@ if __name__ == '__main__':
                             outdir = os.path.join('experiments', fit_module, dataset, subsampler, model)
                             config = grep_config(best_runs, dataset, model, subsampler) #here we additionally feed the subsampler!
                             if resubmit_failed_jobs:
-                                count = get_count_to_submit(counts, n_repetitions, dataset, model, subsampler)
-                                if continue_loop(count):
-                                    continue  
-                            for r in np.arange(n_repetitions):
+                                reps = get_reps_to_submit(counts, seed_counts, n_repetitions, dataset, model, subsampler)
+                                if continue_loop(reps):
+                                    continue
+                                curr_reps = reps
+                            else: 
+                                curr_reps = np.arange(n_repetitions) 
+                            for r in curr_reps: 
                                 command = f'python {fit_module_path} -F {outdir} with {config} rep{r+1}' 
                                 commands.append(command)
                 

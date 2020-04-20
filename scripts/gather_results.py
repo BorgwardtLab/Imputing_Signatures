@@ -10,13 +10,7 @@ from collections import defaultdict
 import seaborn as sns
 import matplotlib.pyplot as plt   
 
-#Renaming dictionaries:
-seeds = {'1': 249040430,
-         '2': 621965744,
-         '3': 771860110,
-         '4': 775293950,
-         '5': 700134501 
-} 
+
 
 test_metrics = [
      'testing.balanced_accuracy',
@@ -241,6 +235,22 @@ def count_runs(out_dict):
                     counts[dataset][method] += 1 #if result is a list of runs: len(result)
     return counts
 
+def count_seeds(out_dict):
+    """ 
+    Function to count all completed seeds, to determine which have yet to be submitted / resubmitted.
+    """
+    counts = defaultdict(dict)
+    for dataset in out_dict.keys(): #dataset
+        if dataset not in counts.keys():
+            counts[dataset] = defaultdict()
+        for run in out_dict[dataset]: #looping over list of runs
+            for method, result in run.items(): #run is a dict with method as key and dictionary of results as value
+                if method not in counts[dataset].keys():
+                    counts[dataset][method] = [result['seed']]
+                else:
+                    counts[dataset][method].append( result['seed']) 
+    return counts
+
 
 def get_best_runs(out_dict, n_counts=20, metrics = ['validation.balanced_accuracy', 'validation.auprc']):
     #pilot_test_methods = ['GP_mom_LSTMSignatureModel']     
@@ -425,7 +435,7 @@ def convert_to_df(data, repetitions=False, n_repetitions=5):
         
         return dfs_irr, dfs_reg
 
-def aggregate_repetitions(out_dict, n_counts=5):
+def aggregate_repetitions(out_dict, n_counts=5, include_incomplete=False, completed=None):
     counts = defaultdict(dict) 
     for dataset in out_dict.keys(): #dataset
         if dataset not in counts.keys():
@@ -434,7 +444,7 @@ def aggregate_repetitions(out_dict, n_counts=5):
             for method, result in run.items(): #run is a dict with method as key and dictionary of results as value
                 #first determine available test metrics to aggregate over:
                 found, metrics = select_test_metrics(test_metrics, result)
-                print(f'Using {metrics}')
+                #print(f'Using {metrics}')
                 if not found:
                     raise ValueError(f'No valid test metric found for the following job: {run}')
                 if method not in counts[dataset].keys():
@@ -450,9 +460,13 @@ def aggregate_repetitions(out_dict, n_counts=5):
                     for metric in metrics:
                         counts[dataset][method][metric]['raw'].append(result[metric])
                     counts[dataset][method]['count'] += 1
-                    if counts[dataset][method]['count'] == n_counts:
+                    if include_incomplete: #also aggregate incomplete runs
+                        curr_n_counts = min( completed[dataset][method], n_counts)
+                    else:
+                        curr_n_counts = n_counts 
+                    if counts[dataset][method]['count'] == curr_n_counts:
                         for metric in metrics:
-                            print(f'Aggregating {dataset} {method} {metric}.. ')
+                            #print(f'Aggregating {dataset} {method} {metric}.. ')
                             # we finished gathering raw repetition results, and aggregate now
                             counts[dataset][method][metric]['raw'] = np.array(counts[dataset][method][metric]['raw'])
                             counts[dataset][method][metric]['mean'] =  counts[dataset][method][metric]['raw'].mean()
@@ -460,12 +474,15 @@ def aggregate_repetitions(out_dict, n_counts=5):
     return counts
 
 
-def plot_df(df, path='results/plots', hue='model'):
+def plot_df(df, path='results/plots', hue='model', main=False):
     """
-    Create nested barplot and save to path/barplot.pdf 
+    - Create grouped barplot and save to path/barplot.pdf
+    - hue: which concept should be inside the grouping of the barplot
+    - main: indicator whether smaller plot (only showing hypersearch objective) for main paper
+
     """
     # do plotting here
-    plt.figure(figsize=(5,5))
+    plt.figure(figsize=(10,10))
     hue_order = ['Sig', 'RNNSig', 'DeepSig', 'RNN']
     order = ['zero', 'lin', 'ff', 'causal', 'ind', 'GP', 'GP_PoM']
     if hue == 'model':
@@ -477,9 +494,24 @@ def plot_df(df, path='results/plots', hue='model'):
         order = tmp 
 
     for dataset in df['long_dataset'].unique():
-        g = sns.catplot(x=x, y="value", row="metric", hue=hue, data=df[df['long_dataset'] == dataset], 
-        kind="bar", height=2, aspect=2, order=order, hue_order=hue_order) # palette="muted") 
-        plt.savefig(os.path.join(path, f"barplot_{dataset.replace('/','-')}.pdf"), bbox_inches='tight') 
+        data = df[df['long_dataset'] == dataset]
+        if main:
+            #only plot metric that was hyperparam search objective:
+            data = data[data['metric'].isin(['BAC', 'Average Precision'])]
+            curr_metric = data['metric'].iloc[0] 
+            data = data.rename(columns={'value': curr_metric} )
+            row = None
+        else:
+            curr_metric = 'value'
+            row = 'metric' 
+        g = sns.catplot(x=x, y=curr_metric, row=row, hue=hue, data=data, 
+        kind="bar", height=2, aspect=2, order=order, hue_order=hue_order, palette=sns.color_palette("Paired", 8), errwidth=0.75, capsize=0.05) #muted #bar 
+        if main:
+            plot_path = os.path.join(path, f"barplot_main_{dataset.replace('/','-')}.pdf")
+        else:
+            plot_path = os.path.join(path, f"barplot_{dataset.replace('/','-')}.pdf")
+
+        plt.savefig(plot_path, bbox_inches='tight') 
 
 if __name__ == "__main__":
     
@@ -517,10 +549,16 @@ if __name__ == "__main__":
     print(json.dumps(counts, indent=4))
 
     if repetitions:
+        #count seeds (for resubs, to ensure that each repetition has been completed)
+        seed_counts = count_seeds(out_dict)
+        with open(f'scripts/completed_{run_name}_seed_counts.json', 'w') as f:
+            json.dump(seed_counts, f)
+    
         #finish after this:
-        agg = aggregate_repetitions(out_dict, n_counts=5)
+        agg = aggregate_repetitions(out_dict, n_counts=5, include_incomplete=True, completed=counts)
         df = convert_to_df(agg, repetitions=True) 
         plot_df(df, hue ='imputation')
+        plot_df(df, hue ='imputation', main=True)
         embed()
         sys.exit()
  
