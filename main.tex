@@ -186,8 +186,6 @@ Process~(GP) adapters~\citep{li2016scalable, futoma2017mgp}.
 Motivated by this, we propose a novel extension of GP adapters that
 directly incorporates uncertainty information into the prediction step,
 thus improving predictive performance.
-% TODO: '...but could also be of independent interest' is a good point,
-% but it belongs into the discussion section.
 Throughout our experiments, we observe that the recently introduced
 \emph{deep signature models}~\citep{kidger2019deep} consistently
 outperform other signature models~(which in turn suffer from increased
@@ -609,7 +607,11 @@ When using the signature transform in machine learning, we have identified a nov
 
 We have identified two key flaws that can arise when mishandling this issue, and show that they are necessarily exhibited by all conventional imputation strategies not specifically adapted for use with the signature transform.
 
-We have then proposed two practical, novel, solutions to overcome them, namely causal signature imputation and a Gaussian process adapter.
+We have then proposed two practical, novel, solutions to overcome them,
+namely causal signature imputation and a Gaussian process adapter, the
+latter of which is of independent interest in other scenarios due to the
+way it incorporates uncertainty information about the \emph{predictions}
+themselves.
 
 As a result, we are able to summarise with `recommendations for the practitioner' on the appropriateness of different techniques.
 
