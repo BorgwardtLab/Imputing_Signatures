@@ -13,6 +13,7 @@
 \usepackage{hyperref}
 \usepackage{wrapfig}
 \newcommand{\theHalgorithm}{\arabic{algorithm}}
+\usepackage{comment}
 
 \usepackage[preprint]{neurips_2020}
 \setcitestyle{square}
@@ -30,6 +31,7 @@
 \newcommand{\lspace}{\mathcal{Y}}
 \newcommand{\seriesspace}{\mathcal{S}}
 \newtheorem{theorem}{Theorem}
+\newcommand{\data}[1]{\mbox{\textsc{#1}}}   % can be used to typeset arbitrary data set set names
 
 \title{Path Imputation Strategies for Signature Models}
 % Alternative Title:
@@ -245,9 +247,9 @@ Alternatively, one may forgo allowing the uncertainty to propagate through $F$ b
 \argmin_{\mathbf{w} \in \mathcal{W},\bm{\eta} \in \mathcal{H}} \sum_{k=1}^N \ell(F(\mu(\,\cdot\,,\mathbf{x}_k, \eta), \mathbf{w}), y_k)
 \end{align}
 
-\section{Method}
+\section{Task}
 
-
+\begin{comment}
 \subsubsection{Application beyond signatures}
 
 Whilst the task of converting observed data into a path in data space is particularly important for signatures, it also arises in the context of, for example, convolutional and recurrent neural networks.
@@ -261,12 +263,10 @@ although the $1/n$ scaling is really only justified in the case that the $t_i$ a
 Similarly, the connection between dynamical systems and recurrent neural networks are well known \cite{FUNAHASHI1993801, continuousrnn}, and these tend to use a similar setup.
 
 For non-signature methods as for signature methods, this implicit usage of data as a path in data space often seems to be swept under the rug, and we suspect it is one deserving further attention. However our focus here is specifically on solutions appropriate for signatures, and this larger problem is not one that we will explore further in this paper.
+\end{comment}
 
 
-
-
-
-\section{Imputation}
+\section{Imputations}
 %For simplicity of presentation, we will now assume that $\dataspace_j = \reals$.%, although in principle the theory actually only requires that $\dataspace_j$ is a Banach space.
 
 Our end goal is to learn a function from $\seriesspace(\dataspace^*)$ to $\lspace$. Our belief (perhaps merely motivated by signature theory, but in this paper explicitly because we wish to apply signatures), is that this is sensibly done by selecting a path-imputation strategy
@@ -487,9 +487,17 @@ This formulation, whilst lacking causality, is nonetheless robust to the issue o
 \section{Experiments}
 % The flaws we have identified have been theoretically identified, and so we have been able to correct them theoretically as well. Nonetheless we have also performed experiments, testing different imputation schemes across several different signature-based models.
 For our empirical analysis, let us first introduce our experimental setup by specifying the investigated datasets, models, imputation schemes as well as prediction tasks at hand. Subsequently, we present our quantitative results.
+\subsection{Datasets}
+We make use of four real-world time series datasets:
+\begin{enumerate}
+    \item Physionet2012
+    \item PenDigits
+    \item LSST
+    \item CharacterTrajectories
+\end{enumerate}
 
-We compare the following combinations of models and imputation schemes:
-
+\subsection{Models}
+We study the following set of models:
 \begin{enumerate}
     \item Sig, a simple signature model which involves a linear augmentation, the signature transform (signature block) and a final module of dense layers.
     \item RNNSig, which extends the signature transform to a window-based stream of signatures, and where the final neural module is a GRU sliding over the stream of signatures.
