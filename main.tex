@@ -116,44 +116,84 @@ Our code is available at XXXXXX.
 
 \section{Introduction}
 
-Originally described by \citet{Chen54, Chen57, Chen58} and popularised in
-the theory of rough paths and controlled differential equations~\cite{lyons1998differential, FritzVictoir10, lyons2014rough}, the
-\emph{signature transform}, also known as the \emph{path signature} or
-simply \emph{signature}, acts on a continuous vector-valued path of
+Originally described by \citet{Chen54, Chen57, Chen58} and popularised
+in the theory of rough paths and controlled differential
+equations~\cite{lyons1998differential, FritzVictoir10, lyons2014rough},
+the \emph{signature transform}, also known as the \emph{path signature}
+or simply \emph{signature}, acts on a continuous vector-valued path of
 bounded variation, and returns a graded sequence of statistics, which
-determine the path up to a negligible equivalence class.
-
-Every continuous function of a path can be recovered by applying
-a linear transform to this collection of statistics \cite[Proposition
-A.6]{kidger2019deep}. This `universal nonlinearity' property makes the
-signature a promising nonparametric feature extractor.
-
+determine a path up to a negligible equivalence class. Moreover,
+it can be shown~\cite[Proposition A.6]{kidger2019deep} that \emph{every}
+continuous function of a path can be recovered by applying a linear
+transform to this collection of statistics. This `universal
+nonlinearity' property makes the signature a promising nonparametric
+feature extractor with beneficial properties in both generative and
+% TODO: consider adding more citations here
+supervised learning scenarios~\citep{kidger2019deep}.
+%
 Given their similarities, it is natural to hope that the tools that
-apply to continuous paths may also be applied to multivariate time
-series. Of course, multivariate time series are not continuous paths.
-For signature techniques to be applied, a continuous path must first be
-constructed from this data.
+apply to continuous paths may \emph{also} be applied to multivariate
+time series. Of course, multivariate time series are not continuous
+paths---in fact, for signature techniques to be applied, one first needs
+to construct a continuous path from this kind of data.
 
-In previous work \cite{kidger2019deep, TODO, TODO, TODO} this has been
-characterised as an embedding problem, and has typically been glossed
-over as an essentially unimportant detail. This is exacerbated by the
-(perfectly sensible) behaviour of software for computing the signature
-\cite{iisignature, signatory}, which take a continuous piecewise linear
-path as an input, described by its sequence of knots. This resembles
-a sequence of data, meaning that the signature is sometimes interpreted
-as operating on sequences of data rather than on paths
-\cite{kidger2019deep, TODO-levin}.
+In previous work~\cite{kidger2019deep, TODO, TODO, TODO}, this
+construction has been characterised as an embedding problem, and was
+typically glossed over as an essentially unimportant detail.
+%
+This is exacerbated by the---perfectly sensible---behaviour of software
+for computing the signature \cite{iisignature, signatory}, which
+commonly considers a continuous piecewise linear path as an input,
+% TODO: is there a better definition of 'knot'? I am aware of the
+% meaning in terms of spline approximations, but maybe we could clarify
+% this here.
+described by its sequence of knots, i.e.\ values.
+%
+Since such sequences resemble a sequence of data, the signature is
+sometimes interpreted as operating on sequences of data rather than on
+paths~\cite{kidger2019deep, TODO-levin}.
+%
+We show that this view is somewhat limiting and that, in order to
+achieve competitive predictive performance for real-world time series
+classification, it is crucial to consider the path construction process.
 
-\subsection{Contributions}
-In this paper we reinterpret of the task of constructing a continuous path, by turning it from an embedding problem into an imputation problem. To distinguish this from traditional imputation problems, we refer to this as \emph{path imputation}.
+Specifically, in this paper we reinterpret the task of
+constructing a continuous path, by turning it from an embedding problem
+into an imputation problem. To distinguish this from traditional
+imputation problems, we refer to this as \emph{path imputation}.
+%
+While a large part of the previous literature on the signature transform
+focused on its excellent theoretical properties, in particular sampling
+independence~\cite{TODO}, our findings show that this does not
+necessarily correspond to excellent empirical performance.
+%
+However, it has previously been established that both observation rates
+and missingness itself can carry information in time series
+classification tasks~\citep{rubin1976inference, gelman2007dataanalysis}.
+%
+Our reinterpreted view of path construction as an imputation problem
+permits us to identify that this performance gap is likely another
+manifestation of the phenomenon of glossing over imputation details.
 
-Much previous literature on the signature transform has focused on its excellent theoretical properties, in particular sampling independence \cite{TODO}, but our findings show that this does not correspond to empirical performance. However it has previously been established that observation rates and missingness itself can carry information \cite{rubin1976inference, gelman2007dataanalysis}. By re-interpreting the task of constructing paths as an imputation problem, we identify that this performance gap is likely to be another manifestation of this phenomenon.
-
-We perform a thorough empirical investigation of various imputation schemes as combined with multiple models that potentially employ signatures. We find that approaches that have access to uncertainty information \emph{during prediction} tend to outperform the competitors, also uncertainty-aware frameworks where the uncertainty is only available during \emph{training}, such as Gaussian process (GP) adapters.
-Motivated by this, we propose a novel extension of GP adapters \cite{li2016scalable, futoma2017mgp} which incorporates uncertainty information into the prediction step, which helps our task at hand but could also be of independent interest.
-As a footnote we observe that the recently introduced `deep signature models' \cite{kidger2019deep} consistently outperform other signature models, which also suffer from much higher variance in their efficacy.
-
-Our code is available at XXXXXX.
+We therefore perform a thorough empirical investigation of various
+imputation schemes in combination with multiple models that can potentially
+employ signatures. We find that approaches that have access to
+uncertainty information \emph{during prediction} tend to outperform the
+competitors, even uncertainty-aware frameworks for which this
+information is only available during \emph{training}, such as Gaussian
+Process~(GP) adapters~\citep{li2016scalable, futoma2017mgp}.
+%
+Motivated by this, we propose a novel extension of GP adapters that
+directly incorporates uncertainty information into the prediction step,
+thus improving predictive performance.
+% TODO: '...but could also be of independent interest' is a good point,
+% but it belongs into the discussion section.
+Throughout our experiments, we observe that the recently introduced
+\emph{deep signature models}~\citep{kidger2019deep} consistently
+outperform other signature models~(which in turn suffer from increased
+variance, thus reducing their efficay).
+%
+We make our code publicly available under XXXXXX.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Old content starts here
