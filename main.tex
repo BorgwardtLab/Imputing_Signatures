@@ -69,7 +69,6 @@ Our first contribution is to characterise this as an imputation problem, and to 
 \end{abstract} % TODO: touch this up a bit, but I think the essential idea is there.
 
 % Suggestion (BR):
-
 \begin{abstract}
 The signature transform, a `universal non-linearity' on the space of
 continuous vector-valued paths, recently started receiving attention in
@@ -106,6 +105,55 @@ Motivated by this, we propose a novel extension of GP adapters \cite{li2016scala
 As a footnote we observe that the recently introduced `deep signature models' \cite{kidger2019deep} consistently outperform other signature models, which also suffer from much higher variance in their efficacy.
 
 Our code is available at XXXXXX.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Introduction (suggestion, BR) 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Introduction}
+
+Originally described by \citet{Chen54, Chen57, Chen58} and popularised in
+the theory of rough paths and controlled differential equations~\cite{lyons1998differential, FritzVictoir10, lyons2014rough}, the
+\emph{signature transform}, also known as the \emph{path signature} or
+simply \emph{signature}, acts on a continuous vector-valued path of
+bounded variation, and returns a graded sequence of statistics, which
+determine the path up to a negligible equivalence class.
+
+Every continuous function of a path can be recovered by applying
+a linear transform to this collection of statistics \cite[Proposition
+A.6]{kidger2019deep}. This `universal nonlinearity' property makes the
+signature a promising nonparametric feature extractor.
+
+Given their similarities, it is natural to hope that the tools that
+apply to continuous paths may also be applied to multivariate time
+series. Of course, multivariate time series are not continuous paths.
+For signature techniques to be applied, a continuous path must first be
+constructed from this data.
+
+In previous work \cite{kidger2019deep, TODO, TODO, TODO} this has been
+characterised as an embedding problem, and has typically been glossed
+over as an essentially unimportant detail. This is exacerbated by the
+(perfectly sensible) behaviour of software for computing the signature
+\cite{iisignature, signatory}, which take a continuous piecewise linear
+path as an input, described by its sequence of knots. This resembles
+a sequence of data, meaning that the signature is sometimes interpreted
+as operating on sequences of data rather than on paths
+\cite{kidger2019deep, TODO-levin}.
+
+\subsection{Contributions}
+In this paper we reinterpret of the task of constructing a continuous path, by turning it from an embedding problem into an imputation problem. To distinguish this from traditional imputation problems, we refer to this as \emph{path imputation}.
+
+Much previous literature on the signature transform has focused on its excellent theoretical properties, in particular sampling independence \cite{TODO}, but our findings show that this does not correspond to empirical performance. However it has previously been established that observation rates and missingness itself can carry information \cite{rubin1976inference, gelman2007dataanalysis}. By re-interpreting the task of constructing paths as an imputation problem, we identify that this performance gap is likely to be another manifestation of this phenomenon.
+
+We perform a thorough empirical investigation of various imputation schemes as combined with multiple models that potentially employ signatures. We find that approaches that have access to uncertainty information \emph{during prediction} tend to outperform the competitors, also uncertainty-aware frameworks where the uncertainty is only available during \emph{training}, such as Gaussian process (GP) adapters.
+Motivated by this, we propose a novel extension of GP adapters \cite{li2016scalable, futoma2017mgp} which incorporates uncertainty information into the prediction step, which helps our task at hand but could also be of independent interest.
+As a footnote we observe that the recently introduced `deep signature models' \cite{kidger2019deep} consistently outperform other signature models, which also suffer from much higher variance in their efficacy.
+
+Our code is available at XXXXXX.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Old content starts here
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Related work}
 A key motivation for this work is the use of the signature transform in machine learning. For example see the work of \cite{primer2016, kormilitzlin2016, yang2016rotation, li2017lpsnet, yang2017leveraging, PerezArribas2018, morrill2019sepsis}, where the signature transform is typically used as a nonparametric feature extractor, on top of which a model is learnt. Recent work has also investigated more tightly integrating the signature transform with neural networks; \cite{jeremythesis}, \cite{logsigrnn} and \cite{kidger2019deep} all study how to use the signature transform\footnote{And the related logsignature transform; the difference between them will not be important for us.} within typical neural network models. \cite{chevyrev2018signature, kiraly2019kernels} study how the signature transform may be used to define a kernel on path space. \cite{toth2019gp} show how this kernel may be used to define a Gaussian process.
