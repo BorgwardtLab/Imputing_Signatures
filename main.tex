@@ -68,6 +68,25 @@ The signature transform is a `universal nonlinearity' on the space of continuous
 Our first contribution is to characterise this as an imputation problem, and to empirically assess the impact of various imputation techniques when applying the signature to irregular time series data. Throughout our experiments, we observe that uncertainty-aware \emph{predictions} are beneficial, also as compared to the uncertainty-aware \emph{training} of Gaussian process (GP) adapters. To this end, we propose a simple extension of GP adapters by integrating uncertainty to the prediction step which leads to competitive performance.
 \end{abstract} % TODO: touch this up a bit, but I think the essential idea is there.
 
+% Suggestion (BR):
+
+\begin{abstract}
+The signature transform, a `universal non-linearity' on the space of
+continuous vector-valued paths, recently started receiving attention in
+machine learning applications. Prior to applying any signature technique,
+real-world temporal data is typically discretised and
+subsequently transformed into a continuous path. While this is commonly
+treated as an embedding problem, we characterise it as an
+\emph{imputation problem} instead, and empirically assess the impact of
+numerous imputation techniques on the classification of
+irregularly-sampled time series data sets by means of signature
+techniques. We observe throughout our experiments that uncertainty-aware
+\emph{predictions} are beneficial, even compared to the
+uncertainty-aware \emph{training} of Gaussian Process~(GP) adapters. We
+thus also propose a simple extension to the prediction step of GP
+adapters and demonstrate that it leads to competitive performance.
+\end{abstract}
+
 \section{Introduction}\label{intro}
 Originally described in \cite{Chen54, Chen57, Chen58} and popularised in the theory of rough paths and controlled differential equations \cite{lyons1998differential, FritzVictoir10, lyons2014rough}, the \emph{signature transform}, also known as the \emph{path signature} or simply \emph{signature}, acts on a continuous vector-valued path of bounded variation, and returns a graded sequence of statistics, which determine the path up to a negligible equivalence class.
 
