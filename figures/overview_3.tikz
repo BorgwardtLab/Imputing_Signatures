@@ -1,7 +1,35 @@
-% Add lower path	
+% Add mean path	
 \addplot[
 	name path=A, 
 	mark=none,
-	line width=2pt,
+	line width=1.5pt,
 	]			
-	table [x=x, y=y, col sep=comma] {data/unobserved_process.csv};
+	table [x=x, y=y, col sep=comma] {data/lin_mean_path.csv};
+	
+% Add std path	
+\addplot[
+	name path=A, 
+	mark=none,
+	line width=1.5pt,
+	]			
+	table [x=x, y=y, col sep=comma] {data/lin_var_path.csv};
+	
+\node[roundnodeMean] (mean0) at (5, -0.24725744052541304) {};
+\node[roundnodeMean] (mean1) at (20, 0.5977561113775971) {};
+\node[roundnodeMean] (mean2) at (35, -0.05169894891056909) {};
+\node[roundnodeMean] (mean3) at (50, -0.05522588877320907) {};
+\node[roundnodeMean] (mean4) at (65, 0.8178513795874245) {};
+\node[roundnodeMean] (mean5) at (80, 0.5013105603358696) {};
+\node[roundnodeMean] (mean6) at (95, -0.6494034655217503) {};
+
+\node[right=0cm of mean0.south east] {\scriptsize Mean};
+
+\node[roundnodeVar] (var0) at (5, 0.23196418460210544) {};
+\node[roundnodeVar] (var1) at (20, 0.008907780421109403) {};
+\node[roundnodeVar] (var2) at (35, 0.021072577826518498) {};
+\node[roundnodeVar] (var3) at (50, 0.23430433387508443) {};
+\node[roundnodeVar] (var4) at (65, 0.01790364003439815) {};
+\node[roundnodeVar] (var5) at (80, 0.037115638215118096) {};
+\node[roundnodeVar] (var6) at (95, 0.025390944844978395) {};
+
+\node at (6.5, 0.55) {\scriptsize Variance};
