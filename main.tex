@@ -11,6 +11,7 @@
 \usepackage{amsthm}
 \usepackage{bbm}  % blackboard 1
 \usepackage{hyperref}
+\usepackage{paralist}
 \usepackage{wrapfig}
 \newcommand{\theHalgorithm}{\arabic{algorithm}}
 \usepackage{comment}
@@ -445,8 +446,14 @@ in existing schemes that we are about to identify.
 
 \subsection{Flaws in existing imputation schemes}\label{section:flaws}
 
-We move on to discussing the flaws of existing schemes.
-% TODO: summary?
+We move on to discussing the flaws of existing schemes, namely
+%
+\begin{inparaenum}[(i)]
+  \item their fragile dependence on sampling in unrelated channels, and
+  \item their non-causality,
+\end{inparaenum}
+%
+before subsequently addressing them.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Fragile dependence on sampling in unrelated channels}
