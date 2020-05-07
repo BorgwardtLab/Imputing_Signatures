@@ -242,12 +242,26 @@ sample arbitrarily. We note that there are also other approaches that
 perform continuous-time imputation~\citep{shukla2018interpolationprediction},
 but we have not investigated these further.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Background}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% TODO: can we summarise what we are doing here? What are the most
+% important points of this section?
+%
+% Maybe: 'In the following, we provide a cursory introduction to the
+% path signature methods. Please refer to XXX for a more in-depth
+% description.'
+
 \subsection{Path signatures}
-Given a continuous, piecewise differentiable path $f \colon [a, b] \to \reals^d$, the \emph{signature transform up to depth $N$} may be defined by
-\begin{equation*}
+
+Given a continuous, piecewise differentiable path $f \colon [a, b] \to
+\reals^d$, the \emph{signature transform up to depth $N$} may be defined
+by
+%
+\begin{equation}
     \sig(f)=\left(\left(\underset{\,a<t_{1}<\cdots<t_{k}<b}{\int \cdots \int} \prod_{j=1}^{k} \frac{\mathrm{d} f_{i_{j}}}{\mathrm{d} t}\left(t_{j}\right) \mathrm{d} t_{1} \cdots \mathrm{d} t_{k}\right)_{1 \leq i_{1}, \ldots, i_{k} \leq d}\right)_{1 \leq k \leq N}.
-\end{equation*}
+\end{equation}
 
 % \begin{wrapfigure}{l}{4cm}
 %     \centering
@@ -259,8 +273,18 @@ Given a continuous, piecewise differentiable path $f \colon [a, b] \to \reals^d$
 
 %This definition may be extended to paths of merely bounded variation by replacing these integrals with Riemann--Stieltjes integrals, and extended further to paths of bounded $p$-variation by replacing them with rough integrals \cite{lyons1998differential}.
 
-In brief, the signature transform may be interpreted as extracting information about order and area. One may interpret its terms as `the area/order of one channel with respect to some collection of other channels'. % As an explicit example of the sort of information extracted, one of the things computed by the signature is the \emph{Levy area} of the path, shown for a one-dimensional example in Figure \ref{fig:sig_path}.
-For an exposition on the properties of the signature transform and its use in machine learning, we recommend either \cite{primer2016} or \cite[Appendix A]{kidger2019deep}. %There is one fact that will prove important to our arguments later, however, so for completeness we repeat it here:
+In brief, the signature transform may be interpreted as extracting
+information about \emph{order} and \emph{area} of a path.
+%
+One may interpret its terms as `the area/order of one channel with
+respect to some collection of other channels'.
+%
+% As an explicit example of the sort of information extracted, one of the things computed by the signature is the \emph{Levy area} of the path, shown for a one-dimensional example in Figure \ref{fig:sig_path}.
+%
+For an exposition on the properties of the signature transform and its
+use in machine learning, please refer to \citet{primer2016} or \citet[Appendix A]{kidger2019deep}.
+%
+%There is one fact that will prove important to our arguments later, however, so for completeness we repeat it here:
 %\begin{theorem}[Invariance to reparameterisation]\label{theorem:invariancetime}
 %Let $f \colon [a, b] \to \reals^d$ be a continuous piecewise differentiable path. Let $\psi \colon [a, b] \to [c, d]$ be continuously differentiable, increasing, and surjective. Then $\sig(f) = \sig(f \circ \psi)$.
 %\end{theorem}
