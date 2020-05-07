@@ -301,16 +301,32 @@ use in machine learning, please refer to \citet{primer2016} or \citet[Appendix A
 %
 %Thus all of the imputation schemes we examine will first seek to select a collection of points in data space (not necessarily only where we had data before), and then linear imputation will be performed to join them up into a piecewise linear path.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Notation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 Given some set $A$, let the space of time series over $A$ be defined by
 \begin{equation}
     \seriesspace(A) = \{((t_1, x_1), \ldots, (t_n, x_n)) \,\vert\, t_i \in \reals, x_i \in A, n \in \naturals, \text{ such that } t_1 \leq \cdots \leq t_n\}.\label{eq:seriesspace}
 \end{equation}
+%
+Note the subtle point that the $t_i$ are separated by $\leq$, not $<$.
+We make this slight change because it will later prove important for one
+of our studied imputation schemes. For example, contrast the
+corresponding definition in \citet[Section 1]{toth2019gp}.
 
-Note the subtle point that the $t_i$ are separated by $\leq$, not $<$. We make this slight change because it will later prove important for one of our studied imputation schemes. For example, contrast the corresponding definition in \cite[Section 1]{toth2019gp}.
-
-Let $\lspace$ be a set and let $\dataspace_j = \reals$ for $j \in \{1, \ldots, d\}$ and $d \in \naturals$. Then we assume that we observe a dataset of labelled time series $(\mathbf{x}_k, y_k)$ for $k \in \{1, \ldots, N\}$, where $\mathbf{x}_k \in \seriesspace(\dataspace^*)$ and $y_k \in \lspace$, where $\dataspace^* = \prod_{j = 1}^d(\dataspace_j \cup \{*\})$ and $*$ represents no observation. We similarly define
-$\dataspace = \prod_{j = 1}^d\dataspace_j.$ Thus $\dataspace$ is the data space, $\dataspace^*$ is the data space allowing missing data, and $\lspace$ is the set of labels.
+\paragraph{Time series and labels.}
+%
+Let $\lspace$ be a set and let $\dataspace_j = \reals$ for $j \in \{1,
+\ldots, d\}$ and $d \in \naturals$. Then we assume that we observe
+a dataset of labelled time series $(\mathbf{x}_k, y_k)$ for $k \in \{1,
+\ldots, N\}$, where $\mathbf{x}_k \in \seriesspace(\dataspace^*)$ and
+$y_k \in \lspace$, with $\dataspace^* = \prod_{j = 1}^d(\dataspace_j
+\cup \{*\})$ and $*$ representing no observation.
+%
+We similarly define $\dataspace = \prod_{j = 1}^d\dataspace_j$. Thus,
+$\dataspace$ is the data space, while $\dataspace^*$ is the data space
+allowing missing data, and $\lspace$ is the set of labels.
 
 % \subsubsection{Terminology for imputation schemes}
 % To avoid ambiguity, we will refer to standard imputation schemes, such as forward-fill, as a \emph{data-imputation} scheme, meaning to impute missing data points. In contrast we will use \emph{path-imputation} to describe the more general task of imputing the full continuous path.
