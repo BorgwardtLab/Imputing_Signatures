@@ -332,33 +332,45 @@ allowing missing data, and $\lspace$ is the set of labels.
 % To avoid ambiguity, we will refer to standard imputation schemes, such as forward-fill, as a \emph{data-imputation} scheme, meaning to impute missing data points. In contrast we will use \emph{path-imputation} to describe the more general task of imputing the full continuous path.
 
 \subsection{Gaussian process adapter}\label{section:gpadapter}
-Some (but not all) of the imputation schemes we consider are based on the uncertainty aware framework of multi-task Gaussian process adapters \cite{li2016scalable, futoma2017mgp}.
 
-Let $\mathcal{W}, \mathcal{H}$ be some sets. Let $\ell \colon \lspace \times \lspace \to [0, \infty)$ be a loss function. Let $F \colon \dataspace^{[a, b]} \times \mathcal{W} \to \lspace$, be some (typically neural network) model, with $\mathcal{W}$ interpreted as a space of parameters. Let
-\begin{align*}
-\mu \colon [a, b] \times \seriesspace(\dataspace^*) \times \mathcal{H} &\to \dataspace\\
-\Sigma \colon [a, b] \times [a, b] \times \seriesspace(\dataspace^*) \times \mathcal{H} &\to \dataspace    
-\end{align*}
-be mean and covariance functions, with $\mathcal{H}$ interpreted as a space of hyperparameters. The dependence on $\seriesspace(\dataspace^*)$ is to represent conditioning on observed values.
+Some~(but not all) of the imputation schemes we consider are based on
+the uncertainty aware-framework of multi-task Gaussian process
+adapters~\citep{li2016scalable, futoma2017mgp}.
+%
+Let $\mathcal{W}, \mathcal{H}$ be some sets. Let $\ell \colon \lspace
+\times \lspace \to [0, \infty)$ be a loss function. Let $F \colon
+\dataspace^{[a, b]} \times \mathcal{W} \to \lspace$, be some (typically
+neural network) model, with $\mathcal{W}$ interpreted as a space of
+parameters. Let \begin{align*} \mu \colon [a, b] \times
+\seriesspace(\dataspace^*) \times \mathcal{H} &\to \dataspace\\ \Sigma
+\colon [a, b] \times [a, b] \times \seriesspace(\dataspace^*) \times
+\mathcal{H} &\to \dataspace    \end{align*} be mean and covariance
+functions, with $\mathcal{H}$ interpreted as a space of
+hyperparameters. The dependence on $\seriesspace(\dataspace^*)$ is to
+represent conditioning on observed values.
 
 Then the goal is to solve
 \begin{equation}\label{eq:gp-mc}
-\argmin_{\mathbf{w} \in \mathcal{W},\bm{\eta} \in \mathcal{H}} \sum_{k=1}^N \overbrace{\rule{0pt}{0.5cm} \mathbb{E}_{\mathbf{z}_k \sim \mathcal{N}\left( \mu(\cdot, \mathbf{x}_k, \eta), \Sigma(\cdot, \cdot, \mathbf{x}_k, \eta)\right) } \big[ \ell(F(\mathbf{z}_k, \mathbf{w}), y_k) \big] }^{\text{$E_k$}} 
+\argmin_{\mathbf{w} \in \mathcal{W},\bm{\eta} \in \mathcal{H}} \sum_{k=1}^N \overbrace{\rule{0pt}{0.5cm} \mathbb{E}_{\mathbf{z}_k \sim \mathcal{N}\left( \mu(\cdot, \mathbf{x}_k, \eta), \Sigma(\cdot, \cdot, \mathbf{x}_k, \eta)\right) } \big[ \ell(F(\mathbf{z}_k, \mathbf{w}),
+y_k) \big] }^{\text{$E_k$}}.
+\end{equation}
+%
+As this expectation is typically not tractable, it is estimated by Monte
+Carlo (MC) sampling with $S$ samples, i.e.\
+\begin{equation}
+E_k \approx \frac{1}{S} \sum_{s=1}^{S} \ell(F(\mathbf{z}_{s, k}, \mathbf{w}), y_k),
+\end{equation}
+%
+where
+%
+\begin{equation}
+    \mathbf{z}_{s, k} \sim \mathcal{N}\left( \mu(\,\cdot\,, \mathbf{x}_k, \eta), \Sigma(\,\cdot\,, \,\cdot\,, \mathbf{x}_k, \eta)\right).
 \end{equation}
 
-As this expectation is typically not tractable, it is estimated by Monte Carlo (MC) sampling with $S$ samples:
-\begin{equation*}
-E_k \approx \frac{1}{S} \sum_{s=1}^{S} \ell(F(\mathbf{z}_{s, k}, \mathbf{w}), y_k),
-\end{equation*}
-where
-\begin{equation*}
-    \mathbf{z}_{s, k} \sim \mathcal{N}\left( \mu(\,\cdot\,, \mathbf{x}_k, \eta), \Sigma(\,\cdot\,, \,\cdot\,, \mathbf{x}_k, \eta)\right).
-\end{equation*}
-
 Alternatively, one may forgo allowing the uncertainty to propagate through $F$ by instead passing the posterior mean directly to $F$; this corresponds to solving
-\begin{align}\label{eq:gp-mean}
-\argmin_{\mathbf{w} \in \mathcal{W},\bm{\eta} \in \mathcal{H}} \sum_{k=1}^N \ell(F(\mu(\,\cdot\,,\mathbf{x}_k, \eta), \mathbf{w}), y_k)
-\end{align}
+\begin{equation}\label{eq:gp-mean}
+\argmin_{\mathbf{w} \in \mathcal{W},\bm{\eta} \in \mathcal{H}} \sum_{k=1}^N \ell(F(\mu(\,\cdot\,,\mathbf{x}_k, \eta), \mathbf{w}), y_k).
+\end{equation}
 
 
 \begin{comment}
