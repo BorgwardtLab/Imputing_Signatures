@@ -390,7 +390,7 @@ Similarly, the connection between dynamical systems and recurrent neural network
 For non-signature methods as for signature methods, this implicit usage of data as a path in data space often seems to be swept under the rug, and we suspect it is one deserving further attention. However our focus here is specifically on solutions appropriate for signatures, and this larger problem is not one that we will explore further in this paper.
 \end{comment}
 
-\begin{figure}
+\begin{figure}[t]
     \centering
     \includegraphics{figures/overview.pdf}
     \caption{Overview of our proposed extension of GP adapters, GP-PoM, leveraging both posterior moments (mean and variance)}
@@ -401,41 +401,60 @@ For non-signature methods as for signature methods, this implicit usage of data 
 \section{Path imputations}
 %For simplicity of presentation, we will now assume that $\dataspace_j = \reals$.%, although in principle the theory actually only requires that $\dataspace_j$ is a Banach space.
 
-Our end goal is to learn a function from $\seriesspace(\dataspace^*)$ to $\lspace$. Our belief (perhaps merely motivated by signature theory, but in this paper explicitly because we wish to apply signatures), is that this is sensibly done by selecting a path-imputation strategy
-\begin{equation*}
+Our goal is to learn a function from $\seriesspace(\dataspace^*)$ to
+$\lspace$. Motivated by signature theory, we believe that this is best
+done by selecting a path imputation strategy
+% Our belief (perhaps merely motivated by signature theory, but in this paper explicitly because we wish to apply signatures), is that this is sensibly done by selecting a path-imputation strategy
+%
+\begin{equation}
     \phi \colon \seriesspace(\dataspace^*) \to (\reals \times \dataspace)^{[a, b]},
-\end{equation*}
-and only afterwards learning a map from $\dataspace^{[a, b]}$ to $\lspace$.
-
+\end{equation}
+and only \emph{afterwards} learning a map from $\dataspace^{[a, b]}$ to $\lspace$.
+%
 Explicitly, we seek $\phi$ such that
 \begin{equation}\label{eq:phi}
 \phi(\mathbf{x}) = f,    
 \end{equation}
+% TODO: can we compress these equations somewhat?
 where
-\begin{equation*}
-\mathbf{x} = ((t_1, x_1), \ldots, (t_n, x_n)) \in \seriesspace(\dataspace^*),    
-\end{equation*}
-with each
-\begin{equation*}
-    x_i = (x_i^1, \ldots, x_i^d) \in \dataspace^* = \prod_{j = 1}^d (\dataspace_j \cup \{*\}),
-\end{equation*}
-and $f \colon [a, b] \to \reals \times \dataspace$ is continuous, piecewise linear, and such that there exist points
+$\mathbf{x} = ((t_1, x_1), \ldots, (t_n, x_n)) \in
+\seriesspace(\dataspace^*)$
+and each $x_i = (x_i^1, \ldots, x_i^d) \in \dataspace^*$, % = \prod_{j = 1}^d (\dataspace_j \cup \{*\}),
+with $f \colon [a, b] \to \reals \times \dataspace$ being a continuous,
+piecewise linear function such that there exist points
 \begin{equation}\label{eq:ss}
 a = s_1 < s_2 < \cdots < s_n = b    
 \end{equation}
-with $f(s_i) = (t_i, z_i)$, with $z_i^j = x_i^j$ for all $x_i^j \neq *$. (And with no restraint on $z_i^j$ if $x_i^j = *$.) Furthermore we impose that $f$ must be monotonically nondecreasing in its $t$ output.
+so that $f(s_i) = (t_i, z_i)$, with $z_i^j = x_i^j$ for all $x_i^j \neq
+*$~(if $x_i^j = *$, we impose no constraints).
+%
+Furthermore, we impose that $f$ must be monotonically nondecreasing in its $t$ output.
 
 % Two remarks on this problem formulation.
 
 % First, we emphasise that the time series does not necessarily have to irregularly sampled or partially observed, although this is the most general setting. Even with a regularly spaced and fully observed time series, we must still path-impute the rest of the continuous path at the values in between.
 
-Note that we have explicitly \emph{not} formulated this as seeking an $f \colon [t_1, t_n] \to \reals \times \dataspace$ with $f(t_i) = (t_i, z_i)$ with $z_i^j = x_i^j$ for $x_i^j \neq *$, as might na{\"i}vely be assumed. This alternate formulation is essentially what is typically used, see for example the `time embedding' of \cite{fermanian2019embedding}. However the slight extra generality in our formulation will be precisely what is necessary to solve the flaws in existing schemes, that we are about to identify.
+Note that we have explicitly \emph{not} formulated this as seeking
+a function $f \colon [t_1, t_n] \to \reals \times \dataspace$ with
+$f(t_i) = (t_i, z_i)$ and $z_i^j = x_i^j$ for $x_i^j \neq *$, as might
+na{\"i}vely be assumed. This alternate formulation is essentially what
+is typically used; see for example the `time embedding' of
+\citet{fermanian2019embedding}. However, the slight extra generality in
+our formulation will be precisely what is necessary to solve the flaws
+in existing schemes that we are about to identify.
 
-\subsection{Flaws in existing schemes}\label{section:flaws}
+\subsection{Flaws in existing imputation schemes}\label{section:flaws}
+
 We move on to discussing the flaws of existing schemes.
+% TODO: summary?
 
 \subsubsection{Fragile dependence on sampling in unrelated channels}
-Na{\"i}vely applying standard data-imputation schemes will typically result in the imputed path exhibiting an undesired dependence on the observations. This can result in dramatic changes in the areas-against-time computed by the signature (potentially going so far as to change the sign of the result).
+%
+Na{\"i}vely applying standard data-imputation schemes will typically
+result in the imputed path exhibiting an undesired dependence on the
+observations. This can result in dramatic changes in the
+areas-against-time computed by the signature (potentially going so far
+as to change the sign of the result).
 
 Suppose that we have observed the (very short) time series
 \begin{equation}\label{eq:flaw1}
