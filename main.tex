@@ -198,16 +198,49 @@ We make our code publicly available under XXXXXX.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Related work}
-A key motivation for this work is the use of the signature transform in machine learning. For example see the work of \cite{primer2016, kormilitzlin2016, yang2016rotation, li2017lpsnet, yang2017leveraging, PerezArribas2018, morrill2019sepsis}, where the signature transform is typically used as a nonparametric feature extractor, on top of which a model is learnt. Recent work has also investigated more tightly integrating the signature transform with neural networks; \cite{jeremythesis}, \cite{logsigrnn} and \cite{kidger2019deep} all study how to use the signature transform\footnote{And the related logsignature transform; the difference between them will not be important for us.} within typical neural network models. \cite{chevyrev2018signature, kiraly2019kernels} study how the signature transform may be used to define a kernel on path space. \cite{toth2019gp} show how this kernel may be used to define a Gaussian process.
 
-In much of this work, data has been converted into a continuous path via linear interpolation. Some authors \cite{primer2016, fermanian2019embedding} have additionally considered `rectilinear' interpolation, which is similar. \cite{levin2013} present the `time joined transformation', which is a hybrid of the two such that the resulting path exhibits a causal dependence on the data.
+A key motivation for this work is the use of the signature transform in
+machine learning: in recent work~\citep{primer2016,
+kormilitzlin2016, yang2016rotation, li2017lpsnet, yang2017leveraging,
+PerezArribas2018, morrill2019sepsis} the signature transform is
+typically used as a nonparametric feature extractor, on top of which
+a model is learnt. A growing body of work has also investigated how to
+integrate the signature transform more tightly with neural networks; 
+\citet{jeremythesis}, \citet{logsigrnn}, and \citet{kidger2019deep} all
+study how to use the signature transform\footnote{And the related
+logsignature transform; the difference between them will not be
+important for us.} within typical neural network models.
+\citet{chevyrev2018signature, kiraly2019kernels} study how the signature
+transform may be used to define a \emph{kernel}---i.e.\ a symmetric,
+positive definite function that is typically used as a similarity
+measure---on path space, while \citet{toth2019gp} show how this kernel
+may be used to define a Gaussian process.
 
-To our knowledge no prior work has regarded this as an imputation problem.
+In much of this work, data has been converted into a continuous path via
+linear interpolation. Some authors~\citep{primer2016,
+fermanian2019embedding} have additionally considered `rectilinear'
+interpolation, which is similar. \citet{levin2013} present the
+`time-joined transformation', which is a hybrid of the two, such that
+the resulting path exhibits a causal dependence on the data.  However,
+to our knowledge, no prior work has regarded this as an imputation
+problem.
 
-The general problem of imputing data is well-known and well-studied, and we will not attempt to describe it here; see for example \cite[Chapter 25]{gelman2007dataanalysis}. % Common simple imputation schemes are to impute missing values as the mean of its channel, or to forward fill the last observed value, although it has been observed that incautious use of such methods can result in heavily biased models \cite{Molnar2008}.
+The general problem of imputing data is well-known and well-studied, and
+we will not attempt to describe it here; see for example \citet[Chapter 25]{gelman2007dataanalysis}.
+% Common simple imputation schemes are to impute missing values as the mean of its channel, or to forward fill the last observed value, although it has been observed that incautious use of such methods can result in heavily biased models \cite{Molnar2008}.
 These methods typically only fill in missing discrete data points, and do not attempt to impute the underlying continuous path.
-
-One approach that does impute a full continuous path is a Gaussian process adapter \cite{li2016scalable, futoma2017mgp}. The data is modelled as coming from a Gaussian process. The posterior distribution, having observed the data, then gives continuous paths through data space. This then allows, for example, for uniformly resampling the data. Gaussian process adapters will be important to this study, although in our case they are of interest not because of uniform resampling, but because they provide a full continuous path which we may sample arbitrarily. We note that there are other approaches that perform continuous-time imputation \cite{shukla2018interpolationprediction}, but we have not investigated these further.
+%
+One approach that does impute a \emph{full} continuous path is
+a Gaussian process adapter~\citep{li2016scalable, futoma2017mgp}. The
+data is modelled as coming from a Gaussian process. The posterior
+distribution, having observed the data, then gives continuous paths
+through data space. This then allows, for example, for uniformly
+resampling the data. Gaussian process adapters will be important to this
+study, although in our case they are of interest not because of uniform
+resampling, but because they provide a full continuous path, which we may
+sample arbitrarily. We note that there are also other approaches that
+perform continuous-time imputation~\citep{shukla2018interpolationprediction},
+but we have not investigated these further.
 
 \section{Background}
 \subsection{Path signatures}
