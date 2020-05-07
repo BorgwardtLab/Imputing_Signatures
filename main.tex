@@ -40,9 +40,9 @@
 %% Path Imputation Strategies with Signature Models for Irregularly Sampled Partially Observed Multivariate Time Series.
 
 \author{
-    Michael Moor$^{1, }$\footnotemark[1]
+    Michael Moor$^1$
     \And
-	Patrick Kidger$^{2, 3, }$\footnotemark[1]
+	Patrick Kidger$^{2, 3}$
 	\And
 	Max Horn$^1$
 	\And
@@ -69,7 +69,7 @@
 
 \begin{abstract}
 The signature transform is a `universal nonlinearity' on the space of continuous vector-valued paths, and has recently received attention for use in machine learning. However real-world temporal data is typically discretized, and must first be transformed into a continuous path before signature techniques can be applied. %, which has previously been described as an embedding problem. 
-Our first contribution is to characterise this as an imputation problem, and to empirically assess the impact of various imputation techniques when applying the signature to irregular time series data. Throughout our experiments, we observe that uncertainty-aware \emph{predictions} are beneficial, also as compared to the uncertainty-aware \emph{training} of Gaussian process (GP) adapters. To this end, we propose a simple extension of GP adapters by integrating uncertainty to the prediction step which leads to competitive performance.
+Our first contribution is to characterise this as an imputation problem, and to empirically assess the impact of various imputation techniques when applying the signature to irregular time series data. Throughout our experiments, we observe that uncertainty-aware \emph{predictions} are beneficial, even compared to the uncertainty-aware \emph{training} of Gaussian process (GP) adapters. We thus also propose a simple extension of GP adapters by integrating uncertainty to the prediction step which leads to competitive performance.
 \end{abstract} % TODO: touch this up a bit, but I think the essential idea is there.
 
 % Suggestion (BR):
@@ -97,12 +97,12 @@ Every continuous function of a path can be recovered by applying a linear transf
 
 Given their similarities, it is natural to hope that the tools that apply to continuous paths may also be applied to multivariate time series. Of course, multivariate time series are not continuous paths. For signature techniques to be applied, a continuous path must first be constructed from this data.
 
-In previous work \cite{kidger2019deep, TODO, TODO, TODO} this has been characterised as an embedding problem, and has typically been glossed over as an essentially unimportant detail. This is exacerbated by the (perfectly sensible) behaviour of software for computing the signature \cite{iisignature, signatory}, which take a continuous piecewise linear path as an input, described by its sequence of knots. This resembles a sequence of data, meaning that the signature is sometimes interpreted as operating on sequences of data rather than on paths \cite{kidger2019deep, TODO-levin}.
+In previous work \cite{kidger2019deep, levin2013, fermanian2019embedding} this has been characterised as an embedding problem, and has typically been glossed over as an essentially unimportant detail. This is exacerbated by the (perfectly sensible) behaviour of software for computing the signature \cite{iisignature, signatory}, which take a continuous piecewise linear path as an input, described by its sequence of knots. This resembles a sequence of data, meaning that the signature is sometimes interpreted as operating on sequences of data rather than on paths \cite{kidger2019deep, levin2013}.
 
 \subsection{Contributions}
 In this paper we reinterpret of the task of constructing a continuous path, by turning it from an embedding problem into an imputation problem. To distinguish this from traditional imputation problems, we refer to this as \emph{path imputation}.
 
-Much previous literature on the signature transform has focused on its excellent theoretical properties, in particular sampling independence \cite{TODO}, but our findings show that this does not correspond to empirical performance. However it has previously been established that observation rates and missingness itself can carry information \cite{rubin1976inference, gelman2007dataanalysis}. By re-interpreting the task of constructing paths as an imputation problem, we identify that this performance gap is likely to be another manifestation of this phenomenon.
+Much previous literature on the signature transform has focused on its excellent theoretical properties, in particular sampling independence \cite[Proposition A.7]{kidger2019deep}, \cite{signatorydocumentation}, \cite[Section 2]{toth2019gp}, but our findings show that this does not correspond to empirical performance. However it has previously been established that observation rates and missingness itself can carry information \cite{rubin1976inference, gelman2007dataanalysis}. By re-interpreting the task of constructing paths as an imputation problem, we identify that this performance gap is likely to be another manifestation of this phenomenon.
 
 We perform a thorough empirical investigation of various imputation schemes as combined with multiple models that potentially employ signatures. We find that approaches that have access to uncertainty information \emph{during prediction} tend to outperform the competitors, also uncertainty-aware frameworks where the uncertainty is only available during \emph{training}, such as Gaussian process (GP) adapters.
 Motivated by this, we propose a novel extension of GP adapters \cite{li2016scalable, futoma2017mgp} which incorporates uncertainty information into the prediction step, which helps our task at hand but could also be of independent interest.
@@ -137,7 +137,7 @@ time series. Of course, multivariate time series are not continuous
 paths---in fact, for signature techniques to be applied, one first needs
 to construct a continuous path from this kind of data.
 
-In previous work~\cite{kidger2019deep, TODO, TODO, TODO}, this
+In previous work~\cite{kidger2019deep, levin2013, fermanian2019embedding}, this
 construction has been characterised as an embedding problem, and was
 typically glossed over as an essentially unimportant detail.
 %
@@ -151,7 +151,7 @@ described by its sequence of knots, i.e.\ values.
 %
 Since such sequences resemble a sequence of data, the signature is
 sometimes interpreted as operating on sequences of data rather than on
-paths~\cite{kidger2019deep, TODO-levin}.
+paths~\cite{kidger2019deep, levin2013}.
 %
 We show that this view is somewhat limiting and that, in order to
 achieve competitive predictive performance for real-world time series
@@ -164,7 +164,7 @@ imputation problems, we refer to this as \emph{path imputation}.
 %
 While a large part of the previous literature on the signature transform
 focused on its excellent theoretical properties, in particular sampling
-independence~\cite{TODO}, our findings show that this does not
+independence~\cite[Proposition A.7]{kidger2019deep},~\cite{signatorydocumentation},~\cite[Section 2]{toth2019gp}, our findings show that this does not
 necessarily correspond to excellent empirical performance.
 %
 However, it has previously been established that both observation rates
@@ -200,14 +200,14 @@ We make our code publicly available under XXXXXX.
 \section{Related work}
 A key motivation for this work is the use of the signature transform in machine learning. For example see the work of \cite{primer2016, kormilitzlin2016, yang2016rotation, li2017lpsnet, yang2017leveraging, PerezArribas2018, morrill2019sepsis}, where the signature transform is typically used as a nonparametric feature extractor, on top of which a model is learnt. Recent work has also investigated more tightly integrating the signature transform with neural networks; \cite{jeremythesis}, \cite{logsigrnn} and \cite{kidger2019deep} all study how to use the signature transform\footnote{And the related logsignature transform; the difference between them will not be important for us.} within typical neural network models. \cite{chevyrev2018signature, kiraly2019kernels} study how the signature transform may be used to define a kernel on path space. \cite{toth2019gp} show how this kernel may be used to define a Gaussian process.
 
-In much of this work, data has been converted into a continuous path via linear interpolation. Some authors \cite{primer2016, fermanian2019embedding} have additionally considered `rectilinear' interpolation, which is similar. \cite{TODO-levin} present the `time joined transformation', which is a hybrid of the two such that the resulting path exhibits a causal dependence on the data.
+In much of this work, data has been converted into a continuous path via linear interpolation. Some authors \cite{primer2016, fermanian2019embedding} have additionally considered `rectilinear' interpolation, which is similar. \cite{levin2013} present the `time joined transformation', which is a hybrid of the two such that the resulting path exhibits a causal dependence on the data.
 
 To our knowledge no prior work has regarded this as an imputation problem.
 
 The general problem of imputing data is well-known and well-studied, and we will not attempt to describe it here; see for example \cite[Chapter 25]{gelman2007dataanalysis}. % Common simple imputation schemes are to impute missing values as the mean of its channel, or to forward fill the last observed value, although it has been observed that incautious use of such methods can result in heavily biased models \cite{Molnar2008}.
 These methods typically only fill in missing discrete data points, and do not attempt to impute the underlying continuous path.
 
-One approach that does impute a full continuous path is a Gaussian process adapter \cite{li2016scalable, futoma2017mgp}. The data is modelled as coming from a Gaussian process. The posterior distribution, having observed the data, then gives continuous paths through data space. This then allows, for example, for uniformly resampling the data. Gaussian process adapters will be important to this study, although in our case they are of interest not because of uniform resampling, but because they provide a full continuous path which we may sample arbitrarily. We note that there are other approaches that perform continuous-time imputation \cite{TODO-interpolation-prediction}, but we have not investigated these further.
+One approach that does impute a full continuous path is a Gaussian process adapter \cite{li2016scalable, futoma2017mgp}. The data is modelled as coming from a Gaussian process. The posterior distribution, having observed the data, then gives continuous paths through data space. This then allows, for example, for uniformly resampling the data. Gaussian process adapters will be important to this study, although in our case they are of interest not because of uniform resampling, but because they provide a full continuous path which we may sample arbitrarily. We note that there are other approaches that perform continuous-time imputation \cite{shukla2018interpolationprediction}, but we have not investigated these further.
 
 \section{Background}
 \subsection{Path signatures}
@@ -287,7 +287,6 @@ Alternatively, one may forgo allowing the uncertainty to propagate through $F$ b
 \argmin_{\mathbf{w} \in \mathcal{W},\bm{\eta} \in \mathcal{H}} \sum_{k=1}^N \ell(F(\mu(\,\cdot\,,\mathbf{x}_k, \eta), \mathbf{w}), y_k)
 \end{align}
 
-\section{Task}
 
 \begin{comment}
 \subsubsection{Application beyond signatures}
@@ -304,6 +303,8 @@ Similarly, the connection between dynamical systems and recurrent neural network
 
 For non-signature methods as for signature methods, this implicit usage of data as a path in data space often seems to be swept under the rug, and we suspect it is one deserving further attention. However our focus here is specifically on solutions appropriate for signatures, and this larger problem is not one that we will explore further in this paper.
 \end{comment}
+
+\section{Task}
 
 
 \section{Imputations}
