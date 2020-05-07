@@ -448,46 +448,25 @@ in existing schemes that we are about to identify.
 We move on to discussing the flaws of existing schemes.
 % TODO: summary?
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Fragile dependence on sampling in unrelated channels}
-%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 Na{\"i}vely applying standard data-imputation schemes will typically
 result in the imputed path exhibiting an undesired dependence on the
 observations. This can result in dramatic changes in the
-areas-against-time computed by the signature (potentially going so far
-as to change the sign of the result).
+areas-against-time computed by the signature~(potentially going so far
+as to even change the sign of the result).
+%
+% TODO: update figure to include time series?
+Figure~\ref{fig:bentline} describes this problem schematically; please
+refer to Supplementary Section~\ref{sec:Fragile dependence} for more
+details.
+%
+% TODO: can we make this into a theorem?
+In general, we can summarise this by saying that \emph{when used with the signature transform, any traditional data-imputation scheme will have a fragile dependence on unrelated observations}.
 
-Suppose that we have observed the (very short) time series
-\begin{equation}\label{eq:flaw1}
-    \mathbf{x} = ((t_1, x_1^1, x_1^2), (t_2, x_2^1, *)) \in \seriesspace(\reals^2).
-\end{equation}
-Perhaps we now apply, say, forward fill data-imputation, to produce
-\begin{equation*}
-    ((t_1, x_1^1, x_1^2), (t_2, x_2^1, x_1^2)).
-\end{equation*}
-Finally we linearly path-impute to create the linear path
-\begin{align*}
-    f &\colon [t_1, t_2] \to \reals \times \reals^2\\
-    f &\colon t \mapsto (t, x_1^1\frac{t_2 - t}{t_2 - t_1} + x_2^1\frac{t - t_1}{t_2 - t_1}, x_1^2),
-\end{align*}
-to which we may then apply the signature transform. In particular we will have computed the Levy area with respect to $t$ and $x^1$. As this is just a straight line, the Levy area is zero.
-% \begin{figure}
-%     \centering
-%     \includegraphics[width=0.7\columnwidth]{figures/sig_path2.pdf}
-%     \vspace{-1.5em}
-%     \caption{Caption}\label{fig:straightline}
-%     \vspace{-1.5em}
-% \end{figure}
-
-Now suppose we include an additional observation at some time $t_{3/2} \in (t_1, t_2)$, so that our data is instead
-\begin{equation}\label{eq:flaw2}
-    \mathbf{x} = ((t_1, x_1^1, x_1^2), (t_{3/2}, *, x_{3/2}^2), (t_2, x_2^1, *)).
-\end{equation}
-Then the same procedure as before will produce the data
-\begin{equation*}
-    \mathbf{x} = ((t_1, x_1^1, x_1^2), (t_{3/2}, x_1^1, x_{3/2}^2), (t_2, x_2^1, x_{3/2}^2)),
-\end{equation*}
-with corresponding function $f$. The $(t, x^1)$ components of $f$ and its $(t, x^1)$-Levy area are shown in Figure \ref{fig:bentline}. As a result of an unrelated observation in the $x^2$ channel, the $(t, x^1)$-Levy area has been changed. The closer $t_{3/2}$ is to $t_2$, the greater the disparity.
-\begin{figure}
+\begin{figure}[t]
     \centering
     \includegraphics[width=0.45 \columnwidth]{figures/sig_path3.pdf}
     %\vspace{-1.5em}
@@ -495,25 +474,14 @@ with corresponding function $f$. The $(t, x^1)$ components of $f$ and its $(t, x
     \vspace{-1em}
 \end{figure}
 
-This simple example underscores the danger of `just forward-fill data-imputing'. Doing so has introduced an undesired dependency on the simple \emph{presence} of an observation in other channels, with the change in our imputed path being determined by the \emph{time} at which this other observation occurred.
-
-Indeed, any imputation scheme that predicts something other than the unique value lying on the dashed line in Figure \ref{fig:bentline}, will fail. This means that this example holds for essentially every data-imputation scheme -- the only scheme that survives this flaw is the linear data-imputation scheme. This is the unique imputation scheme which coincides with the linear path-imputation that \emph{must} be our concluding step.
-
-% Extending our previous example, linear data-imputation would produce
-% \begin{align*}
-%     \mathbf{x} = (&(t_1, x_1^1, x_1^2),\\
-%     &(t_{3/2}, x_1^1 \frac{t_2 - t_{3/2}}{t_2 - t_1} + x_2^1 \frac{t_{3/2} - t_1}{t_2 - t_1}, x_{3/2}^2),\\
-%     &(t_2, x_2^1, *)).
-% \end{align*}
-% Note that there is still an unimputed piece of data in the $x_2^2$ slot; we will return to this in a moment. Concerning the $x_{3/2}^1$ slot, we see that the value imputed is precisely the same as that given by a subsequent linear path-imputation, and it is in this way that the linear scheme does not fall afoul of this flaw.
-
-However, when there is missing data at the start or the end of a partially observed times series, then there is no `next observation' which linear imputation can use. So in general, we cannot uniformly apply the linear data-imputation scheme, and must choose another scheme.
-
-In general, we can summarise this by saying that \emph{when used with the signature transform, any traditional data-imputation scheme will have a fragile dependence on unrelated observations}.
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Non-causality}
-Once fully observed data has been acquired, either by observation or data-imputation, then our next operation is always to perform linear path-imputation.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+Once fully observed data has been acquired, either by observation or
+data-imputation, then our next operation is always to perform linear
+path-imputation.
+%
 However, linear path-imputation is explicitly non-causal.
 
 Given some $(t_i, x_i)$ and $(t_{i+1}, x_{i + 1})$, then the interpolating function $f$, considered on the interval $(t_i, t_{i + 1})$, will already be moving toward $x_{i + 1}$ before that piece of data has arrived:
@@ -739,6 +707,49 @@ TODO
 \appendix
 
 \section{Appendix}\label{sec:Appendix}
+
+\section{Fragile dependence on sampling in unrelated channels: example}%
+\label{sec:Fragile dependence} 
+
+Suppose that we have observed the (very short) time series
+\begin{equation}\label{eq:flaw1}
+    \mathbf{x} = ((t_1, x_1^1, x_1^2), (t_2, x_2^1, *)) \in \seriesspace(\reals^2).
+\end{equation}
+Perhaps we now apply, say, forward fill data-imputation, to produce
+\begin{equation*}
+    ((t_1, x_1^1, x_1^2), (t_2, x_2^1, x_1^2)).
+\end{equation*}
+Finally we linearly path-impute to create the linear path
+\begin{align*}
+    f &\colon [t_1, t_2] \to \reals \times \reals^2\\
+    f &\colon t \mapsto (t, x_1^1\frac{t_2 - t}{t_2 - t_1} + x_2^1\frac{t - t_1}{t_2 - t_1}, x_1^2),
+\end{align*}
+to which we may then apply the signature transform. In particular we will have computed the Levy area with respect to $t$ and $x^1$. As this is just a straight line, the Levy area is zero.
+
+Now suppose we include an additional observation at some time $t_{3/2} \in (t_1, t_2)$, so that our data is instead
+\begin{equation}\label{eq:flaw2}
+    \mathbf{x} = ((t_1, x_1^1, x_1^2), (t_{3/2}, *, x_{3/2}^2), (t_2, x_2^1, *)).
+\end{equation}
+Then the same procedure as before will produce the data
+\begin{equation*}
+    \mathbf{x} = ((t_1, x_1^1, x_1^2), (t_{3/2}, x_1^1, x_{3/2}^2), (t_2, x_2^1, x_{3/2}^2)),
+\end{equation*}
+with corresponding function $f$. The $(t, x^1)$ components of $f$ and its $(t, x^1)$-Levy area are shown in Figure \ref{fig:bentline}. As a result of an unrelated observation in the $x^2$ channel, the $(t, x^1)$-Levy area has been changed. The closer $t_{3/2}$ is to $t_2$, the greater the disparity.
+
+This simple example underscores the danger of `just forward-fill data-imputing'. Doing so has introduced an undesired dependency on the simple \emph{presence} of an observation in other channels, with the change in our imputed path being determined by the \emph{time} at which this other observation occurred.
+
+Indeed, any imputation scheme that predicts something other than the unique value lying on the dashed line in Figure \ref{fig:bentline}, will fail. This means that this example holds for essentially every data-imputation scheme -- the only scheme that survives this flaw is the linear data-imputation scheme. This is the unique imputation scheme which coincides with the linear path-imputation that \emph{must} be our concluding step.
+
+% Extending our previous example, linear data-imputation would produce
+% \begin{align*}
+%     \mathbf{x} = (&(t_1, x_1^1, x_1^2),\\
+%     &(t_{3/2}, x_1^1 \frac{t_2 - t_{3/2}}{t_2 - t_1} + x_2^1 \frac{t_{3/2} - t_1}{t_2 - t_1}, x_{3/2}^2),\\
+%     &(t_2, x_2^1, *)).
+% \end{align*}
+% Note that there is still an unimputed piece of data in the $x_2^2$ slot; we will return to this in a moment. Concerning the $x_{3/2}^1$ slot, we see that the value imputed is precisely the same as that given by a subsequent linear path-imputation, and it is in this way that the linear scheme does not fall afoul of this flaw.
+
+However, when there is missing data at the start or the end of a partially observed times series, then there is no `next observation' which linear imputation can use. So in general, we cannot uniformly apply the linear data-imputation scheme, and must choose another scheme.
+
 \subsection{Further Experiments}\label{supp:Experiments}
 Describe here the further datasets, the subsampling types etc.
 
