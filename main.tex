@@ -510,20 +510,40 @@ overcome this challenge too.
 We can summarise this by saying that \emph{when used with the signature transform, any traditional data-imputation scheme will be non-causal}.
 % TODO: try and adjust this, it's really the path imputation that's noncausal.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Causal signature imputation}
-We have spoke so far about the limitations of traditional data-imputation schemes, and at first glance one may be forgiven for thinking that these are issues are unavoidable. 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-However, it turns out that we need not be limited just to these traditional imputation schemes. The trick is to consider time not as a \emph{parameterization}, but as a \emph{channel}. Contrast the two possible formulations that were discussed for $\phi$ defined in equation \eqref{eq:phi}.\footnote{To be clear, using time as a channel is already a well-known trick in the signature literature that we do not take credit for inventing! See for example \cite[Definition A.3]{kidger2019deep}. It is however pleasing that something commonly used in the theory of signatures is also what allows us to overcome what we identify as some of their limitations.}
+We have spoken so far about the limitations of traditional
+data imputation schemes, and at first glance, one may be forgiven for
+thinking that these are issues that are unavoidable. 
+%
+However, it turns out that we need not be limited just to these
+traditional imputation schemes. The trick is to consider time not as
+a \emph{parameterization}, but as a \emph{channel}. Contrast the two
+possible formulations that were discussed for $\phi$ defined in equation
+\eqref{eq:phi}.\footnote{To be clear, using time as a channel is already
+a well-known trick in the signature literature that we do not take
+credit for inventing! See for example \citet[Definition
+A.3]{kidger2019deep}. It is however pleasing that something commonly
+used in the theory of signatures is also what allows us to overcome what
+we identify as some of their limitations.}
+%
+This leads to our novel `meta imputation strategy', which we refer to as
+\emph{causal signature imputation}. It will turn any traditional causal
+data-imputation strategy (for example, feed-forward) into a causal
+path-imputation strategy for signatures; at the same time it will
+overcome the issue of a fragile dependence.
 
-This leads to our novel `meta imputation strategy', which we refer to as \emph{causal signature imputation}. It will turn any traditional causal data-imputation strategy (for example, feed-forward) into a causal path-imputation strategy for signatures; at the same time it will overcome the issue of a fragile dependence.
-
-Suppose we have $\mathbf{x} \in \seriesspace(\dataspace^*)$, and some favourite choice of causal data-imputation strategy $c \colon \seriesspace(\dataspace^*) \to \seriesspace(\dataspace)$.
-
-Next, given
-\begin{align*}
-    \mathbf{x} = ((t_1, x_1), \ldots, (t_n, x_n)) \in \seriesspace(\dataspace)
-\end{align*}
-we define the operation $\Phi \colon \seriesspace(\dataspace) \to \seriesspace(\dataspace)$ by
+Suppose we have $\mathbf{x} \in \seriesspace(\dataspace^*)$, and some
+favourite choice of causal data imputation strategy $c \colon
+\seriesspace(\dataspace^*) \to \seriesspace(\dataspace)$.
+%
+Next, given $\mathbf{x} = ((t_1, x_1), \ldots, (t_n, x_n)) \in \seriesspace(\dataspace)$,
+%
+we define the operation $\Phi\colon \seriesspace(\dataspace) \to
+\seriesspace(\dataspace)$ by
+%
 \begin{align}
     \Phi(\mathbf{x}) = (&(t_1, x_1), (t_2, x_1), (t_2, x_2),(t_3, x_2),\nonumber\\
     &\ldots,\nonumber\\
@@ -531,59 +551,47 @@ we define the operation $\Phi \colon \seriesspace(\dataspace) \to \seriesspace(\
     &\ldots,\nonumber\\
     &(t_{n - 1}, x_{n - 1}), (t_n, x_{n - 1}),(t_n, x_n)).\label{eq:causalsig}
 \end{align}
-That is, first time is updated, and then the corresponding observation in data space is updated. This means that the change in data space occurs instantaneously.
-
+%
+That is, \emph{first} time is updated, and \emph{then} the corresponding
+observation in data space is updated. This means that the change in data
+space occurs instantaneously.
+%
 For each $n \in \naturals$ (and given $a < b$), fix any $s_i^{(n)}$ for $i \in \{1, \ldots, n \}$ as in equation \eqref{eq:ss}. (We will see that the exact choice is unimportant in a moment.) Given
 \begin{align*}
     \mathbf{x} = ((t_1, x_1), \ldots, (t_n, x_n)) \in \seriesspace(\dataspace),
 \end{align*}
 let $\psi \colon \seriesspace(\dataspace) \to (\reals \times \dataspace)^{[a, b]}$ be the unique continuous piecewise linear path such that $\psi(s_i^{(n)}) = (t_i, x_i)$. Note that this is just a slight generalisation of the linear path-imputation that has already been performed so far; we are simply no longer asking for additional assumptions of the form $s_i^{(n)} = t_i$.\footnote{As in the $\mathbf{\varphi}_\theta$ of \cite{toth2019gp}, for example.}
-
+%
 Finally, we put this all together, and define the causal signature imputation strategy $\phi_c$ associated with $c$ to be
-\begin{equation*}
+%
+\begin{equation}
 \phi_c = \psi \circ \Phi \circ c,
-\end{equation*}
-which will be a map $\seriesspace(\dataspace^*) \to (\reals \times \dataspace)^{[a, b]}$.
-
-Thus $\phi_c$ defines a family of path-imputation schemes, parameterized by a choice of data-imputation scheme.
-
-Why does this work?
-
-First, note that the choice of $s_i^{(n)}$ is unimportant in this definition. By Theorem \ref{theorem:invariancetime}, the signature transform of $\phi_c(\mathbf{x})$ is invariant to this choice.
-
-Second, note that holding time between observations fixed is a valid choice, by the definition for $\seriesspace$ in equation \eqref{eq:seriesspace}. There should hopefully be no moral objection to our definition of $\seriesspace$, as holding time fixed essentially just corresponds to a jump discontinuity; not such a strange thing to have occur. Here, by replacing time as the parameterization, we are then able to recover the continuity of the path.
-
-Third, we claim that $\phi_c$ is immune to both of the flaws we describe in section \ref{section:flaws}. Consider first the flaw of dependence on sampling in unrelated channels.
-
-For simplicity take $c$ to be the forward-fill data-imputation strategy. Consider against the $\mathbf{x}$ defined in expression \eqref{eq:flaw1}. This means that
-\begin{equation}\label{eq:causal1}
-    \phi_c(\mathbf{x}) = \psi(\;((t_1, x_1^1, x_1^2), (t_2, x_1^1, x_1^2), (t_2, x_2^1, x_1^2))\;).
 \end{equation}
-% \begin{align*}
-%     &\phi_c(\mathbf{x})(s)\\
-%     &= \psi(\Phi(c(\mathbf{x})))(s)\\
-%     &=\psi(\Phi(\;((t_1, x_1^1, x_1^2), (t_2, x_2^1, C_2))\;))(s)\\
-%     &=\psi(\;((t_1, x_1^1, x_1^2), (t_2, x_1^1, x_1^2), (t_2, x_2^1, C_2))\;)(s)\\
-%     &= \begin{cases}
-%     (t_1 \frac{s_2^{(3)}- s}{s_2^{(3)} - s_1^{(3)}} + t_2 \frac{s - s_1^{(3)}}{s_2^{(3)} - s_1^{(3)}}, x_1^1, x_1^2)\\
-%     \hphantom{\hphantom{(t_2, }\,x_1^2 \frac{s_3^{(3)} - s}{s_3^{(3)} - s_2^{(3)}} + C_2 \frac{s - s_2^{(3)}}{s_3^{(3)} - s_2^{(3)}}) }\text{ for }s \in [s_1, s_2]\\
-%     (t_2, x_1^1 \frac{s_3^{(3)} - s}{s_3^{(3)} - s_2^{(3)}} + x_2^1 \frac{s - s_2^{(3)}}{s_3^{(3)} - s_2^{(3)}},\\
-%     \hphantom{(t_2, }\,x_1^2 \frac{s_3^{(3)} - s}{s_3^{(3)} - s_2^{(3)}} + C_2 \frac{s - s_2^{(3)}}{s_3^{(3)} - s_2^{(3)}}) \text{ for }s \in (s_2, s_3]
-%     \end{cases}
-% \end{align*}
-Contrast adding in the extra observation at $t_{3/2}$ as in equation \eqref{eq:flaw2}. Then
-\begin{align}
-    &\phi_c(\mathbf{x})(s)\nonumber\\
-    &=\psi(\;((t_1, x_1^1, x_1^2), (t_{3/2}, x_1^1, x_1^2), (t_{3/2}, x_1^1, x_{3/2}^2),\nonumber\\ &\hspace{3.1em}(t_2, x_1^1, x_{3/2}^2), (t_2, x_2^1, x_{3/2}^2))\;).\label{eq:causal2}
-\end{align}
+%
+which will be a map $\seriesspace(\dataspace^*) \to (\reals \times \dataspace)^{[a, b]}$.
+%
+Thus $\phi_c$ defines a family of path-imputation schemes, parameterized
+by a choice of data-imputation scheme. Please refer to Supplemental
+Section~\ref{sec:Causal signature imputation} for more details and
+a worked-out example.
 
-Evaluating each $\psi$ will then in each case give a path with three channels, corresponding to $t, x^1, x^2$. Then it is clear that the $(t, x^1)$ component of the path in equation \eqref{eq:causal1} is just a reparameterization of the path in equation \eqref{eq:causal2}, a difference which is irrelevant by Theorem \ref{theorem:invariancetime}. (And the $x^2$ component of the second path has been updated to use the new information $x_{3/2}^2$.) Thus the proposed scheme is robust to such issues. For general time series and $c$ taken to be any other causal data-imputation strategy, then much the same analysis can be easily be performed.
-
-Now consider the second potential flaw, of non-causality. The issue previously arose because of the non-causality of the linear path-imputation. We see from equation \eqref{eq:causalsig}, however, such changes only occur in data space while the time channel is frozen; conversely the time channel only updates with the value in the data space frozen. Provided that $c$ is also causal, then causality will, overall, have been preserved. For example, it is possible to use this scheme in an online setting.
-
-There are interesting comparisons to be made between causal signature imputation and certain operations in the signature literature. First is the \emph{lead-lag} transform \cite{primer2016}. With the lead-lag transform, the entire path is \emph{duplicated}, and then each side is alternately updated. Conversely, in causal signature imputation, the path is instead \emph{split} between $t$ and $(x^1, \ldots, x^n)$, and then each side is alternately updated.
-
-Second is the comparison to the linear and rectilinear embedding strategies, see for example \cite{fermanian2019embedding}. It is possible to interpret $\psi \circ \Phi$ as a hybrid between the linear and rectilinear embeddings: it is rectilinear with respect to an ordering of $t$ and $(x^1, \ldots, x^n)$, and linear on $(x^1, \ldots, x^n)$.
+\paragraph{Comparison to known signature imputation strategies.}
+%
+Our formulation can be related to two operations in the signature
+literature. First is the \emph{lead-lag} transform \cite{primer2016}.
+With the lead-lag transform, the entire path is \emph{duplicated}, after
+which each side is alternately updated.
+%
+Conversely, in causal signature imputation, the path is instead
+\emph{split} between $t$ and $(x^1, \ldots, x^n)$, and then each side is
+alternately updated.
+%
+Second is the comparison to the linear and rectilinear embedding
+strategies, see for example \citet{fermanian2019embedding}. It is
+possible to interpret $\psi \circ \Phi$ as a hybrid between the linear
+and rectilinear embeddings: it is rectilinear with respect to an
+ordering of $t$ and $(x^1, \ldots, x^n)$, and linear on $(x^1, \ldots,
+x^n)$.
 
 \subsection{Extending Gaussian process adapters with posterior moments}\label{section:ourgpadapter}
 TODO: % emphasize that the idea behind the PoM is that the model has access to uncertainty information during the prediction step. We argue that the previous formulation is not really uncertainty-aware in this sense, and we propose an approach to fix this. Notably, PoM comes at the cost of losing uncertainty \emph{about} the models predictions. 
@@ -758,6 +766,85 @@ Indeed, any imputation scheme that predicts something other than the unique valu
 % Note that there is still an unimputed piece of data in the $x_2^2$ slot; we will return to this in a moment. Concerning the $x_{3/2}^1$ slot, we see that the value imputed is precisely the same as that given by a subsequent linear path-imputation, and it is in this way that the linear scheme does not fall afoul of this flaw.
 
 However, when there is missing data at the start or the end of a partially observed times series, then there is no `next observation' which linear imputation can use. So in general, we cannot uniformly apply the linear data-imputation scheme, and must choose another scheme.
+
+\subsection{Causal signature imputation}
+\label{sec:Causal signature imputation}
+
+We have spoken so far about the limitations of traditional data-imputation schemes, and at first glance one may be forgiven for thinking that these are issues are unavoidable. 
+
+However, it turns out that we need not be limited just to these traditional imputation schemes. The trick is to consider time not as a \emph{parameterization}, but as a \emph{channel}. Contrast the two possible formulations that were discussed for $\phi$ defined in equation \eqref{eq:phi}.\footnote{To be clear, using time as a channel is already a well-known trick in the signature literature that we do not take credit for inventing! See for example \cite[Definition A.3]{kidger2019deep}. It is however pleasing that something commonly used in the theory of signatures is also what allows us to overcome what we identify as some of their limitations.}
+
+This leads to our novel `meta imputation strategy', which we refer to as \emph{causal signature imputation}. It will turn any traditional causal data-imputation strategy (for example, feed-forward) into a causal path-imputation strategy for signatures; at the same time it will overcome the issue of a fragile dependence.
+
+Suppose we have $\mathbf{x} \in \seriesspace(\dataspace^*)$, and some favourite choice of causal data-imputation strategy $c \colon \seriesspace(\dataspace^*) \to \seriesspace(\dataspace)$.
+
+Next, given
+\begin{align*}
+    \mathbf{x} = ((t_1, x_1), \ldots, (t_n, x_n)) \in \seriesspace(\dataspace)
+\end{align*}
+we define the operation $\Phi \colon \seriesspace(\dataspace) \to \seriesspace(\dataspace)$ by
+\begin{align}
+    \Phi(\mathbf{x}) = (&(t_1, x_1), (t_2, x_1), (t_2, x_2),(t_3, x_2),\nonumber\\
+    &\ldots,\nonumber\\
+    &(t_i, x_i), (t_{i + 1}, x_i), (t_{i + 1}, x_{i + 1}), (t_{i + 2}, x_{i + 1}),\nonumber\\
+    &\ldots,\nonumber\\
+    &(t_{n - 1}, x_{n - 1}), (t_n, x_{n - 1}),(t_n, x_n)).\label{eq:causalsig}
+\end{align}
+That is, first time is updated, and then the corresponding observation in data space is updated. This means that the change in data space occurs instantaneously.
+
+For each $n \in \naturals$ (and given $a < b$), fix any $s_i^{(n)}$ for $i \in \{1, \ldots, n \}$ as in equation \eqref{eq:ss}. (We will see that the exact choice is unimportant in a moment.) Given
+\begin{align*}
+    \mathbf{x} = ((t_1, x_1), \ldots, (t_n, x_n)) \in \seriesspace(\dataspace),
+\end{align*}
+let $\psi \colon \seriesspace(\dataspace) \to (\reals \times \dataspace)^{[a, b]}$ be the unique continuous piecewise linear path such that $\psi(s_i^{(n)}) = (t_i, x_i)$. Note that this is just a slight generalisation of the linear path-imputation that has already been performed so far; we are simply no longer asking for additional assumptions of the form $s_i^{(n)} = t_i$.\footnote{As in the $\mathbf{\varphi}_\theta$ of \cite{toth2019gp}, for example.}
+
+Finally, we put this all together, and define the causal signature imputation strategy $\phi_c$ associated with $c$ to be
+\begin{equation*}
+\phi_c = \psi \circ \Phi \circ c,
+\end{equation*}
+which will be a map $\seriesspace(\dataspace^*) \to (\reals \times \dataspace)^{[a, b]}$.
+
+Thus $\phi_c$ defines a family of path-imputation schemes, parameterized by a choice of data-imputation scheme.
+
+Why does this work?
+
+First, note that the choice of $s_i^{(n)}$ is unimportant in this definition. By Theorem \ref{theorem:invariancetime}, the signature transform of $\phi_c(\mathbf{x})$ is invariant to this choice.
+
+Second, note that holding time between observations fixed is a valid choice, by the definition for $\seriesspace$ in equation \eqref{eq:seriesspace}. There should hopefully be no moral objection to our definition of $\seriesspace$, as holding time fixed essentially just corresponds to a jump discontinuity; not such a strange thing to have occur. Here, by replacing time as the parameterization, we are then able to recover the continuity of the path.
+
+Third, we claim that $\phi_c$ is immune to both of the flaws we describe in section \ref{section:flaws}. Consider first the flaw of dependence on sampling in unrelated channels.
+
+For simplicity take $c$ to be the forward-fill data-imputation strategy. Consider against the $\mathbf{x}$ defined in expression \eqref{eq:flaw1}. This means that
+\begin{equation}\label{eq:causal1}
+    \phi_c(\mathbf{x}) = \psi(\;((t_1, x_1^1, x_1^2), (t_2, x_1^1, x_1^2), (t_2, x_2^1, x_1^2))\;).
+\end{equation}
+% \begin{align*}
+%     &\phi_c(\mathbf{x})(s)\\
+%     &= \psi(\Phi(c(\mathbf{x})))(s)\\
+%     &=\psi(\Phi(\;((t_1, x_1^1, x_1^2), (t_2, x_2^1, C_2))\;))(s)\\
+%     &=\psi(\;((t_1, x_1^1, x_1^2), (t_2, x_1^1, x_1^2), (t_2, x_2^1, C_2))\;)(s)\\
+%     &= \begin{cases}
+%     (t_1 \frac{s_2^{(3)}- s}{s_2^{(3)} - s_1^{(3)}} + t_2 \frac{s - s_1^{(3)}}{s_2^{(3)} - s_1^{(3)}}, x_1^1, x_1^2)\\
+%     \hphantom{\hphantom{(t_2, }\,x_1^2 \frac{s_3^{(3)} - s}{s_3^{(3)} - s_2^{(3)}} + C_2 \frac{s - s_2^{(3)}}{s_3^{(3)} - s_2^{(3)}}) }\text{ for }s \in [s_1, s_2]\\
+%     (t_2, x_1^1 \frac{s_3^{(3)} - s}{s_3^{(3)} - s_2^{(3)}} + x_2^1 \frac{s - s_2^{(3)}}{s_3^{(3)} - s_2^{(3)}},\\
+%     \hphantom{(t_2, }\,x_1^2 \frac{s_3^{(3)} - s}{s_3^{(3)} - s_2^{(3)}} + C_2 \frac{s - s_2^{(3)}}{s_3^{(3)} - s_2^{(3)}}) \text{ for }s \in (s_2, s_3]
+%     \end{cases}
+% \end{align*}
+Contrast adding in the extra observation at $t_{3/2}$ as in equation \eqref{eq:flaw2}. Then
+\begin{align}
+    &\phi_c(\mathbf{x})(s)\nonumber\\
+    &=\psi(\;((t_1, x_1^1, x_1^2), (t_{3/2}, x_1^1, x_1^2), (t_{3/2}, x_1^1, x_{3/2}^2),\nonumber\\ &\hspace{3.1em}(t_2, x_1^1, x_{3/2}^2), (t_2, x_2^1, x_{3/2}^2))\;).\label{eq:causal2}
+\end{align}
+
+Evaluating each $\psi$ will then in each case give a path with three channels, corresponding to $t, x^1, x^2$. Then it is clear that the $(t, x^1)$ component of the path in equation \eqref{eq:causal1} is just a reparameterization of the path in equation \eqref{eq:causal2}, a difference which is irrelevant by Theorem \ref{theorem:invariancetime}. (And the $x^2$ component of the second path has been updated to use the new information $x_{3/2}^2$.) Thus the proposed scheme is robust to such issues. For general time series and $c$ taken to be any other causal data-imputation strategy, then much the same analysis can be easily be performed.
+
+Now consider the second potential flaw, of non-causality. The issue previously arose because of the non-causality of the linear path-imputation. We see from equation \eqref{eq:causalsig}, however, such changes only occur in data space while the time channel is frozen; conversely the time channel only updates with the value in the data space frozen. Provided that $c$ is also causal, then causality will, overall, have been preserved. For example, it is possible to use this scheme in an online setting.
+
+There are interesting comparisons to be made between causal signature imputation and certain operations in the signature literature. First is the \emph{lead-lag} transform \cite{primer2016}. With the lead-lag transform, the entire path is \emph{duplicated}, and then each side is alternately updated. Conversely, in causal signature imputation, the path is instead \emph{split} between $t$ and $(x^1, \ldots, x^n)$, and then each side is alternately updated.
+
+Second is the comparison to the linear and rectilinear embedding strategies, see for example \cite{fermanian2019embedding}. It is possible to interpret $\psi \circ \Phi$ as a hybrid between the linear and rectilinear embeddings: it is rectilinear with respect to an ordering of $t$ and $(x^1, \ldots, x^n)$, and linear on $(x^1, \ldots, x^n)$.
+
+
 
 \subsection{Further Experiments}\label{supp:Experiments}
 Describe here the further datasets, the subsampling types etc.
