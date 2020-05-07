@@ -483,16 +483,23 @@ data-imputation, then our next operation is always to perform linear
 path-imputation.
 %
 However, linear path-imputation is explicitly non-causal.
-
-Given some $(t_i, x_i)$ and $(t_{i+1}, x_{i + 1})$, then the interpolating function $f$, considered on the interval $(t_i, t_{i + 1})$, will already be moving toward $x_{i + 1}$ before that piece of data has arrived:
-\begin{equation*}
-    f(t) = x_{i} \frac{t_{i + 1} - t}{t_{i + 1} - t_i} + x_{i + 1} \frac{t - t_i}{t_{i + 1} - t_i}\text{ for }t \in (t_i, t_{i + 1}).
-\end{equation*}
-
+%
+Given some $(t_i, x_i)$ and $(t_{i+1}, x_{i + 1})$, then the
+interpolating function $f$, considered on the interval $(t_i, t_{i
++ 1})$, will already be moving toward $x_{i + 1}$ before that piece of
+data has arrived:
+%
+\begin{equation}
+    f(t) = x_{i} \frac{t_{i + 1} - t}{t_{i + 1} - t_i} + x_{i + 1} \frac{t - t_i}{t_{i + 1} - t_i}\text{ for }t \in (t_i, t_{i + 1})
+\end{equation}
+%
 This poses an issue in, for example, the online setting.
-
-Non-causality is of course not always a concern, but we will see in the next section that the same strategy for overcoming the previous flaw can overcome this challenge too.
-
+%
+Non-causality is not always a concern, but we will see in the
+next section that the same strategy for overcoming the previous flaw can
+overcome this challenge too.
+%
+% TODO: can we make this into a theorem?
 We can summarise this by saying that \emph{when used with the signature transform, any traditional data-imputation scheme will be non-causal}.
 % TODO: try and adjust this, it's really the path imputation that's noncausal.
 
