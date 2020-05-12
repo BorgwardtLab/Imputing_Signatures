@@ -118,9 +118,9 @@
 		\draw[-latex, dashed, gray] (meanPt6) -- (mean6);
 		
 		% draw the text nodes
-		\node[text width=\annotBoxWidth] at (my plots c2r1) {uncertainty aware piecewise linear path};
-		\node[text width=\annotBoxWidth] at (my plots c2r2) {uncertainty aware Gaussian Process};
-		\node[text width=\annotBoxWidth] at (my plots c2r3) {unobserved underlying process};
+		\node[text width=\annotBoxWidth] at ($((-0.0,0)+(my plots c2r1)$) {uncertainty aware piecewise linear path \par};
+		\node[text width=\annotBoxWidth] at ($((-0.0,0)+(my plots c2r2)$) {uncertainty aware Gaussian Process \par};
+		\node[text width=\annotBoxWidth] at ($((-0.0,0)+(my plots c2r3)$) {unobserved underlying process \par};
 		
 		\node (clfRect) at ($(0, 0.6)+(my plots c1r1.north)$) [draw] {Signature-based Classifier};
 		\draw[-latex, solid, black] (my plots c1r1.north) -- (clfRect);
