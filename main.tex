@@ -11,11 +11,12 @@
 \usepackage{amsthm}
 \usepackage{bbm}  % blackboard 1
 \usepackage{hyperref}
+\usepackage{paralist}
 \usepackage{wrapfig}
 \newcommand{\theHalgorithm}{\arabic{algorithm}}
 \usepackage{comment}
 
-\PassOptionsToPackage{numbers, compress}{natbib}
+\PassOptionsToPackage{sort, numbers, compress}{natbib}
 
 \usepackage[preprint]{neurips_2020}
 \setcitestyle{square}
@@ -40,9 +41,9 @@
 %% Path Imputation Strategies with Signature Models for Irregularly Sampled Partially Observed Multivariate Time Series.
 
 \author{
-    Michael Moor$^{1, }$\footnotemark[1]
+    Michael Moor$^1$
     \And
-	Patrick Kidger$^{2, 3, }$\footnotemark[1]
+	Patrick Kidger$^{2, 3}$
 	\And
 	Max Horn$^1$
 	\And
@@ -69,46 +70,47 @@
 
 \begin{abstract}
 The signature transform is a `universal nonlinearity' on the space of continuous vector-valued paths, and has recently received attention for use in machine learning. However real-world temporal data is typically discretized, and must first be transformed into a continuous path before signature techniques can be applied. %, which has previously been described as an embedding problem. 
-Our first contribution is to characterise this as an imputation problem, and to empirically assess the impact of various imputation techniques when applying the signature to irregular time series data. Throughout our experiments, we observe that uncertainty-aware \emph{predictions} are beneficial, also as compared to the uncertainty-aware \emph{training} of Gaussian process (GP) adapters. To this end, we propose a simple extension of GP adapters by integrating uncertainty to the prediction step which leads to competitive performance.
+Our first contribution is to characterise this as an imputation problem, and to empirically assess the impact of various imputation techniques when applying the signature to irregular time series data. Throughout our experiments, we observe that uncertainty-aware \emph{predictions} are beneficial, even compared to the uncertainty-aware \emph{training} of Gaussian process (GP) adapters. We thus also propose a simple extension of GP adapters by integrating uncertainty to the prediction step which leads to competitive performance.
 \end{abstract} % TODO: touch this up a bit, but I think the essential idea is there.
 
-% Suggestion (BR):
-\begin{abstract}
-The signature transform, a `universal non-linearity' on the space of
-continuous vector-valued paths, recently started receiving attention in
-machine learning applications. Prior to applying any signature technique,
-real-world temporal data is typically discretised and
-subsequently transformed into a continuous path. While this is commonly
-treated as an embedding problem, we characterise it as an
-\emph{imputation problem} instead, and empirically assess the impact of
-numerous imputation techniques on the classification of
-irregularly-sampled time series data sets by means of signature
-techniques. We observe throughout our experiments that uncertainty-aware
-\emph{predictions} are beneficial, even compared to the
-uncertainty-aware \emph{training} of Gaussian Process~(GP) adapters. We
-thus also propose a simple extension to the prediction step of GP
-adapters and demonstrate that it leads to competitive performance.
-\end{abstract}
+% % Suggestion (BR):
+% \begin{abstract}
+% The signature transform, a `universal non-linearity' on the space of
+% continuous vector-valued paths, recently started receiving attention in
+% machine learning applications. Prior to applying any signature technique,
+% real-world temporal data is typically discretised and
+% subsequently transformed into a continuous path. While this is commonly
+% treated as an embedding problem, we characterise it as an
+% \emph{imputation problem} instead, and empirically assess the impact of
+% numerous imputation techniques on the classification of
+% irregularly-sampled time series data sets by means of signature
+% techniques. We observe throughout our experiments that uncertainty-aware
+% \emph{predictions} are beneficial, even compared to the
+% uncertainty-aware \emph{training} of Gaussian Process~(GP) adapters. We
+% thus also propose a simple extension to the prediction step of GP
+% adapters and demonstrate that it leads to competitive performance.
+% \end{abstract}
 
-\section{Introduction}\label{intro}
-Originally described in \cite{Chen54, Chen57, Chen58} and popularised in the theory of rough paths and controlled differential equations \cite{lyons1998differential, FritzVictoir10, lyons2014rough}, the \emph{signature transform}, also known as the \emph{path signature} or simply \emph{signature}, acts on a continuous vector-valued path of bounded variation, and returns a graded sequence of statistics, which determine the path up to a negligible equivalence class.
+% %OLD VERSION:
+% \section{Introduction}\label{intro}
+% Originally described in \cite{Chen54, Chen57, Chen58} and popularised in the theory of rough paths and controlled differential equations \cite{lyons1998differential, FritzVictoir10, lyons2014rough}, the \emph{signature transform}, also known as the \emph{path signature} or simply \emph{signature}, acts on a continuous vector-valued path of bounded variation, and returns a graded sequence of statistics, which determine the path up to a negligible equivalence class.
 
-Every continuous function of a path can be recovered by applying a linear transform to this collection of statistics \cite[Proposition A.6]{kidger2019deep}. This `universal nonlinearity' property makes the signature a promising nonparametric feature extractor.
+% Every continuous function of a path can be recovered by applying a linear transform to this collection of statistics \cite[Proposition A.6]{kidger2019deep}. This `universal nonlinearity' property makes the signature a promising nonparametric feature extractor.
 
-Given their similarities, it is natural to hope that the tools that apply to continuous paths may also be applied to multivariate time series. Of course, multivariate time series are not continuous paths. For signature techniques to be applied, a continuous path must first be constructed from this data.
+% Given their similarities, it is natural to hope that the tools that apply to continuous paths may also be applied to multivariate time series. Of course, multivariate time series are not continuous paths. For signature techniques to be applied, a continuous path must first be constructed from this data.
 
-In previous work \cite{kidger2019deep, TODO, TODO, TODO} this has been characterised as an embedding problem, and has typically been glossed over as an essentially unimportant detail. This is exacerbated by the (perfectly sensible) behaviour of software for computing the signature \cite{iisignature, signatory}, which take a continuous piecewise linear path as an input, described by its sequence of knots. This resembles a sequence of data, meaning that the signature is sometimes interpreted as operating on sequences of data rather than on paths \cite{kidger2019deep, TODO-levin}.
+% In previous work \cite{kidger2019deep, levin2013, fermanian2019embedding} this has been characterised as an embedding problem, and has typically been glossed over as an essentially unimportant detail. This is exacerbated by the (perfectly sensible) behaviour of software for computing the signature \cite{iisignature, signatory}, which take a continuous piecewise linear path as an input, described by its sequence of knots. This resembles a sequence of data, meaning that the signature is sometimes interpreted as operating on sequences of data rather than on paths \cite{kidger2019deep, levin2013}.
 
-\subsection{Contributions}
-In this paper we reinterpret of the task of constructing a continuous path, by turning it from an embedding problem into an imputation problem. To distinguish this from traditional imputation problems, we refer to this as \emph{path imputation}.
+% \subsection{Contributions}
+% In this paper we reinterpret of the task of constructing a continuous path, by turning it from an embedding problem into an imputation problem. To distinguish this from traditional imputation problems, we refer to this as \emph{path imputation}.
 
-Much previous literature on the signature transform has focused on its excellent theoretical properties, in particular sampling independence \cite{TODO}, but our findings show that this does not correspond to empirical performance. However it has previously been established that observation rates and missingness itself can carry information \cite{rubin1976inference, gelman2007dataanalysis}. By re-interpreting the task of constructing paths as an imputation problem, we identify that this performance gap is likely to be another manifestation of this phenomenon.
+% Much previous literature on the signature transform has focused on its excellent theoretical properties, in particular sampling independence \cite[Proposition A.7]{kidger2019deep}, \cite{signatorydocumentation}, \cite[Section 2]{toth2019gp}, but our findings show that this does not correspond to empirical performance. However it has previously been established that observation rates and missingness itself can carry information \cite{rubin1976inference, gelman2007dataanalysis}. By re-interpreting the task of constructing paths as an imputation problem, we identify that this performance gap is likely to be another manifestation of this phenomenon.
 
-We perform a thorough empirical investigation of various imputation schemes as combined with multiple models that potentially employ signatures. We find that approaches that have access to uncertainty information \emph{during prediction} tend to outperform the competitors, also uncertainty-aware frameworks where the uncertainty is only available during \emph{training}, such as Gaussian process (GP) adapters.
-Motivated by this, we propose a novel extension of GP adapters \cite{li2016scalable, futoma2017mgp} which incorporates uncertainty information into the prediction step, which helps our task at hand but could also be of independent interest.
-As a footnote we observe that the recently introduced `deep signature models' \cite{kidger2019deep} consistently outperform other signature models, which also suffer from much higher variance in their efficacy.
+% We perform a thorough empirical investigation of various imputation schemes as combined with multiple models that potentially employ signatures. We find that approaches that have access to uncertainty information \emph{during prediction} tend to outperform the competitors, also uncertainty-aware frameworks where the uncertainty is only available during \emph{training}, such as Gaussian process (GP) adapters.
+% Motivated by this, we propose a novel extension of GP adapters \cite{li2016scalable, futoma2017mgp} which incorporates uncertainty information into the prediction step, which helps our task at hand but could also be of independent interest.
+% As a footnote we observe that the recently introduced `deep signature models' \cite{kidger2019deep} consistently outperform other signature models, which also suffer from much higher variance in their efficacy.
 
-Our code is available at XXXXXX.
+% Our code is available at XXXXXX.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Introduction (suggestion, BR) 
@@ -137,9 +139,9 @@ time series. Of course, multivariate time series are not continuous
 paths---in fact, for signature techniques to be applied, one first needs
 to construct a continuous path from this kind of data.
 
-In previous work~\cite{kidger2019deep, TODO, TODO, TODO}, this
+In previous work~\cite{kidger2019deep, levin2013, fermanian2019embedding}, this
 construction has been characterised as an embedding problem, and was
-typically glossed over as an essentially unimportant detail.
+typically glossed over as a rather unimportant detail.
 %
 This is exacerbated by the---perfectly sensible---behaviour of software
 for computing the signature \cite{iisignature, signatory}, which
@@ -151,7 +153,7 @@ described by its sequence of knots, i.e.\ values.
 %
 Since such sequences resemble a sequence of data, the signature is
 sometimes interpreted as operating on sequences of data rather than on
-paths~\cite{kidger2019deep, TODO-levin}.
+paths~\cite{kidger2019deep, levin2013}.
 %
 We show that this view is somewhat limiting and that, in order to
 achieve competitive predictive performance for real-world time series
@@ -164,7 +166,7 @@ imputation problems, we refer to this as \emph{path imputation}.
 %
 While a large part of the previous literature on the signature transform
 focused on its excellent theoretical properties, in particular sampling
-independence~\cite{TODO}, our findings show that this does not
+independence~\cite[Proposition A.7]{kidger2019deep},~\cite{signatorydocumentation},~\cite[Section 2]{toth2019gp}, our findings show that this does not
 necessarily correspond to excellent empirical performance.
 %
 However, it has previously been established that both observation rates
@@ -193,28 +195,28 @@ variance, thus reducing their efficay).
 %
 We make our code publicly available under XXXXXX.
 
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Old content starts here
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\section{Related work}
-A key motivation for this work is the use of the signature transform in machine learning. For example see the work of \cite{primer2016, kormilitzlin2016, yang2016rotation, li2017lpsnet, yang2017leveraging, PerezArribas2018, morrill2019sepsis}, where the signature transform is typically used as a nonparametric feature extractor, on top of which a model is learnt. Recent work has also investigated more tightly integrating the signature transform with neural networks; \cite{jeremythesis}, \cite{logsigrnn} and \cite{kidger2019deep} all study how to use the signature transform\footnote{And the related logsignature transform; the difference between them will not be important for us.} within typical neural network models. \cite{chevyrev2018signature, kiraly2019kernels} study how the signature transform may be used to define a kernel on path space. \cite{toth2019gp} show how this kernel may be used to define a Gaussian process.
-
-In much of this work, data has been converted into a continuous path via linear interpolation. Some authors \cite{primer2016, fermanian2019embedding} have additionally considered `rectilinear' interpolation, which is similar. \cite{TODO-levin} present the `time joined transformation', which is a hybrid of the two such that the resulting path exhibits a causal dependence on the data.
-
-To our knowledge no prior work has regarded this as an imputation problem.
-
-The general problem of imputing data is well-known and well-studied, and we will not attempt to describe it here; see for example \cite[Chapter 25]{gelman2007dataanalysis}. % Common simple imputation schemes are to impute missing values as the mean of its channel, or to forward fill the last observed value, although it has been observed that incautious use of such methods can result in heavily biased models \cite{Molnar2008}.
-These methods typically only fill in missing discrete data points, and do not attempt to impute the underlying continuous path.
-
-One approach that does impute a full continuous path is a Gaussian process adapter \cite{li2016scalable, futoma2017mgp}. The data is modelled as coming from a Gaussian process. The posterior distribution, having observed the data, then gives continuous paths through data space. This then allows, for example, for uniformly resampling the data. Gaussian process adapters will be important to this study, although in our case they are of interest not because of uniform resampling, but because they provide a full continuous path which we may sample arbitrarily. We note that there are other approaches that perform continuous-time imputation \cite{TODO-interpolation-prediction}, but we have not investigated these further.
-
 \section{Background}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% TODO: can we summarise what we are doing here? What are the most
+% important points of this section?
+%
+% Maybe: 'In the following, we provide a cursory introduction to the
+% path signature methods. Please refer to XXX for a more in-depth
+% description.'
+
 \subsection{Path signatures}
-Given a continuous, piecewise differentiable path $f \colon [a, b] \to \reals^d$, the \emph{signature transform up to depth $N$} may be defined by
-\begin{equation*}
+
+Given a continuous, piecewise differentiable path $f \colon [a, b] \to
+\reals^d$, the \emph{signature transform up to depth $N$} may be defined
+by
+%
+\begin{equation}
     \sig(f)=\left(\left(\underset{\,a<t_{1}<\cdots<t_{k}<b}{\int \cdots \int} \prod_{j=1}^{k} \frac{\mathrm{d} f_{i_{j}}}{\mathrm{d} t}\left(t_{j}\right) \mathrm{d} t_{1} \cdots \mathrm{d} t_{k}\right)_{1 \leq i_{1}, \ldots, i_{k} \leq d}\right)_{1 \leq k \leq N}.
-\end{equation*}
+\end{equation}
 
 % \begin{wrapfigure}{l}{4cm}
 %     \centering
@@ -226,8 +228,18 @@ Given a continuous, piecewise differentiable path $f \colon [a, b] \to \reals^d$
 
 %This definition may be extended to paths of merely bounded variation by replacing these integrals with Riemann--Stieltjes integrals, and extended further to paths of bounded $p$-variation by replacing them with rough integrals \cite{lyons1998differential}.
 
-In brief, the signature transform may be interpreted as extracting information about order and area. One may interpret its terms as `the area/order of one channel with respect to some collection of other channels'. % As an explicit example of the sort of information extracted, one of the things computed by the signature is the \emph{Levy area} of the path, shown for a one-dimensional example in Figure \ref{fig:sig_path}.
-For an exposition on the properties of the signature transform and its use in machine learning, we recommend either \cite{primer2016} or \cite[Appendix A]{kidger2019deep}. %There is one fact that will prove important to our arguments later, however, so for completeness we repeat it here:
+In brief, the signature transform may be interpreted as extracting
+information about \emph{order} and \emph{area} of a path.
+%
+One may interpret its terms as `the area/order of one channel with
+respect to some collection of other channels'.
+%
+% As an explicit example of the sort of information extracted, one of the things computed by the signature is the \emph{Levy area} of the path, shown for a one-dimensional example in Figure \ref{fig:sig_path}.
+%
+For an exposition on the properties of the signature transform and its
+use in machine learning, please refer to \citet{primer2016} or \citet[Appendix A]{kidger2019deep}.
+%
+%There is one fact that will prove important to our arguments later, however, so for completeness we repeat it here:
 %\begin{theorem}[Invariance to reparameterisation]\label{theorem:invariancetime}
 %Let $f \colon [a, b] \to \reals^d$ be a continuous piecewise differentiable path. Let $\psi \colon [a, b] \to [c, d]$ be continuously differentiable, increasing, and surjective. Then $\sig(f) = \sig(f \circ \psi)$.
 %\end{theorem}
@@ -244,50 +256,77 @@ For an exposition on the properties of the signature transform and its use in ma
 %
 %Thus all of the imputation schemes we examine will first seek to select a collection of points in data space (not necessarily only where we had data before), and then linear imputation will be performed to join them up into a piecewise linear path.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Notation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 Given some set $A$, let the space of time series over $A$ be defined by
 \begin{equation}
     \seriesspace(A) = \{((t_1, x_1), \ldots, (t_n, x_n)) \,\vert\, t_i \in \reals, x_i \in A, n \in \naturals, \text{ such that } t_1 \leq \cdots \leq t_n\}.\label{eq:seriesspace}
 \end{equation}
+%
+Note the subtle point that the $t_i$ are separated by $\leq$, not $<$.
+We make this slight change because it will later prove important for one
+of our studied imputation schemes. For example, contrast the
+corresponding definition in \citet[Section 1]{toth2019gp}.
 
-Note the subtle point that the $t_i$ are separated by $\leq$, not $<$. We make this slight change because it will later prove important for one of our studied imputation schemes. For example, contrast the corresponding definition in \cite[Section 1]{toth2019gp}.
-
-Let $\lspace$ be a set and let $\dataspace_j = \reals$ for $j \in \{1, \ldots, d\}$ and $d \in \naturals$. Then we assume that we observe a dataset of labelled time series $(\mathbf{x}_k, y_k)$ for $k \in \{1, \ldots, N\}$, where $\mathbf{x}_k \in \seriesspace(\dataspace^*)$ and $y_k \in \lspace$, where $\dataspace^* = \prod_{j = 1}^d(\dataspace_j \cup \{*\})$ and $*$ represents no observation. We similarly define
-$\dataspace = \prod_{j = 1}^d\dataspace_j.$ Thus $\dataspace$ is the data space, $\dataspace^*$ is the data space allowing missing data, and $\lspace$ is the set of labels.
+\paragraph{Time series and labels.}
+%
+Let $\lspace$ be a set and let $\dataspace_j = \reals$ for $j \in \{1,
+\ldots, d\}$ and $d \in \naturals$. Then we assume that we observe
+a dataset of labelled time series $(\mathbf{x}_k, y_k)$ for $k \in \{1,
+\ldots, N\}$, where $\mathbf{x}_k \in \seriesspace(\dataspace^*)$ and
+$y_k \in \lspace$, with $\dataspace^* = \prod_{j = 1}^d(\dataspace_j
+\cup \{*\})$ and $*$ representing no observation.
+%
+We similarly define $\dataspace = \prod_{j = 1}^d\dataspace_j$. Thus,
+$\dataspace$ is the data space, while $\dataspace^*$ is the data space
+allowing missing data, and $\lspace$ is the set of labels.
 
 % \subsubsection{Terminology for imputation schemes}
 % To avoid ambiguity, we will refer to standard imputation schemes, such as forward-fill, as a \emph{data-imputation} scheme, meaning to impute missing data points. In contrast we will use \emph{path-imputation} to describe the more general task of imputing the full continuous path.
 
 \subsection{Gaussian process adapter}\label{section:gpadapter}
-Some (but not all) of the imputation schemes we consider are based on the uncertainty aware framework of multi-task Gaussian process adapters \cite{li2016scalable, futoma2017mgp}.
 
-Let $\mathcal{W}, \mathcal{H}$ be some sets. Let $\ell \colon \lspace \times \lspace \to [0, \infty)$ be a loss function. Let $F \colon \dataspace^{[a, b]} \times \mathcal{W} \to \lspace$, be some (typically neural network) model, with $\mathcal{W}$ interpreted as a space of parameters. Let
-\begin{align*}
-\mu \colon [a, b] \times \seriesspace(\dataspace^*) \times \mathcal{H} &\to \dataspace\\
-\Sigma \colon [a, b] \times [a, b] \times \seriesspace(\dataspace^*) \times \mathcal{H} &\to \dataspace    
-\end{align*}
-be mean and covariance functions, with $\mathcal{H}$ interpreted as a space of hyperparameters. The dependence on $\seriesspace(\dataspace^*)$ is to represent conditioning on observed values.
+Some~(but not all) of the imputation schemes we consider are based on
+the uncertainty aware-framework of multi-task Gaussian process
+adapters~\citep{li2016scalable, futoma2017mgp}.
+%
+Let $\mathcal{W}, \mathcal{H}$ be some sets. Let $\ell \colon \lspace
+\times \lspace \to [0, \infty)$ be a loss function. Let $F \colon
+\dataspace^{[a, b]} \times \mathcal{W} \to \lspace$, be some (typically
+neural network) model, with $\mathcal{W}$ interpreted as a space of
+parameters. Let \begin{align*} \mu \colon [a, b] \times
+\seriesspace(\dataspace^*) \times \mathcal{H} &\to \dataspace\\ \Sigma
+\colon [a, b] \times [a, b] \times \seriesspace(\dataspace^*) \times
+\mathcal{H} &\to \dataspace    \end{align*} be mean and covariance
+functions, with $\mathcal{H}$ interpreted as a space of
+hyperparameters. The dependence on $\seriesspace(\dataspace^*)$ is to
+represent conditioning on observed values.
 
 Then the goal is to solve
 \begin{equation}\label{eq:gp-mc}
-\argmin_{\mathbf{w} \in \mathcal{W},\bm{\eta} \in \mathcal{H}} \sum_{k=1}^N \overbrace{\rule{0pt}{0.5cm} \mathbb{E}_{\mathbf{z}_k \sim \mathcal{N}\left( \mu(\cdot, \mathbf{x}_k, \eta), \Sigma(\cdot, \cdot, \mathbf{x}_k, \eta)\right) } \big[ \ell(F(\mathbf{z}_k, \mathbf{w}), y_k) \big] }^{\text{$E_k$}} 
+\argmin_{\mathbf{w} \in \mathcal{W},\bm{\eta} \in \mathcal{H}} \sum_{k=1}^N \overbrace{\rule{0pt}{0.5cm} \mathbb{E}_{\mathbf{z}_k \sim \mathcal{N}\left( \mu(\cdot, \mathbf{x}_k, \eta), \Sigma(\cdot, \cdot, \mathbf{x}_k, \eta)\right) } \big[ \ell(F(\mathbf{z}_k, \mathbf{w}),
+y_k) \big] }^{\text{$E_k$}}.
+\end{equation}
+%
+As this expectation is typically not tractable, it is estimated by Monte
+Carlo (MC) sampling with $S$ samples, i.e.\
+\begin{equation}
+E_k \approx \frac{1}{S} \sum_{s=1}^{S} \ell(F(\mathbf{z}_{s, k}, \mathbf{w}), y_k),
+\end{equation}
+%
+where
+%
+\begin{equation}
+    \mathbf{z}_{s, k} \sim \mathcal{N}\left( \mu(\,\cdot\,, \mathbf{x}_k, \eta), \Sigma(\,\cdot\,, \,\cdot\,, \mathbf{x}_k, \eta)\right).
 \end{equation}
 
-As this expectation is typically not tractable, it is estimated by Monte Carlo (MC) sampling with $S$ samples:
-\begin{equation*}
-E_k \approx \frac{1}{S} \sum_{s=1}^{S} \ell(F(\mathbf{z}_{s, k}, \mathbf{w}), y_k),
-\end{equation*}
-where
-\begin{equation*}
-    \mathbf{z}_{s, k} \sim \mathcal{N}\left( \mu(\,\cdot\,, \mathbf{x}_k, \eta), \Sigma(\,\cdot\,, \,\cdot\,, \mathbf{x}_k, \eta)\right).
-\end{equation*}
-
 Alternatively, one may forgo allowing the uncertainty to propagate through $F$ by instead passing the posterior mean directly to $F$; this corresponds to solving
-\begin{align}\label{eq:gp-mean}
-\argmin_{\mathbf{w} \in \mathcal{W},\bm{\eta} \in \mathcal{H}} \sum_{k=1}^N \ell(F(\mu(\,\cdot\,,\mathbf{x}_k, \eta), \mathbf{w}), y_k)
-\end{align}
+\begin{equation}\label{eq:gp-mean}
+\argmin_{\mathbf{w} \in \mathcal{W},\bm{\eta} \in \mathcal{H}} \sum_{k=1}^N \ell(F(\mu(\,\cdot\,,\mathbf{x}_k, \eta), \mathbf{w}), y_k).
+\end{equation}
 
-\section{Task}
 
 \begin{comment}
 \subsubsection{Application beyond signatures}
@@ -305,78 +344,137 @@ Similarly, the connection between dynamical systems and recurrent neural network
 For non-signature methods as for signature methods, this implicit usage of data as a path in data space often seems to be swept under the rug, and we suspect it is one deserving further attention. However our focus here is specifically on solutions appropriate for signatures, and this larger problem is not one that we will explore further in this paper.
 \end{comment}
 
+\begin{figure}[t]
+    \centering
+    \hspace*{1cm}
+    \includegraphics[width=0.7\columnwidth]{figures/overview.pdf}
+    \caption{Overview of our proposed extension of GP adapters, GP-PoM, leveraging both posterior moments (mean and variance)}
+    \label{fig:overview}
+\end{figure}
 
-\section{Imputations}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Related work}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+A key motivation for this work is the use of the signature transform in
+machine learning: in recent work~\citep{primer2016,
+kormilitzlin2016, yang2016rotation, li2017lpsnet, yang2017leveraging,
+PerezArribas2018, morrill2019sepsis} the signature transform is
+typically used as a nonparametric feature extractor, on top of which
+a model is learnt. A growing body of work has also investigated how to
+integrate the signature transform more tightly with neural networks; 
+\citet{jeremythesis}, \citet{logsigrnn}, and \citet{kidger2019deep} all
+study how to use the signature transform\footnote{And the related
+logsignature transform; the difference between them will not be
+important for us.} within typical neural network models.
+\citet{chevyrev2018signature, kiraly2019kernels} study how the signature
+transform may be used to define a \emph{kernel}---i.e.\ a symmetric,
+positive definite function that is typically used as a similarity
+measure---on path space, while \citet{toth2019gp} show how this kernel
+may be used to define a Gaussian process.
+
+In much of this work, data has been converted into a continuous path via
+linear interpolation. Some authors~\citep{primer2016,
+fermanian2019embedding} have additionally considered `rectilinear'
+interpolation, which is similar. \citet{levin2013} present the
+`time-joined transformation', which is a hybrid of the two, such that
+the resulting path exhibits a causal dependence on the data.  However,
+to our knowledge, no prior work has regarded this as an imputation
+problem.
+
+The general problem of imputing data is well-known and well-studied, and
+we will not attempt to describe it here; see for example \citet[Chapter 25]{gelman2007dataanalysis}.
+% Common simple imputation schemes are to impute missing values as the mean of its channel, or to forward fill the last observed value, although it has been observed that incautious use of such methods can result in heavily biased models \cite{Molnar2008}.
+These methods typically only fill in missing discrete data points, and do not attempt to impute the underlying continuous path.
+%
+One approach that does impute a \emph{full} continuous path is
+a Gaussian process adapter~\citep{li2016scalable, futoma2017mgp}. The
+data is modelled as coming from a Gaussian process. The posterior
+distribution, having observed the data, then gives continuous paths
+through data space. This then allows, for example, for uniformly
+resampling the data. Gaussian process adapters will be important to this
+study, although in our case they are of interest not because of uniform
+resampling, but because they provide a full continuous path, which we may
+sample arbitrarily. We note that there are also other approaches that
+perform continuous-time imputation~\citep{shukla2018interpolationprediction},
+but we have not investigated these further.
+
+\section{Path imputations}
 %For simplicity of presentation, we will now assume that $\dataspace_j = \reals$.%, although in principle the theory actually only requires that $\dataspace_j$ is a Banach space.
 
-Our end goal is to learn a function from $\seriesspace(\dataspace^*)$ to $\lspace$. Our belief (perhaps merely motivated by signature theory, but in this paper explicitly because we wish to apply signatures), is that this is sensibly done by selecting a path-imputation strategy
-\begin{equation*}
+Our goal is to learn a function from $\seriesspace(\dataspace^*)$ to
+$\lspace$. Motivated by signature theory, we believe that this is best
+done by selecting a path imputation strategy
+% Our belief (perhaps merely motivated by signature theory, but in this paper explicitly because we wish to apply signatures), is that this is sensibly done by selecting a path-imputation strategy
+%
+\begin{equation}
     \phi \colon \seriesspace(\dataspace^*) \to (\reals \times \dataspace)^{[a, b]},
-\end{equation*}
-and only afterwards learning a map from $\dataspace^{[a, b]}$ to $\lspace$.
-
+\end{equation}
+and only \emph{afterwards} learning a map from $\dataspace^{[a, b]}$ to $\lspace$.
+%
 Explicitly, we seek $\phi$ such that
 \begin{equation}\label{eq:phi}
 \phi(\mathbf{x}) = f,    
 \end{equation}
+% TODO: can we compress these equations somewhat?
 where
-\begin{equation*}
-\mathbf{x} = ((t_1, x_1), \ldots, (t_n, x_n)) \in \seriesspace(\dataspace^*),    
-\end{equation*}
-with each
-\begin{equation*}
-    x_i = (x_i^1, \ldots, x_i^d) \in \dataspace^* = \prod_{j = 1}^d (\dataspace_j \cup \{*\}),
-\end{equation*}
-and $f \colon [a, b] \to \reals \times \dataspace$ is continuous, piecewise linear, and such that there exist points
+$\mathbf{x} = ((t_1, x_1), \ldots, (t_n, x_n)) \in
+\seriesspace(\dataspace^*)$
+and each $x_i = (x_i^1, \ldots, x_i^d) \in \dataspace^*$, % = \prod_{j = 1}^d (\dataspace_j \cup \{*\}),
+with $f \colon [a, b] \to \reals \times \dataspace$ being a continuous,
+piecewise linear function such that there exist points
 \begin{equation}\label{eq:ss}
 a = s_1 < s_2 < \cdots < s_n = b    
 \end{equation}
-with $f(s_i) = (t_i, z_i)$, with $z_i^j = x_i^j$ for all $x_i^j \neq *$. (And with no restraint on $z_i^j$ if $x_i^j = *$.) Furthermore we impose that $f$ must be monotonically nondecreasing in its $t$ output.
+so that $f(s_i) = (t_i, z_i)$, with $z_i^j = x_i^j$ for all $x_i^j \neq
+*$~(if $x_i^j = *$, we impose no constraints).
+%
+Furthermore, we impose that $f$ must be monotonically nondecreasing in its $t$ output.
 
 % Two remarks on this problem formulation.
 
 % First, we emphasise that the time series does not necessarily have to irregularly sampled or partially observed, although this is the most general setting. Even with a regularly spaced and fully observed time series, we must still path-impute the rest of the continuous path at the values in between.
 
-Note that we have explicitly \emph{not} formulated this as seeking an $f \colon [t_1, t_n] \to \reals \times \dataspace$ with $f(t_i) = (t_i, z_i)$ with $z_i^j = x_i^j$ for $x_i^j \neq *$, as might na{\"i}vely be assumed. This alternate formulation is essentially what is typically used, see for example the `time embedding' of \cite{fermanian2019embedding}. However the slight extra generality in our formulation will be precisely what is necessary to solve the flaws in existing schemes, that we are about to identify.
+Note that we have explicitly \emph{not} formulated this as seeking
+a function $f \colon [t_1, t_n] \to \reals \times \dataspace$ with
+$f(t_i) = (t_i, z_i)$ and $z_i^j = x_i^j$ for $x_i^j \neq *$, as might
+na{\"i}vely be assumed. This alternate formulation is essentially what
+is typically used; see for example the `time embedding' of
+\citet{fermanian2019embedding}. However, the slight extra generality in
+our formulation will be precisely what is necessary to solve the flaws
+in existing schemes that we are about to identify.
 
-\subsection{Flaws in existing schemes}\label{section:flaws}
-We move on to discussing the flaws of existing schemes.
+\subsection{Flaws in existing imputation schemes}\label{section:flaws}
 
+We move on to discussing the flaws of existing schemes, namely
+%
+\begin{inparaenum}[(i)]
+  \item their fragile dependence on sampling in unrelated channels, and
+  \item their non-causality,
+\end{inparaenum}
+%
+before subsequently addressing them.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Fragile dependence on sampling in unrelated channels}
-Na{\"i}vely applying standard data-imputation schemes will typically result in the imputed path exhibiting an undesired dependence on the observations. This can result in dramatic changes in the areas-against-time computed by the signature (potentially going so far as to change the sign of the result).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Suppose that we have observed the (very short) time series
-\begin{equation}\label{eq:flaw1}
-    \mathbf{x} = ((t_1, x_1^1, x_1^2), (t_2, x_2^1, *)) \in \seriesspace(\reals^2).
-\end{equation}
-Perhaps we now apply, say, forward fill data-imputation, to produce
-\begin{equation*}
-    ((t_1, x_1^1, x_1^2), (t_2, x_2^1, x_1^2)).
-\end{equation*}
-Finally we linearly path-impute to create the linear path
-\begin{align*}
-    f &\colon [t_1, t_2] \to \reals \times \reals^2\\
-    f &\colon t \mapsto (t, x_1^1\frac{t_2 - t}{t_2 - t_1} + x_2^1\frac{t - t_1}{t_2 - t_1}, x_1^2),
-\end{align*}
-to which we may then apply the signature transform. In particular we will have computed the Levy area with respect to $t$ and $x^1$. As this is just a straight line, the Levy area is zero.
-% \begin{figure}
-%     \centering
-%     \includegraphics[width=0.7\columnwidth]{figures/sig_path2.pdf}
-%     \vspace{-1.5em}
-%     \caption{Caption}\label{fig:straightline}
-%     \vspace{-1.5em}
-% \end{figure}
+Na{\"i}vely applying standard data-imputation schemes will typically
+result in the imputed path exhibiting an undesired dependence on the
+observations. This can result in dramatic changes in the
+areas-against-time computed by the signature~(potentially going so far
+as to even change the sign of the result).
+%
+% TODO: update figure to include time series?
+Figure~\ref{fig:bentline} describes this problem schematically; please
+refer to Supplementary Section~\ref{sec:Fragile dependence} for more
+details.
+%
+% TODO: can we make this into a theorem?
+In general, we can summarise this by saying that \emph{when used with the signature transform, any traditional data-imputation scheme will have a fragile dependence on unrelated observations}.
 
-Now suppose we include an additional observation at some time $t_{3/2} \in (t_1, t_2)$, so that our data is instead
-\begin{equation}\label{eq:flaw2}
-    \mathbf{x} = ((t_1, x_1^1, x_1^2), (t_{3/2}, *, x_{3/2}^2), (t_2, x_2^1, *)).
-\end{equation}
-Then the same procedure as before will produce the data
-\begin{equation*}
-    \mathbf{x} = ((t_1, x_1^1, x_1^2), (t_{3/2}, x_1^1, x_{3/2}^2), (t_2, x_2^1, x_{3/2}^2)),
-\end{equation*}
-with corresponding function $f$. The $(t, x^1)$ components of $f$ and its $(t, x^1)$-Levy area are shown in Figure \ref{fig:bentline}. As a result of an unrelated observation in the $x^2$ channel, the $(t, x^1)$-Levy area has been changed. The closer $t_{3/2}$ is to $t_2$, the greater the disparity.
-\begin{figure}
+\begin{figure}[t]
     \centering
     \includegraphics[width=0.45 \columnwidth]{figures/sig_path3.pdf}
     %\vspace{-1.5em}
@@ -384,53 +482,69 @@ with corresponding function $f$. The $(t, x^1)$ components of $f$ and its $(t, x
     \vspace{-1em}
 \end{figure}
 
-This simple example underscores the danger of `just forward-fill data-imputing'. Doing so has introduced an undesired dependency on the simple \emph{presence} of an observation in other channels, with the change in our imputed path being determined by the \emph{time} at which this other observation occurred.
-
-Indeed, any imputation scheme that predicts something other than the unique value lying on the dashed line in Figure \ref{fig:bentline}, will fail. This means that this example holds for essentially every data-imputation scheme -- the only scheme that survives this flaw is the linear data-imputation scheme. This is the unique imputation scheme which coincides with the linear path-imputation that \emph{must} be our concluding step.
-
-% Extending our previous example, linear data-imputation would produce
-% \begin{align*}
-%     \mathbf{x} = (&(t_1, x_1^1, x_1^2),\\
-%     &(t_{3/2}, x_1^1 \frac{t_2 - t_{3/2}}{t_2 - t_1} + x_2^1 \frac{t_{3/2} - t_1}{t_2 - t_1}, x_{3/2}^2),\\
-%     &(t_2, x_2^1, *)).
-% \end{align*}
-% Note that there is still an unimputed piece of data in the $x_2^2$ slot; we will return to this in a moment. Concerning the $x_{3/2}^1$ slot, we see that the value imputed is precisely the same as that given by a subsequent linear path-imputation, and it is in this way that the linear scheme does not fall afoul of this flaw.
-
-However, when there is missing data at the start or the end of a partially observed times series, then there is no `next observation' which linear imputation can use. So in general, we cannot uniformly apply the linear data-imputation scheme, and must choose another scheme.
-
-In general, we can summarise this by saying that \emph{when used with the signature transform, any traditional data-imputation scheme will have a fragile dependence on unrelated observations}.
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Non-causality}
-Once fully observed data has been acquired, either by observation or data-imputation, then our next operation is always to perform linear path-imputation.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+Once fully observed data has been acquired, either by observation or
+data-imputation, then our next operation is always to perform linear
+path-imputation.
+%
 However, linear path-imputation is explicitly non-causal.
-
-Given some $(t_i, x_i)$ and $(t_{i+1}, x_{i + 1})$, then the interpolating function $f$, considered on the interval $(t_i, t_{i + 1})$, will already be moving toward $x_{i + 1}$ before that piece of data has arrived:
-\begin{equation*}
-    f(t) = x_{i} \frac{t_{i + 1} - t}{t_{i + 1} - t_i} + x_{i + 1} \frac{t - t_i}{t_{i + 1} - t_i}\text{ for }t \in (t_i, t_{i + 1}).
-\end{equation*}
-
+%
+Given some $(t_i, x_i)$ and $(t_{i+1}, x_{i + 1})$, then the
+interpolating function $f$, considered on the interval $(t_i, t_{i
++ 1})$, will already be moving toward $x_{i + 1}$ before that piece of
+data has arrived:
+%
+\begin{equation}
+    f(t) = x_{i} \frac{t_{i + 1} - t}{t_{i + 1} - t_i} + x_{i + 1} \frac{t - t_i}{t_{i + 1} - t_i}\text{ for }t \in (t_i, t_{i + 1})
+\end{equation}
+%
 This poses an issue in, for example, the online setting.
-
-Non-causality is of course not always a concern, but we will see in the next section that the same strategy for overcoming the previous flaw can overcome this challenge too.
-
+%
+Non-causality is not always a concern, but we will see in the
+next section that the same strategy for overcoming the previous flaw can
+overcome this challenge too.
+%
+% TODO: can we make this into a theorem?
 We can summarise this by saying that \emph{when used with the signature transform, any traditional data-imputation scheme will be non-causal}.
 % TODO: try and adjust this, it's really the path imputation that's noncausal.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Causal signature imputation}
-We have spoke so far about the limitations of traditional data-imputation schemes, and at first glance one may be forgiven for thinking that these are issues are unavoidable. 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-However, it turns out that we need not be limited just to these traditional imputation schemes. The trick is to consider time not as a \emph{parameterization}, but as a \emph{channel}. Contrast the two possible formulations that were discussed for $\phi$ defined in equation \eqref{eq:phi}.\footnote{To be clear, using time as a channel is already a well-known trick in the signature literature that we do not take credit for inventing! See for example \cite[Definition A.3]{kidger2019deep}. It is however pleasing that something commonly used in the theory of signatures is also what allows us to overcome what we identify as some of their limitations.}
+We have spoken so far about the limitations of traditional
+data imputation schemes, and at first glance, one may be forgiven for
+thinking that these are issues that are unavoidable. 
+%
+However, it turns out that we need not be limited just to these
+traditional imputation schemes. The trick is to consider time not as
+a \emph{parameterization}, but as a \emph{channel}. Contrast the two
+possible formulations that were discussed for $\phi$ defined in equation
+\eqref{eq:phi}.\footnote{To be clear, using time as a channel is already
+a well-known trick in the signature literature that we do not take
+credit for inventing! See for example \citet[Definition
+A.3]{kidger2019deep}. It is however pleasing that something commonly
+used in the theory of signatures is also what allows us to overcome what
+we identify as some of their limitations.}
+%
+This leads to our novel `meta imputation strategy', which we refer to as
+\emph{causal signature imputation}. It will turn any traditional causal
+data-imputation strategy (for example, feed-forward) into a causal
+path-imputation strategy for signatures; at the same time it will
+overcome the issue of a fragile dependence.
 
-This leads to our novel `meta imputation strategy', which we refer to as \emph{causal signature imputation}. It will turn any traditional causal data-imputation strategy (for example, feed-forward) into a causal path-imputation strategy for signatures; at the same time it will overcome the issue of a fragile dependence.
-
-Suppose we have $\mathbf{x} \in \seriesspace(\dataspace^*)$, and some favourite choice of causal data-imputation strategy $c \colon \seriesspace(\dataspace^*) \to \seriesspace(\dataspace)$.
-
-Next, given
-\begin{align*}
-    \mathbf{x} = ((t_1, x_1), \ldots, (t_n, x_n)) \in \seriesspace(\dataspace)
-\end{align*}
-we define the operation $\Phi \colon \seriesspace(\dataspace) \to \seriesspace(\dataspace)$ by
+Suppose we have $\mathbf{x} \in \seriesspace(\dataspace^*)$, and some
+favourite choice of causal data imputation strategy $c \colon
+\seriesspace(\dataspace^*) \to \seriesspace(\dataspace)$.
+%
+Next, given $\mathbf{x} = ((t_1, x_1), \ldots, (t_n, x_n)) \in \seriesspace(\dataspace)$,
+%
+we define the operation $\Phi\colon \seriesspace(\dataspace) \to
+\seriesspace(\dataspace)$ by
+%
 \begin{align}
     \Phi(\mathbf{x}) = (&(t_1, x_1), (t_2, x_1), (t_2, x_2),(t_3, x_2),\nonumber\\
     &\ldots,\nonumber\\
@@ -438,59 +552,47 @@ we define the operation $\Phi \colon \seriesspace(\dataspace) \to \seriesspace(\
     &\ldots,\nonumber\\
     &(t_{n - 1}, x_{n - 1}), (t_n, x_{n - 1}),(t_n, x_n)).\label{eq:causalsig}
 \end{align}
-That is, first time is updated, and then the corresponding observation in data space is updated. This means that the change in data space occurs instantaneously.
-
+%
+That is, \emph{first} time is updated, and \emph{then} the corresponding
+observation in data space is updated. This means that the change in data
+space occurs instantaneously.
+%
 For each $n \in \naturals$ (and given $a < b$), fix any $s_i^{(n)}$ for $i \in \{1, \ldots, n \}$ as in equation \eqref{eq:ss}. (We will see that the exact choice is unimportant in a moment.) Given
 \begin{align*}
     \mathbf{x} = ((t_1, x_1), \ldots, (t_n, x_n)) \in \seriesspace(\dataspace),
 \end{align*}
 let $\psi \colon \seriesspace(\dataspace) \to (\reals \times \dataspace)^{[a, b]}$ be the unique continuous piecewise linear path such that $\psi(s_i^{(n)}) = (t_i, x_i)$. Note that this is just a slight generalisation of the linear path-imputation that has already been performed so far; we are simply no longer asking for additional assumptions of the form $s_i^{(n)} = t_i$.\footnote{As in the $\mathbf{\varphi}_\theta$ of \cite{toth2019gp}, for example.}
-
+%
 Finally, we put this all together, and define the causal signature imputation strategy $\phi_c$ associated with $c$ to be
-\begin{equation*}
+%
+\begin{equation}
 \phi_c = \psi \circ \Phi \circ c,
-\end{equation*}
-which will be a map $\seriesspace(\dataspace^*) \to (\reals \times \dataspace)^{[a, b]}$.
-
-Thus $\phi_c$ defines a family of path-imputation schemes, parameterized by a choice of data-imputation scheme.
-
-Why does this work?
-
-First, note that the choice of $s_i^{(n)}$ is unimportant in this definition. By Theorem \ref{theorem:invariancetime}, the signature transform of $\phi_c(\mathbf{x})$ is invariant to this choice.
-
-Second, note that holding time between observations fixed is a valid choice, by the definition for $\seriesspace$ in equation \eqref{eq:seriesspace}. There should hopefully be no moral objection to our definition of $\seriesspace$, as holding time fixed essentially just corresponds to a jump discontinuity; not such a strange thing to have occur. Here, by replacing time as the parameterization, we are then able to recover the continuity of the path.
-
-Third, we claim that $\phi_c$ is immune to both of the flaws we describe in section \ref{section:flaws}. Consider first the flaw of dependence on sampling in unrelated channels.
-
-For simplicity take $c$ to be the forward-fill data-imputation strategy. Consider against the $\mathbf{x}$ defined in expression \eqref{eq:flaw1}. This means that
-\begin{equation}\label{eq:causal1}
-    \phi_c(\mathbf{x}) = \psi(\;((t_1, x_1^1, x_1^2), (t_2, x_1^1, x_1^2), (t_2, x_2^1, x_1^2))\;).
 \end{equation}
-% \begin{align*}
-%     &\phi_c(\mathbf{x})(s)\\
-%     &= \psi(\Phi(c(\mathbf{x})))(s)\\
-%     &=\psi(\Phi(\;((t_1, x_1^1, x_1^2), (t_2, x_2^1, C_2))\;))(s)\\
-%     &=\psi(\;((t_1, x_1^1, x_1^2), (t_2, x_1^1, x_1^2), (t_2, x_2^1, C_2))\;)(s)\\
-%     &= \begin{cases}
-%     (t_1 \frac{s_2^{(3)}- s}{s_2^{(3)} - s_1^{(3)}} + t_2 \frac{s - s_1^{(3)}}{s_2^{(3)} - s_1^{(3)}}, x_1^1, x_1^2)\\
-%     \hphantom{\hphantom{(t_2, }\,x_1^2 \frac{s_3^{(3)} - s}{s_3^{(3)} - s_2^{(3)}} + C_2 \frac{s - s_2^{(3)}}{s_3^{(3)} - s_2^{(3)}}) }\text{ for }s \in [s_1, s_2]\\
-%     (t_2, x_1^1 \frac{s_3^{(3)} - s}{s_3^{(3)} - s_2^{(3)}} + x_2^1 \frac{s - s_2^{(3)}}{s_3^{(3)} - s_2^{(3)}},\\
-%     \hphantom{(t_2, }\,x_1^2 \frac{s_3^{(3)} - s}{s_3^{(3)} - s_2^{(3)}} + C_2 \frac{s - s_2^{(3)}}{s_3^{(3)} - s_2^{(3)}}) \text{ for }s \in (s_2, s_3]
-%     \end{cases}
-% \end{align*}
-Contrast adding in the extra observation at $t_{3/2}$ as in equation \eqref{eq:flaw2}. Then
-\begin{align}
-    &\phi_c(\mathbf{x})(s)\nonumber\\
-    &=\psi(\;((t_1, x_1^1, x_1^2), (t_{3/2}, x_1^1, x_1^2), (t_{3/2}, x_1^1, x_{3/2}^2),\nonumber\\ &\hspace{3.1em}(t_2, x_1^1, x_{3/2}^2), (t_2, x_2^1, x_{3/2}^2))\;).\label{eq:causal2}
-\end{align}
+%
+which will be a map $\seriesspace(\dataspace^*) \to (\reals \times \dataspace)^{[a, b]}$.
+%
+Thus $\phi_c$ defines a family of path-imputation schemes, parameterized
+by a choice of data-imputation scheme. Please refer to Supplemental
+Section~\ref{sec:Causal signature imputation} for more details and
+a worked-out example.
 
-Evaluating each $\psi$ will then in each case give a path with three channels, corresponding to $t, x^1, x^2$. Then it is clear that the $(t, x^1)$ component of the path in equation \eqref{eq:causal1} is just a reparameterization of the path in equation \eqref{eq:causal2}, a difference which is irrelevant by Theorem \ref{theorem:invariancetime}. (And the $x^2$ component of the second path has been updated to use the new information $x_{3/2}^2$.) Thus the proposed scheme is robust to such issues. For general time series and $c$ taken to be any other causal data-imputation strategy, then much the same analysis can be easily be performed.
-
-Now consider the second potential flaw, of non-causality. The issue previously arose because of the non-causality of the linear path-imputation. We see from equation \eqref{eq:causalsig}, however, such changes only occur in data space while the time channel is frozen; conversely the time channel only updates with the value in the data space frozen. Provided that $c$ is also causal, then causality will, overall, have been preserved. For example, it is possible to use this scheme in an online setting.
-
-There are interesting comparisons to be made between causal signature imputation and certain operations in the signature literature. First is the \emph{lead-lag} transform \cite{primer2016}. With the lead-lag transform, the entire path is \emph{duplicated}, and then each side is alternately updated. Conversely, in causal signature imputation, the path is instead \emph{split} between $t$ and $(x^1, \ldots, x^n)$, and then each side is alternately updated.
-
-Second is the comparison to the linear and rectilinear embedding strategies, see for example \cite{fermanian2019embedding}. It is possible to interpret $\psi \circ \Phi$ as a hybrid between the linear and rectilinear embeddings: it is rectilinear with respect to an ordering of $t$ and $(x^1, \ldots, x^n)$, and linear on $(x^1, \ldots, x^n)$.
+\paragraph{Comparison to known signature imputation strategies.}
+%
+Our formulation can be related to two operations in the signature
+literature. First is the \emph{lead-lag} transform \cite{primer2016}.
+With the lead-lag transform, the entire path is \emph{duplicated}, after
+which each side is alternately updated.
+%
+Conversely, in causal signature imputation, the path is instead
+\emph{split} between $t$ and $(x^1, \ldots, x^n)$, and then each side is
+alternately updated.
+%
+Second is the comparison to the linear and rectilinear embedding
+strategies, see for example \citet{fermanian2019embedding}. It is
+possible to interpret $\psi \circ \Phi$ as a hybrid between the linear
+and rectilinear embeddings: it is rectilinear with respect to an
+ordering of $t$ and $(x^1, \ldots, x^n)$, and linear on $(x^1, \ldots,
+x^n)$.
 
 \subsection{Extending Gaussian process adapters with posterior moments}\label{section:ourgpadapter}
 TODO: % emphasize that the idea behind the PoM is that the model has access to uncertainty information during the prediction step. We argue that the previous formulation is not really uncertainty-aware in this sense, and we propose an approach to fix this. Notably, PoM comes at the cost of losing uncertainty \emph{about} the models predictions. 
@@ -526,15 +628,10 @@ This formulation, whilst lacking causality, is nonetheless robust to the issue o
 
 \section{Experiments}
 % The flaws we have identified have been theoretically identified, and so we have been able to correct them theoretically as well. Nonetheless we have also performed experiments, testing different imputation schemes across several different signature-based models.
-For our empirical analysis, let us first introduce our experimental setup by specifying the investigated datasets, models, imputation schemes as well as prediction tasks at hand. Subsequently, we present our quantitative results.
+For our empirical analysis, let us first introduce our experimental setup by specifying the investigated datasets, models, imputation schemes as well as prediction tasks at hand. Subsequently, we present and discuss our quantitative results.
 \subsection{Datasets}
-We make use of four real-world time series datasets:
-\begin{enumerate}
-    \item Physionet2012
-    \item PenDigits
-    \item LSST
-    \item CharacterTrajectories
-\end{enumerate}
+We make use of four real-world time series datasets: Physionet2012 challenge \cite{goldberger2000physiobank},
+    PenDigits \cite{Dua2019}, LSST \cite{allam2018photometric}, and CharacterTrajectories \cite{Dua2019}.
 
 \subsection{Models}
 We study the following set of models:
@@ -628,6 +725,128 @@ TODO
 \appendix
 
 \section{Appendix}\label{sec:Appendix}
+
+\section{Fragile dependence on sampling in unrelated channels: example}%
+\label{sec:Fragile dependence} 
+
+Suppose that we have observed the (very short) time series
+\begin{equation}\label{eq:flaw1}
+    \mathbf{x} = ((t_1, x_1^1, x_1^2), (t_2, x_2^1, *)) \in \seriesspace(\reals^2).
+\end{equation}
+Perhaps we now apply, say, forward fill data-imputation, to produce
+\begin{equation*}
+    ((t_1, x_1^1, x_1^2), (t_2, x_2^1, x_1^2)).
+\end{equation*}
+Finally we linearly path-impute to create the linear path
+\begin{align*}
+    f &\colon [t_1, t_2] \to \reals \times \reals^2\\
+    f &\colon t \mapsto (t, x_1^1\frac{t_2 - t}{t_2 - t_1} + x_2^1\frac{t - t_1}{t_2 - t_1}, x_1^2),
+\end{align*}
+to which we may then apply the signature transform. In particular we will have computed the Levy area with respect to $t$ and $x^1$. As this is just a straight line, the Levy area is zero.
+
+Now suppose we include an additional observation at some time $t_{3/2} \in (t_1, t_2)$, so that our data is instead
+\begin{equation}\label{eq:flaw2}
+    \mathbf{x} = ((t_1, x_1^1, x_1^2), (t_{3/2}, *, x_{3/2}^2), (t_2, x_2^1, *)).
+\end{equation}
+Then the same procedure as before will produce the data
+\begin{equation*}
+    \mathbf{x} = ((t_1, x_1^1, x_1^2), (t_{3/2}, x_1^1, x_{3/2}^2), (t_2, x_2^1, x_{3/2}^2)),
+\end{equation*}
+with corresponding function $f$. The $(t, x^1)$ components of $f$ and its $(t, x^1)$-Levy area are shown in Figure \ref{fig:bentline}. As a result of an unrelated observation in the $x^2$ channel, the $(t, x^1)$-Levy area has been changed. The closer $t_{3/2}$ is to $t_2$, the greater the disparity.
+
+This simple example underscores the danger of `just forward-fill data-imputing'. Doing so has introduced an undesired dependency on the simple \emph{presence} of an observation in other channels, with the change in our imputed path being determined by the \emph{time} at which this other observation occurred.
+
+Indeed, any imputation scheme that predicts something other than the unique value lying on the dashed line in Figure \ref{fig:bentline}, will fail. This means that this example holds for essentially every data-imputation scheme -- the only scheme that survives this flaw is the linear data-imputation scheme. This is the unique imputation scheme which coincides with the linear path-imputation that \emph{must} be our concluding step.
+
+% Extending our previous example, linear data-imputation would produce
+% \begin{align*}
+%     \mathbf{x} = (&(t_1, x_1^1, x_1^2),\\
+%     &(t_{3/2}, x_1^1 \frac{t_2 - t_{3/2}}{t_2 - t_1} + x_2^1 \frac{t_{3/2} - t_1}{t_2 - t_1}, x_{3/2}^2),\\
+%     &(t_2, x_2^1, *)).
+% \end{align*}
+% Note that there is still an unimputed piece of data in the $x_2^2$ slot; we will return to this in a moment. Concerning the $x_{3/2}^1$ slot, we see that the value imputed is precisely the same as that given by a subsequent linear path-imputation, and it is in this way that the linear scheme does not fall afoul of this flaw.
+
+However, when there is missing data at the start or the end of a partially observed times series, then there is no `next observation' which linear imputation can use. So in general, we cannot uniformly apply the linear data-imputation scheme, and must choose another scheme.
+
+\subsection{Causal signature imputation}
+\label{sec:Causal signature imputation}
+
+We have spoken so far about the limitations of traditional data-imputation schemes, and at first glance one may be forgiven for thinking that these are issues are unavoidable. 
+
+However, it turns out that we need not be limited just to these traditional imputation schemes. The trick is to consider time not as a \emph{parameterization}, but as a \emph{channel}. Contrast the two possible formulations that were discussed for $\phi$ defined in equation \eqref{eq:phi}.\footnote{To be clear, using time as a channel is already a well-known trick in the signature literature that we do not take credit for inventing! See for example \cite[Definition A.3]{kidger2019deep}. It is however pleasing that something commonly used in the theory of signatures is also what allows us to overcome what we identify as some of their limitations.}
+
+This leads to our novel `meta imputation strategy', which we refer to as \emph{causal signature imputation}. It will turn any traditional causal data-imputation strategy (for example, feed-forward) into a causal path-imputation strategy for signatures; at the same time it will overcome the issue of a fragile dependence.
+
+Suppose we have $\mathbf{x} \in \seriesspace(\dataspace^*)$, and some favourite choice of causal data-imputation strategy $c \colon \seriesspace(\dataspace^*) \to \seriesspace(\dataspace)$.
+
+Next, given
+\begin{align*}
+    \mathbf{x} = ((t_1, x_1), \ldots, (t_n, x_n)) \in \seriesspace(\dataspace)
+\end{align*}
+we define the operation $\Phi \colon \seriesspace(\dataspace) \to \seriesspace(\dataspace)$ by
+\begin{align}
+    \Phi(\mathbf{x}) = (&(t_1, x_1), (t_2, x_1), (t_2, x_2),(t_3, x_2),\nonumber\\
+    &\ldots,\nonumber\\
+    &(t_i, x_i), (t_{i + 1}, x_i), (t_{i + 1}, x_{i + 1}), (t_{i + 2}, x_{i + 1}),\nonumber\\
+    &\ldots,\nonumber\\
+    &(t_{n - 1}, x_{n - 1}), (t_n, x_{n - 1}),(t_n, x_n)).\label{eq:causalsig}
+\end{align}
+That is, first time is updated, and then the corresponding observation in data space is updated. This means that the change in data space occurs instantaneously.
+
+For each $n \in \naturals$ (and given $a < b$), fix any $s_i^{(n)}$ for $i \in \{1, \ldots, n \}$ as in equation \eqref{eq:ss}. (We will see that the exact choice is unimportant in a moment.) Given
+\begin{align*}
+    \mathbf{x} = ((t_1, x_1), \ldots, (t_n, x_n)) \in \seriesspace(\dataspace),
+\end{align*}
+let $\psi \colon \seriesspace(\dataspace) \to (\reals \times \dataspace)^{[a, b]}$ be the unique continuous piecewise linear path such that $\psi(s_i^{(n)}) = (t_i, x_i)$. Note that this is just a slight generalisation of the linear path-imputation that has already been performed so far; we are simply no longer asking for additional assumptions of the form $s_i^{(n)} = t_i$.\footnote{As in the $\mathbf{\varphi}_\theta$ of \cite{toth2019gp}, for example.}
+
+Finally, we put this all together, and define the causal signature imputation strategy $\phi_c$ associated with $c$ to be
+\begin{equation*}
+\phi_c = \psi \circ \Phi \circ c,
+\end{equation*}
+which will be a map $\seriesspace(\dataspace^*) \to (\reals \times \dataspace)^{[a, b]}$.
+
+Thus $\phi_c$ defines a family of path-imputation schemes, parameterized by a choice of data-imputation scheme.
+
+Why does this work?
+
+First, note that the choice of $s_i^{(n)}$ is unimportant in this definition. By Theorem \ref{theorem:invariancetime}, the signature transform of $\phi_c(\mathbf{x})$ is invariant to this choice.
+
+Second, note that holding time between observations fixed is a valid choice, by the definition for $\seriesspace$ in equation \eqref{eq:seriesspace}. There should hopefully be no moral objection to our definition of $\seriesspace$, as holding time fixed essentially just corresponds to a jump discontinuity; not such a strange thing to have occur. Here, by replacing time as the parameterization, we are then able to recover the continuity of the path.
+
+Third, we claim that $\phi_c$ is immune to both of the flaws we describe in section \ref{section:flaws}. Consider first the flaw of dependence on sampling in unrelated channels.
+
+For simplicity take $c$ to be the forward-fill data-imputation strategy. Consider against the $\mathbf{x}$ defined in expression \eqref{eq:flaw1}. This means that
+\begin{equation}\label{eq:causal1}
+    \phi_c(\mathbf{x}) = \psi(\;((t_1, x_1^1, x_1^2), (t_2, x_1^1, x_1^2), (t_2, x_2^1, x_1^2))\;).
+\end{equation}
+% \begin{align*}
+%     &\phi_c(\mathbf{x})(s)\\
+%     &= \psi(\Phi(c(\mathbf{x})))(s)\\
+%     &=\psi(\Phi(\;((t_1, x_1^1, x_1^2), (t_2, x_2^1, C_2))\;))(s)\\
+%     &=\psi(\;((t_1, x_1^1, x_1^2), (t_2, x_1^1, x_1^2), (t_2, x_2^1, C_2))\;)(s)\\
+%     &= \begin{cases}
+%     (t_1 \frac{s_2^{(3)}- s}{s_2^{(3)} - s_1^{(3)}} + t_2 \frac{s - s_1^{(3)}}{s_2^{(3)} - s_1^{(3)}}, x_1^1, x_1^2)\\
+%     \hphantom{\hphantom{(t_2, }\,x_1^2 \frac{s_3^{(3)} - s}{s_3^{(3)} - s_2^{(3)}} + C_2 \frac{s - s_2^{(3)}}{s_3^{(3)} - s_2^{(3)}}) }\text{ for }s \in [s_1, s_2]\\
+%     (t_2, x_1^1 \frac{s_3^{(3)} - s}{s_3^{(3)} - s_2^{(3)}} + x_2^1 \frac{s - s_2^{(3)}}{s_3^{(3)} - s_2^{(3)}},\\
+%     \hphantom{(t_2, }\,x_1^2 \frac{s_3^{(3)} - s}{s_3^{(3)} - s_2^{(3)}} + C_2 \frac{s - s_2^{(3)}}{s_3^{(3)} - s_2^{(3)}}) \text{ for }s \in (s_2, s_3]
+%     \end{cases}
+% \end{align*}
+Contrast adding in the extra observation at $t_{3/2}$ as in equation \eqref{eq:flaw2}. Then
+\begin{align}
+    &\phi_c(\mathbf{x})(s)\nonumber\\
+    &=\psi(\;((t_1, x_1^1, x_1^2), (t_{3/2}, x_1^1, x_1^2), (t_{3/2}, x_1^1, x_{3/2}^2),\nonumber\\ &\hspace{3.1em}(t_2, x_1^1, x_{3/2}^2), (t_2, x_2^1, x_{3/2}^2))\;).\label{eq:causal2}
+\end{align}
+
+Evaluating each $\psi$ will then in each case give a path with three channels, corresponding to $t, x^1, x^2$. Then it is clear that the $(t, x^1)$ component of the path in equation \eqref{eq:causal1} is just a reparameterization of the path in equation \eqref{eq:causal2}, a difference which is irrelevant by Theorem \ref{theorem:invariancetime}. (And the $x^2$ component of the second path has been updated to use the new information $x_{3/2}^2$.) Thus the proposed scheme is robust to such issues. For general time series and $c$ taken to be any other causal data-imputation strategy, then much the same analysis can be easily be performed.
+
+Now consider the second potential flaw, of non-causality. The issue previously arose because of the non-causality of the linear path-imputation. We see from equation \eqref{eq:causalsig}, however, such changes only occur in data space while the time channel is frozen; conversely the time channel only updates with the value in the data space frozen. Provided that $c$ is also causal, then causality will, overall, have been preserved. For example, it is possible to use this scheme in an online setting.
+
+There are interesting comparisons to be made between causal signature imputation and certain operations in the signature literature. First is the \emph{lead-lag} transform \cite{primer2016}. With the lead-lag transform, the entire path is \emph{duplicated}, and then each side is alternately updated. Conversely, in causal signature imputation, the path is instead \emph{split} between $t$ and $(x^1, \ldots, x^n)$, and then each side is alternately updated.
+
+Second is the comparison to the linear and rectilinear embedding strategies, see for example \cite{fermanian2019embedding}. It is possible to interpret $\psi \circ \Phi$ as a hybrid between the linear and rectilinear embeddings: it is rectilinear with respect to an ordering of $t$ and $(x^1, \ldots, x^n)$, and linear on $(x^1, \ldots, x^n)$.
+
+
+
 \subsection{Further Experiments}\label{supp:Experiments}
 Describe here the further datasets, the subsampling types etc.
 
