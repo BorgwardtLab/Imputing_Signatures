@@ -1,7 +1,7 @@
-# GP Signatures
-
+# Path Imputation Strategies for Signature Models
+ 
 The goal of this project is to extend signature models to the real-world setting of classifying irregularly spaced and incompletely observed time series. 
-Specifically, we propose a GP-Sig, an end-to-end MGP adapter employing a deep signature model.
+
 
 ## Environment
 Please install the dependencies as indicated in the Pipfile
