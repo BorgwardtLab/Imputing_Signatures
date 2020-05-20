@@ -5,7 +5,7 @@ The goal of this project is to extend signature models to the real-world setting
 
 ## Environment
 Please install the dependencies as indicated in the requirements.txt 
-```> pipenv install requirements.txt --skip-lock```  
+```> pipenv install --skip-lock```  
 ```> pipenv shell```
 
 Note, that the newer GPytorch versions ( >1.0.0 ) tend to overwrite the torch version in pipenv. If this happens (e.g. with GPytorch 1.0.1), a working solution was to just ```>pip intall torch==1.2.0``` 
