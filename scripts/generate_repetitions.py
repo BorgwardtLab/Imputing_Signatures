@@ -70,14 +70,17 @@ def grep_config(data, dataset, model, subsampler=None):
 if __name__ == '__main__':
     
     parser = argparse.ArgumentParser()
-    parser.add_argument('--resubmit', action='store_true', default=True, 
+    parser.add_argument('--resubmit', action='store_true', default=False, 
         help='whether completed runs should be checked and NOT resubmitted, but only remaining jobs')
+    parser.add_argument('--dir', default='experiments', 
+        help='dir where results are stored')
     args = parser.parse_args()
     # number of repetitions for each method:
     n_repetitions = 5
     
     #Set up paths:
     exp_dir = 'exp'
+    base_dir = args.dir
     fit_module = 'train_model'
     fit_module_path = os.path.join(exp_dir, fit_module + '.py')
 
@@ -135,7 +138,7 @@ if __name__ == '__main__':
                         for data_format in data_formats:
                             imputed_model = data_format + model
                             #define output directory of current hypersearch experiment
-                            outdir = os.path.join('experiments', fit_module, dataset, imputed_model)
+                            outdir = os.path.join(base_dir, fit_module, dataset, imputed_model)
                             config = grep_config(best_runs, dataset, imputed_model)
                             if resubmit_failed_jobs:
                                 reps = get_reps_to_submit(counts, seed_counts, n_repetitions, dataset, model, data_format=data_format)
@@ -149,7 +152,7 @@ if __name__ == '__main__':
                                 commands.append(command)
                     else:
                         #GP models
-                        outdir = os.path.join('experiments', fit_module, dataset, model)
+                        outdir = os.path.join(base_dir, fit_module, dataset, model)
                         config = grep_config(best_runs, dataset, model)
                         if resubmit_failed_jobs:
                             reps = get_reps_to_submit(counts, seed_counts, n_repetitions, dataset, model)
@@ -170,7 +173,7 @@ if __name__ == '__main__':
                             for data_format in data_formats:
                                 imputed_model = data_format + model
                                 #define output directory of current hypersearch experiment
-                                outdir = os.path.join('experiments', fit_module, dataset, subsampler, imputed_model)
+                                outdir = os.path.join(base_dir, fit_module, dataset, subsampler, imputed_model)
                                 config = grep_config(best_runs, dataset, imputed_model, subsampler) #here we additionally feed the subsampler!
                                 if resubmit_failed_jobs:
                                     reps = get_reps_to_submit(counts, seed_counts, n_repetitions, dataset, model, subsampler, data_format)
@@ -184,7 +187,7 @@ if __name__ == '__main__':
                                     commands.append(command)
                         else:
                             #define output directory of current GP hypersearch experiments
-                            outdir = os.path.join('experiments', fit_module, dataset, subsampler, model)
+                            outdir = os.path.join(base_dir, fit_module, dataset, subsampler, model)
                             config = grep_config(best_runs, dataset, model, subsampler) #here we additionally feed the subsampler!
                             if resubmit_failed_jobs:
                                 reps = get_reps_to_submit(counts, seed_counts, n_repetitions, dataset, model, subsampler)
