@@ -4,7 +4,6 @@ import json
 import argparse
 import pandas as pd
 import numpy as np
-from IPython import embed
 from tabulate import tabulate
 from collections import defaultdict
 import seaborn as sns
@@ -647,7 +646,6 @@ if __name__ == "__main__":
         param_df = convert_to_df(params, repetitions=True, param_flag=True) 
         plot_df(df, hue ='imputation')
         plot_df(df, params=param_df, hue ='imputation', main=True)
-        embed()
         sys.exit()
  
     #Find the test performance of the best run per method (in terms of validation performance)
