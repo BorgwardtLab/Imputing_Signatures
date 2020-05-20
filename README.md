@@ -15,17 +15,18 @@ after the pipenv install
 ### gpu scheduler
 if you want to use a gpu scheduler, simply install this one via:
 ```> pip install simple_gpu_scheduler ```
+
 ### generate hypersearch commands:
-To ensure that there is no later collision between processes trying to cache at the same time and place, first run the following bash script configured to preprocessing=true, 
-it then genereates commands which will only handle the preprocessing and caching. 
-```> ./scripts/generate_UEA_hypersearch_commands.sh ``` 
-After preprocessing, deactivate it (setting preprocessing=false), and rerun the script.
-This bash script generates multiple command files, one for GP-based methods and one for the other imputed methods (usually requiring less memory).
-For instance, this one: ```command_UEA_imputed_hypersearches.txt```
+```> python scripts/generate_hypersearch_commands.py
+
+This script generates multiple command files, one for GP-based methods and one for the other imputed methods (usually requiring less memory).
+For instance, this one: ```scripts/commands/command_LSST_imputed_hypersearches.csv```
 
 ### actually run the hypersearch via gpu scheduler on the first 3 devices of your server:
-```> simple_gpu_scheduler --gpus 0,1,2 < command_UEA_imputed_hypersearches.txt ```
+```> simple_gpu_scheduler --gpus 0,1,2 < command_LSST_imputed_hypersearches.csv ```
 
+If there is a configuration problem with the virtual environment and the gpu scheduler, alternatively those python commands could be started manually
+or sequentially via ```> source scripts/commands/command_LSST_imputed_hypersearches.csv
 
 # Quick fitting, testing
 ## Train a end-to-end, posterior moments GP-imputed Signature Model, specifying signature depth (truncation level) to 3
