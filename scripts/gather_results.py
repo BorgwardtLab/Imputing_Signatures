@@ -62,7 +62,8 @@ metric_names = {
     'validation.balanced_accuracy': 'val-BAC',
     'testing.auprc': 'Average Precision', #average precision 
     'testing.auroc': 'AUROC',
-    'validation.auprc': 'val-AP'  
+    'validation.auprc': 'val-AP',
+    'n_params': 'Number of Parameters' 
 }
 
 def process_experiment(base_path, exp_path, heads):
@@ -365,10 +366,13 @@ def extract_and_tex_single_datasets(df):
         curr_piv.to_latex(f'results/tables/{dat}.tex', escape=False)
     return dfs
 
-def convert_to_df(data, repetitions=False, n_repetitions=5):
+def convert_to_df(data, repetitions=False, n_repetitions=5, param_flag=False):
     """Convert best runs dictionary to pd dataframe which can be transformed to tex table or easy to plot.
         If repetitions=True, #n_repetitions results are also added as seperate records
+        If param_flag=True (requires repetitions), param df is compiled
     """
+    if param_flag and not repetitions:
+        raise ValueError('param df only computed for reptitions! --> set repetitions=True')
     out_df = pd.DataFrame() 
     for dataset in data.keys():
         if '/' in dataset:
@@ -384,23 +388,33 @@ def convert_to_df(data, repetitions=False, n_repetitions=5):
                 if metric in ['path', 'seed', 'count']:
                     continue
                 if repetitions:
-                    found_reps = len(data[dataset][model][metric]['raw']) 
-                    if found_reps < n_repetitions: 
-                        print(f'For {dataset}{subsampling} {model} found {found_reps} completed repetitions!')    
-                        continue
-                    
                     model_name = model_names[model]
                     imputation, model_name = model_name.split('-') 
-                    for rep in np.arange(n_repetitions):
+                    if not param_flag:
+                        found_reps = len(data[dataset][model][metric]['raw']) 
+                        if found_reps < n_repetitions: 
+                            print(f'For {dataset}{subsampling} {model} found {found_reps} completed repetitions!')    
+                        for rep in np.arange(found_reps): # cave: this rep must not coincide with the exact rep nr that was used in the command!
+                            record = {  'long_dataset': os.path.join(dataset_name, subsampling),
+                                        'dataset':      dataset_name,
+                                        'subsampling':  subsampling_names[subsampling],
+                                        'model':        model_name,
+                                        'imputation':   imputation,
+                                        'metric':       metric_names[metric], 
+                                        'value':        [ data[dataset][model][metric]['raw'][rep] ] ,
+                                        'repetition':   rep + 1
+                                 }
+                            record_df = pd.DataFrame(record)
+                            out_df = out_df.append(record_df)
+                    else: #if param flag and repetitions
                         record = {  'long_dataset': os.path.join(dataset_name, subsampling),
                                     'dataset':      dataset_name,
                                     'subsampling':  subsampling_names[subsampling],
                                     'model':        model_name,
                                     'imputation':   imputation,
                                     'metric':       metric_names[metric], 
-                                    'value':        [ data[dataset][model][metric]['raw'][rep] ] ,
-                                    'repetition':   rep + 1
-                             }
+                                    'value':        [ data[dataset][model][metric] ]
+                                 }
                         record_df = pd.DataFrame(record)
                         out_df = out_df.append(record_df) 
                 else:
@@ -474,7 +488,7 @@ def aggregate_repetitions(out_dict, n_counts=5, include_incomplete=False, comple
     return counts
 
 
-def plot_df(df, path='results/plots', hue='model', main=False):
+def plot_df(df, params=None, path='results/plots', hue='model', main=False):
     """
     - Create grouped barplot and save to path/barplot.pdf
     - hue: which concept should be inside the grouping of the barplot
@@ -482,7 +496,8 @@ def plot_df(df, path='results/plots', hue='model', main=False):
 
     """
     # do plotting here
-    plt.figure(figsize=(10,10))
+    
+
     hue_order = ['Sig', 'RNNSig', 'DeepSig', 'RNN']
     order = ['zero', 'lin', 'ff', 'causal', 'ind', 'GP', 'GP_PoM']
     if hue == 'model':
@@ -495,23 +510,94 @@ def plot_df(df, path='results/plots', hue='model', main=False):
 
     for dataset in df['long_dataset'].unique():
         data = df[df['long_dataset'] == dataset]
+        plt.clf() 
+        figsize=(10,10) 
+        plt.figure(figsize=figsize)        
         if main:
             #only plot metric that was hyperparam search objective:
             data = data[data['metric'].isin(['BAC', 'Average Precision'])]
-            curr_metric = data['metric'].iloc[0] 
+            curr_metric = data['metric'].iloc[0]                              
             data = data.rename(columns={'value': curr_metric} )
-            row = None
+            row = None 
         else:
             curr_metric = 'value'
-            row = 'metric' 
-        g = sns.catplot(x=x, y=curr_metric, row=row, hue=hue, data=data, 
-        kind="bar", height=2, aspect=2, order=order, hue_order=hue_order, palette=sns.color_palette("Paired", 8), errwidth=0.75, capsize=0.05) #muted #bar 
+            row = 'metric'
+        
+        g = sns.catplot(x=x, y=curr_metric, row=row, hue=hue, data=data,  
+            kind="bar", height=2, aspect=2, order=order, hue_order=hue_order, palette=sns.color_palette("Paired", 8), errwidth=0.75, capsize=0.05) #muted #bar
+ 
+        #if params is not None:
+        #    if not main:
+        #        raise ValueError('param plotting only implemented for main figure with one eval metric')
+        #    curr_par = params[params['long_dataset'] == dataset]
+        #    curr_metric = curr_par['metric'].iloc[0]
+        #    curr_par = curr_par.rename(columns={'value': curr_metric} )
+        #    row = None
+        #    #add parameters to plot
+        #    g.map(sns.catplot, x=x, y=curr_metric, row=row, hue=hue, kind="bar", height=2, aspect=2, order=order, hue_order=hue_order, palette=sns.color_palette("Paired", 8), data=curr_par) 
         if main:
             plot_path = os.path.join(path, f"barplot_main_{dataset.replace('/','-')}.pdf")
         else:
             plot_path = os.path.join(path, f"barplot_{dataset.replace('/','-')}.pdf")
 
-        plt.savefig(plot_path, bbox_inches='tight') 
+        plt.savefig(plot_path, bbox_inches='tight')
+        plt.close()
+        plt.clf()
+
+        if params is not None:
+            plt.figure(figsize=figsize)        
+            curr_par = params[params['long_dataset'] == dataset]
+            curr = curr_par['metric'].iloc[0]
+            curr_par = curr_par.rename(columns={'value': curr} )
+            
+            g = sns.catplot(x=x, y=curr, row=row, hue=hue, data=curr_par, 
+                    kind="bar", height=2, aspect=2, order=order, hue_order=hue_order, palette=sns.color_palette("Paired", 8), errwidth=0.75, capsize=0.05) #muted #bar
+            g.set(yscale="log")           
+            plot_path = os.path.join(path, f"barplot_main_params_{dataset.replace('/','-')}.pdf")
+            plt.savefig(plot_path, bbox_inches='tight')
+            plt.close()
+            plt.clf()
+
+def get_run_params(path):
+    """ function that reads out the number of parameter for a given run path
+        - input: path (relative, starting from: experiments/train_model/<path>
+        (cout.txt is the file where the parameters are written to, this will 
+        be appended to path here)
+    """ 
+    filepath = os.path.join('experiments', 'train_model', path, 'cout.txt')
+    key = 'Number of trainable Parameters:'  
+    with open(filepath, 'r') as f:
+        found = False
+        while not found:
+            l = f.readline()
+            if key in l:
+                found = True    
+                param_line = l
+    if not found:
+        return False, None
+    else:
+        p_string = param_line.split(':')[1].rstrip('\n')
+        return True, int(p_string)
+ 
+def gather_parameters(out_dict):
+    counts = defaultdict(dict) 
+    for dataset in out_dict.keys(): #dataset
+        if dataset not in counts.keys():
+            counts[dataset] = defaultdict()
+        for run in out_dict[dataset]: #looping over list of runs
+            for method, result in run.items(): #run is a dict with method as key and dictionary of results as value
+                #first determine available test metrics to aggregate over:
+                found, n_params = get_run_params(result['path'])
+                if not found:
+                    raise ValueError(f'Number of parameters not found for the following job: {run}')
+                if method not in counts[dataset].keys():
+                    counts[dataset][method] = defaultdict()
+                    counts[dataset][method]['n_params'] = n_params
+                else:
+                    assert n_params == counts[dataset][method]['n_params']
+    return counts
+
+
 
 if __name__ == "__main__":
     
@@ -556,9 +642,11 @@ if __name__ == "__main__":
     
         #finish after this:
         agg = aggregate_repetitions(out_dict, n_counts=5, include_incomplete=True, completed=counts)
-        df = convert_to_df(agg, repetitions=True) 
+        params = gather_parameters(out_dict)
+        df = convert_to_df(agg, repetitions=True)
+        param_df = convert_to_df(params, repetitions=True, param_flag=True) 
         plot_df(df, hue ='imputation')
-        plot_df(df, hue ='imputation', main=True)
+        plot_df(df, params=param_df, hue ='imputation', main=True)
         embed()
         sys.exit()
  
