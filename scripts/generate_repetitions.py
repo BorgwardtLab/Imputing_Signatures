@@ -148,7 +148,7 @@ if __name__ == '__main__':
                             else: 
                                 curr_reps = np.arange(n_repetitions) 
                             for r in curr_reps:
-                                command = f'python {fit_module_path} -F {outdir} with {config} rep{r+1}' 
+                                command = f'pipenv run python {fit_module_path} -F {outdir} with {config} rep{r+1}' 
                                 commands.append(command)
                     else:
                         #GP models
@@ -162,7 +162,7 @@ if __name__ == '__main__':
                         else: 
                             curr_reps = np.arange(n_repetitions) 
                         for r in curr_reps:
-                            command = f'python {fit_module_path} -F {outdir} with {config} rep{r+1}' 
+                            command = f'pipenv run python {fit_module_path} -F {outdir} with {config} rep{r+1}' 
                             commands.append(command)
                         
             else: #UEA datasets here ..         
@@ -183,7 +183,7 @@ if __name__ == '__main__':
                                 else: 
                                     curr_reps = np.arange(n_repetitions)
                                 for r in curr_reps: 
-                                    command = f'python {fit_module_path} -F {outdir} with {config} rep{r+1}' 
+                                    command = f'pipenv run python {fit_module_path} -F {outdir} with {config} rep{r+1}' 
                                     commands.append(command)
                         else:
                             #define output directory of current GP hypersearch experiments
@@ -197,7 +197,7 @@ if __name__ == '__main__':
                             else: 
                                 curr_reps = np.arange(n_repetitions) 
                             for r in curr_reps: 
-                                command = f'python {fit_module_path} -F {outdir} with {config} rep{r+1}' 
+                                command = f'pipenv run python {fit_module_path} -F {outdir} with {config} rep{r+1}' 
                                 commands.append(command)
                 
             #Write commands to outfile:

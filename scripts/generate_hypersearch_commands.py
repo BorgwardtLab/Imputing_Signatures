@@ -100,7 +100,7 @@ if __name__ == '__main__':
                             #we need additional loop over imputation strategies
                             for data_format in data_formats:
                                 #write command to outfile, this one is just to run the preprocessing!
-                                command = f'python {fit_module_path} with {model} {dataset} {data_format} n_calls=1 n_random_starts=1 overrides.n_epochs=1'
+                                command = f'pipenv run python {fit_module_path} with {model} {dataset} {data_format} n_calls=1 n_random_starts=1 overrides.n_epochs=1'
                                 commands.append(command)
                     else:
                         #determine if to exlude_original has to be set (only in signature models)
@@ -120,7 +120,7 @@ if __name__ == '__main__':
                                 if count == 0: #dont add invalid commands
                                     continue 
                                 count_f = format_counts(count)
-                                command = f'python {fit_module_path} -F {outdir} with {model} {dataset} {data_format} {count_f} {suffix}' 
+                                command = f'pipenv run python {fit_module_path} -F {outdir} with {model} {dataset} {data_format} {count_f} {suffix}' 
                                 commands.append(command)
                         else:
                             #GP models
@@ -132,7 +132,7 @@ if __name__ == '__main__':
                             if count == 0: #dont add invalid commands
                                     continue 
                             count_f = format_counts(count)
-                            command = f'python {fit_module_path} -F {outdir} with {model} {dataset} {count_f} {suffix}' 
+                            command = f'pipenv run python {fit_module_path} -F {outdir} with {model} {dataset} {count_f} {suffix}' 
                             commands.append(command)
  
             else: #UEA datasets here ..         
@@ -146,10 +146,10 @@ if __name__ == '__main__':
                                     #write command to outfile, this one is just to run the preprocessing!
                                     if dataset == 'PenDigits':
                                         print('Using custom subsampling for PenDigits due to short lengths')
-                                        #write python command
-                                        command = f'python {fit_module_path} with {subsampler}{dataset} {model} {dataset} {data_format} n_calls=1 n_random_starts=1 overrides.n_epochs=1' 
+                                        #write pipenv run python command
+                                        command = f'pipenv run python {fit_module_path} with {subsampler}{dataset} {model} {dataset} {data_format} n_calls=1 n_random_starts=1 overrides.n_epochs=1' 
                                     else:
-                                        command = f'python {fit_module_path} with {subsampler} {model} {dataset} {data_format} n_calls=1 n_random_starts=1 overrides.n_epochs=1'
+                                        command = f'pipenv run python {fit_module_path} with {subsampler} {model} {dataset} {data_format} n_calls=1 n_random_starts=1 overrides.n_epochs=1'
                                     commands.append(command)        
                         else:
                             if model_type == 'imputed':
@@ -167,11 +167,11 @@ if __name__ == '__main__':
 
                                     if dataset == 'PenDigits':
                                         print('Using custom subsampling for PenDigits due to short lengths')
-                                        #write python command
-                                        command = f'python {fit_module_path} -F {outdir} with {subsampler}{dataset} {model} {dataset} {data_format} {eval_str} {count_f}' 
+                                        #write pipenv run python command
+                                        command = f'pipenv run python {fit_module_path} -F {outdir} with {subsampler}{dataset} {model} {dataset} {data_format} {eval_str} {count_f}' 
                                     else:
-                                        #write python command 
-                                        command = f'python {fit_module_path} -F {outdir} with {subsampler} {model} {dataset} {data_format} {eval_str} {count_f}' 
+                                        #write pipenv run python command 
+                                        command = f'pipenv run python {fit_module_path} -F {outdir} with {subsampler} {model} {dataset} {data_format} {eval_str} {count_f}' 
                                     commands.append(command)
                             else:
                                 #define output directory of current GP hypersearch experiments
@@ -186,10 +186,10 @@ if __name__ == '__main__':
 
                                 if dataset == 'PenDigits':
                                     print('Using custom subsampling for PenDigits due to short lengths')
-                                    #write python command
-                                    command = f'python {fit_module_path} -F {outdir} with {subsampler}{dataset} {model} {dataset} {eval_str} {count_f}' 
+                                    #write pipenv run python command
+                                    command = f'pipenv run python {fit_module_path} -F {outdir} with {subsampler}{dataset} {model} {dataset} {eval_str} {count_f}' 
                                 else: 
-                                    command = f'python {fit_module_path} -F {outdir} with {subsampler} {model} {dataset} {eval_str} {count_f}' 
+                                    command = f'pipenv run python {fit_module_path} -F {outdir} with {subsampler} {model} {dataset} {eval_str} {count_f}' 
                                 commands.append(command)
                 
             #Write commands to outfile:
