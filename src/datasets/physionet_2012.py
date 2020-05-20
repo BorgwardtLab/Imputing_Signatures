@@ -15,7 +15,7 @@ import torch
 
 from src.tasks import BinaryClassification
 from .dataset import Dataset
-from .mimic_benchmarks_utils import Normalizer
+from .benchmarks_utils import Normalizer
 from .utils import DATA_DIR
 import os
 

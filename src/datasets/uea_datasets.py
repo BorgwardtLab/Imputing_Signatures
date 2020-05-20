@@ -10,7 +10,7 @@ from .utils import DATA_DIR
 import uea_ucr_datasets # >>>>> requires the input data in ~/.data/UEA_UCR <<<<<<
 
 from src.tasks import MulticlassClassification 
-from .mimic_benchmarks_utils import Normalizer
+from .benchmarks_utils import Normalizer
 from .utils import DATA_DIR
 
 DATASET_BASE_PATH = os.path.join(DATA_DIR, 'UEA')
