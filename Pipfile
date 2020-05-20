@@ -20,6 +20,7 @@ requests = "*"
 scikit-optimize = "*"
 ipython = "*"
 tabulate = "*"
+requirements-txt = "*"
 
 [requires]
 python_version = "3.7"
