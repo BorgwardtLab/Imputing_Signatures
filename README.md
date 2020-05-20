@@ -28,6 +28,11 @@ For instance, this one: ```scripts/commands/command_LSST_imputed_hypersearches.c
 If there is a configuration problem with the virtual environment and the gpu scheduler, alternatively those python commands could be started manually
 or sequentially via ```> source scripts/commands/command_LSST_imputed_hypersearches.csv
 
+### Running repetitions:
+```> python scripts/generate_repetitions.py  
+Again, as with the hyperparameter search:
+```> simple_gpu_scheduler --gpus 0,1,2 < command_LSST_imputed_repetitions.csv ```
+
 # Quick fitting, testing
 ## Train a end-to-end, posterior moments GP-imputed Signature Model, specifying signature depth (truncation level) to 3
 
