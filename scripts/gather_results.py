@@ -8,7 +8,7 @@ from tabulate import tabulate
 from collections import defaultdict
 import seaborn as sns
 import matplotlib.pyplot as plt   
-
+from IPython import embed
 
 
 test_metrics = [
@@ -24,10 +24,10 @@ model_names = {
     'GP_mc_GRUSignatureModel': 'GP-RNNSig',
     'GP_mc_SignatureModel': 'GP-Sig',
     'GP_mc_DeepSignatureModel': 'GP-DeepSig',
-    'GP_mom_GRUModel': 'GP_PoM-RNN',
-    'GP_mom_GRUSignatureModel': 'GP_PoM-RNNSig',
-    'GP_mom_SignatureModel': 'GP_PoM-Sig',
-    'GP_mom_DeepSignatureModel': 'GP_PoM-DeepSig',
+    'GP_mom_GRUModel': 'GP-PoM-RNN',
+    'GP_mom_GRUSignatureModel': 'GP-PoM-RNNSig',
+    'GP_mom_SignatureModel': 'GP-PoM-Sig',
+    'GP_mom_DeepSignatureModel': 'GP-PoM-DeepSig',
     'causalImputedRNNModel': 'causal-RNN',
     'causalImputedRNNSignatureModel': 'causal-RNNSig',
     'causalImputedSignatureModel': 'causal-Sig',
@@ -307,8 +307,8 @@ def get_best_runs_dict(data):
                 out[dataset][method][metric] = data[dataset][method]['best'][metric] 
     return out
 
-def pivot_df(df):
-    df_out = df.pivot_table(index=['subsampling', 'model'], columns='metric', values='value')
+def pivot_df(df, aggfunc=np.mean):
+    df_out = df.pivot_table(index=['subsampling', 'model'], columns='metric', values='value', aggfunc=aggfunc)
     return df_out
 
 def highlight_best(df, top=3): #actually operates on df series 
@@ -327,6 +327,27 @@ def highlight_best(df, top=3): #actually operates on df series
     #however, there is the same issue here as well.. 
     df[rest] = df[rest].apply(lambda x: '$ {:g} $'.format(float('{:.5g}'.format(float(x))))) 
     return df
+
+def highlight_best_with_std(df, df_s, top=3): 
+    """ actually operates on dataframes
+        here, takes df with mean (to determine best), and one with std as to reformat
+    """
+    formats = [ [r' \mathbf{ \underline{ ',    ' }}'],
+        [r' \mathbf{ ',               ' }'],
+        [r' \underline{ ',            ' }']]
+    for col in df.columns:
+        top_n = df[col].nlargest(top).index.tolist()
+        rest = list(df[col].index)
+        for i, best in enumerate(top_n):
+            df[col][best] = '$ ' + formats[i][0] + f'{df[col][best]:.4g} \pm {df_s[col][best]:.2g}' + formats[i][1] + ' $'
+            rest.remove(best)
+        #this manual step was trying to get conistently 5 decimals as df.round did not do it.
+        #however, there is the same issue here as well.. 
+        for row in rest:
+            df[col][row] =  f'$ {df[col][row]:.4g} \pm {df_s[col][row]:.2g} $'
+        #df_s[col][rest] = df_s[col][rest].apply(lambda x: '$ {:g} $'.format(float('{:.5g}'.format(float(x))))) 
+    return df
+
 
 def extract_and_tex_single_datasets(df):
     """ return dict of dataset-wise results in df format"""
@@ -365,7 +386,52 @@ def extract_and_tex_single_datasets(df):
         curr_piv.to_latex(f'results/tables/{dat}.tex', escape=False)
     return dfs
 
-def convert_to_df(data, repetitions=False, n_repetitions=5, param_flag=False):
+def extract_and_tex_single_datasets_with_std(df):
+    """ return dict of dataset-wise results in df format"""
+    dfs = defaultdict()
+    datasets = df['dataset'].unique()
+    for dat in datasets:
+        curr_df = df.query("dataset == @dat")
+        #pivot df to compact format (metrics as columns)
+        curr_piv_m = pivot_df(curr_df)
+        curr_piv_s = pivot_df(curr_df, aggfunc=np.std)
+        if curr_piv_m.index[0][0] == '':
+            curr_piv_m = curr_piv_m.reset_index(level='subsampling', drop=True)
+            curr_piv_s = curr_piv_s.reset_index(level='subsampling', drop=True)
+            curr_piv = highlight_best_with_std(curr_piv_m, curr_piv_s) 
+    
+        else: #using subsampling, split dfs for bolding the winners
+            curr_piv = pd.DataFrame() #initialize the concatenated df of all subsamplings
+            subsamplings = curr_df['subsampling'].unique()
+            for subsampling in subsamplings:
+                df_sub = curr_df.query("subsampling == @subsampling")
+                df_sub_piv_m = pivot_df(df_sub)
+                df_sub_piv_s = pivot_df(df_sub, aggfunc=np.std)
+                df_sub_piv = highlight_best_with_std(df_sub_piv_m, df_sub_piv_s)
+                curr_piv = curr_piv.append(df_sub_piv)
+        #drop validation metrics:
+        cols = list(curr_piv.columns)
+        cols_to_drop = [col for col in cols if 'val' in col]
+        print(cols_to_drop)
+        curr_piv = curr_piv.drop(columns=cols_to_drop)
+        #rearrange columns (show hypersearch obj first)
+        cols = list(curr_piv.columns)
+        if 'Accuracy' in cols: #multivariate dataset
+            new_order = [2,1,0]
+            curr_piv = curr_piv[curr_piv.columns[new_order]] 
+        dfs[dat] = curr_piv
+
+        #Write table to result folder
+        if type(curr_piv.index[0]) == tuple:
+            #write table for each subsampling scheme:
+            for subsampling in curr_piv.index.levels[0]:
+                curr_piv.loc[subsampling].to_latex(f'results/tables/repetitions_{dat}_{subsampling}.tex', escape=False)
+        else:
+            curr_piv.to_latex(f'results/tables/repetitions_{dat}.tex', escape=False)
+    return dfs
+
+
+def convert_to_df(data, repetitions=False, n_repetitions=5, param_flag=False, plot=False):
     """Convert best runs dictionary to pd dataframe which can be transformed to tex table or easy to plot.
         If repetitions=True, #n_repetitions results are also added as seperate records
         If param_flag=True (requires repetitions), param df is compiled
@@ -388,13 +454,14 @@ def convert_to_df(data, repetitions=False, n_repetitions=5, param_flag=False):
                     continue
                 if repetitions:
                     model_name = model_names[model]
-                    imputation, model_name = model_name.split('-') 
+                    imputation, model_name = model_name.rsplit('-', 1) 
                     if not param_flag:
                         found_reps = len(data[dataset][model][metric]['raw']) 
                         if found_reps < n_repetitions: 
                             print(f'For {dataset}{subsampling} {model} found {found_reps} completed repetitions!')    
                         for rep in np.arange(found_reps): # cave: this rep must not coincide with the exact rep nr that was used in the command!
-                            record = {  'long_dataset': os.path.join(dataset_name, subsampling),
+                            if plot:
+                                record = {  'long_dataset': os.path.join(dataset_name, subsampling),
                                         'dataset':      dataset_name,
                                         'subsampling':  subsampling_names[subsampling],
                                         'model':        model_name,
@@ -402,7 +469,16 @@ def convert_to_df(data, repetitions=False, n_repetitions=5, param_flag=False):
                                         'metric':       metric_names[metric], 
                                         'value':        [ data[dataset][model][metric]['raw'][rep] ] ,
                                         'repetition':   rep + 1
-                                 }
+                                }
+                            else:
+                                record = {  'long_dataset': os.path.join(dataset_name, subsampling),
+                                        'dataset':      dataset_name,
+                                        'subsampling':  subsampling_names[subsampling],
+                                        'model':        model_names[model],
+                                        'metric':       metric_names[metric], 
+                                        'value':        [ data[dataset][model][metric]['raw'][rep] ] ,
+                                        'repetition':   rep + 1
+                                }
                             record_df = pd.DataFrame(record)
                             out_df = out_df.append(record_df)
                     else: #if param flag and repetitions
@@ -428,25 +504,24 @@ def convert_to_df(data, repetitions=False, n_repetitions=5, param_flag=False):
     # rename models:
      
     df = out_df.sort_values(['dataset','subsampling', 'metric']) 
+    
+    irregular = ['Physionet2012']
+    is_irregular = df['dataset'].isin(irregular)
+    df_irregular = df[is_irregular]
+    df_regular = df[~is_irregular]
+
     if repetitions:
-        return df
+        if plot:
+            return df
+        else:
+            dfs_irr = extract_and_tex_single_datasets_with_std(df_irregular)
+            dfs_reg = extract_and_tex_single_datasets_with_std(df_regular)
     else: 
-        #if df.index[0][0] == '':
-        #    df = df.drop(index=['subsampling'])
         #extract irregularly spaced and regularly spaced datasets:
-        irregular = ['Physionet2012']
-        is_irregular = df['dataset'].isin(irregular)
-        df_irregular = df[is_irregular]
-        df_regular = df[~is_irregular]
-        
         dfs_irr = extract_and_tex_single_datasets(df_irregular)
         dfs_reg = extract_and_tex_single_datasets(df_regular)   
         
-        #df_irregular = df_irregular.reset_index(drop=True)
-        #df_irr_pivoted = pivot_df(df_irregular)
-        #df_reg_pivoted = pivot_df(df_regular)  
-        
-        return dfs_irr, dfs_reg
+    return dfs_irr, dfs_reg
 
 def aggregate_repetitions(out_dict, n_counts=5, include_incomplete=False, completed=None):
     counts = defaultdict(dict) 
@@ -603,9 +678,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--repetitions', action='store_true', default=False, 
         help='if true, reptitions are gathered, otherwise hypersearch runs (default: false)')
+    parser.add_argument('--plot', action='store_true', default=False, 
+        help='if true, reptitions are plotted in barplot, no tables are outputted')
     args = parser.parse_args()
         
     repetitions = args.repetitions
+    plot = args.plot
  
     # Parameters:
     if repetitions: #gather and aggregate results of repetitions
@@ -642,10 +720,11 @@ if __name__ == "__main__":
         #finish after this:
         agg = aggregate_repetitions(out_dict, n_counts=5, include_incomplete=True, completed=counts)
         params = gather_parameters(out_dict)
-        df = convert_to_df(agg, repetitions=True)
-        param_df = convert_to_df(params, repetitions=True, param_flag=True) 
-        plot_df(df, hue ='imputation')
-        plot_df(df, params=param_df, hue ='imputation', main=True)
+        df = convert_to_df(agg, repetitions=True, plot=plot)
+        if plot:
+            param_df = convert_to_df(params, repetitions=True, param_flag=True, plot=plot) 
+            plot_df(df, hue ='imputation')
+            plot_df(df, params=param_df, hue ='imputation', main=True)
         sys.exit()
  
     #Find the test performance of the best run per method (in terms of validation performance)
