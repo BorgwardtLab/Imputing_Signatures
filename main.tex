@@ -62,53 +62,27 @@
 \maketitle
 
 \begin{abstract}
-The signature transform is a `universal nonlinearity' on the space of continuous vector-valued paths, and has recently received attention for use in machine learning. However real-world temporal data is typically discretized, and must first be transformed into a continuous path before signature techniques can be applied. %, which has previously been described as an embedding problem. 
-Our first contribution is to characterise this as an imputation problem, and to empirically assess the impact of various imputation techniques when applying the signature to irregular time series data. Throughout our experiments, we observe that uncertainty-aware \emph{predictions} are beneficial, even compared to the uncertainty-aware \emph{training} of Gaussian process (GP) adapters. We thus also propose a simple extension of GP adapters by integrating uncertainty to the prediction step which leads to competitive performance.
+The signature transform is a `universal nonlinearity' on the space of
+continuous vector-valued paths, and has received attention for use in
+machine learning. However real-world temporal data is typically
+discretised, and must first be transformed into a continuous path before
+signature techniques can be applied.  We characterise this as an imputation
+problem, and empirically assess the impact of various imputation techniques
+when applying signatures to irregular time series data. In our experiments,
+we find that the choice of imputation drastically affects shallow signature models,
+whereas deeper architectures are more robust. We also observe that
+uncertainty-aware \emph{predictions} are overall beneficial, even
+compared to the uncertainty-aware \emph{training} of Gaussian process~(GP) adapters.
+Hence, we propose an extension
+of GP adapters by integrating uncertainty to the prediction step. This
+leads to competitive performance in general, and improves robustness in
+signature models in particular.
 \end{abstract} % TODO: touch this up a bit, but I think the essential idea is there.
 
-% % Suggestion (BR):
-% \begin{abstract}
-% The signature transform, a `universal non-linearity' on the space of
-% continuous vector-valued paths, recently started receiving attention in
-% machine learning applications. Prior to applying any signature technique,
-% real-world temporal data is typically discretised and
-% subsequently transformed into a continuous path. While this is commonly
-% treated as an embedding problem, we characterise it as an
-% \emph{imputation problem} instead, and empirically assess the impact of
-% numerous imputation techniques on the classification of
-% irregularly-sampled time series data sets by means of signature
-% techniques. We observe throughout our experiments that uncertainty-aware
-% \emph{predictions} are beneficial, even compared to the
-% uncertainty-aware \emph{training} of Gaussian Process~(GP) adapters. We
-% thus also propose a simple extension to the prediction step of GP
-% adapters and demonstrate that it leads to competitive performance.
-% \end{abstract}
 
-% %OLD VERSION:
-% \section{Introduction}\label{intro}
-% Originally described in \cite{Chen54, Chen57, Chen58} and popularised in the theory of rough paths and controlled differential equations \cite{lyons1998differential, FritzVictoir10, lyons2014rough}, the \emph{signature transform}, also known as the \emph{path signature} or simply \emph{signature}, acts on a continuous vector-valued path of bounded variation, and returns a graded sequence of statistics, which determine the path up to a negligible equivalence class.
-
-% Every continuous function of a path can be recovered by applying a linear transform to this collection of statistics \cite[Proposition A.6]{kidger2019deep}. This `universal nonlinearity' property makes the signature a promising nonparametric feature extractor.
-
-% Given their similarities, it is natural to hope that the tools that apply to continuous paths may also be applied to multivariate time series. Of course, multivariate time series are not continuous paths. For signature techniques to be applied, a continuous path must first be constructed from this data.
-
-% In previous work \cite{kidger2019deep, levin2013, fermanian2019embedding} this has been characterised as an embedding problem, and has typically been glossed over as an essentially unimportant detail. This is exacerbated by the (perfectly sensible) behaviour of software for computing the signature \cite{iisignature, signatory}, which take a continuous piecewise linear path as an input, described by its sequence of knots. This resembles a sequence of data, meaning that the signature is sometimes interpreted as operating on sequences of data rather than on paths \cite{kidger2019deep, levin2013}.
-
-% \subsection{Contributions}
-% In this paper we reinterpret of the task of constructing a continuous path, by turning it from an embedding problem into an imputation problem. To distinguish this from traditional imputation problems, we refer to this as \emph{path imputation}.
-
-% Much previous literature on the signature transform has focused on its excellent theoretical properties, in particular sampling independence \cite[Proposition A.7]{kidger2019deep}, \cite{signatorydocumentation}, \cite[Section 2]{toth2019gp}, but our findings show that this does not correspond to empirical performance. However it has previously been established that observation rates and missingness itself can carry information \cite{rubin1976inference, gelman2007dataanalysis}. By re-interpreting the task of constructing paths as an imputation problem, we identify that this performance gap is likely to be another manifestation of this phenomenon.
-
-% We perform a thorough empirical investigation of various imputation schemes as combined with multiple models that potentially employ signatures. We find that approaches that have access to uncertainty information \emph{during prediction} tend to outperform the competitors, also uncertainty-aware frameworks where the uncertainty is only available during \emph{training}, such as Gaussian process (GP) adapters.
-% Motivated by this, we propose a novel extension of GP adapters \cite{li2016scalable, futoma2017mgp} which incorporates uncertainty information into the prediction step, which helps our task at hand but could also be of independent interest.
-% As a footnote we observe that the recently introduced `deep signature models' \cite{kidger2019deep} consistently outperform other signature models, which also suffer from much higher variance in their efficacy.
-
-% Our code is available at XXXXXX.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Introduction (suggestion, BR) 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Introduction (NEW)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
 
 Originally described by \citet{Chen54, Chen57, Chen58} and popularised
@@ -118,154 +92,194 @@ the \emph{signature transform}, also known as the \emph{path signature}
 or simply \emph{signature}, acts on a continuous vector-valued path of
 bounded variation, and returns a graded sequence of statistics, which
 determine a path up to a negligible equivalence class. Moreover,
-it can be shown~\cite[Proposition A.6]{kidger2019deep} that \emph{every}
-continuous function of a path can be recovered by applying a linear
-transform to this collection of statistics. This `universal
-nonlinearity' property makes the signature a promising nonparametric
-feature extractor with beneficial properties in both generative and
-% TODO: consider adding more citations here
-supervised learning scenarios~\citep{kidger2019deep}.
-%
-Given their similarities, it is natural to hope that the tools that
-apply to continuous paths may \emph{also} be applied to multivariate
-time series. Of course, multivariate time series are not continuous
-paths---in fact, for signature techniques to be applied, one first needs
-to construct a continuous path from this kind of data.
+\emph{every} continuous function of a path can be recovered by applying
+a linear transform to this collection of statistics~\citep[Proposition
+A.6]{kidger2019deep}.
 
-In previous work~\cite{kidger2019deep, levin2013, fermanian2019embedding}, this
-construction has been characterised as an embedding problem, and was
-typically glossed over as a rather unimportant detail.
+This `universal nonlinearity' property makes the signature a promising nonparametric
+feature extractor with beneficial properties in both generative and
+supervised learning scenarios.
 %
+Given their similarities, we may hope that tools that
+apply to continuous paths can \emph{also} be extended to multivariate
+time series. But since multivariate time series are not continuous
+paths, one first needs to construct a continuous path to apply signature techniques.
+%
+Previous work~\citep{levin2013, kidger2019deep, fermanian2019embedding}
+characterise this construction as an embedding problem, and
+typically consider it a minor technical detail.
 This is exacerbated by the---perfectly sensible---behaviour of software
 for computing the signature \cite{iisignature, signatory}, which
 commonly considers a continuous piecewise linear path as an input,
-% TODO: is there a better definition of 'knot'? I am aware of the
-% meaning in terms of spline approximations, but maybe we could clarify
-% this here.
 described by its sequence of knots, i.e.\ values.
 %
 Since such sequences resemble a sequence of data, the signature is
 sometimes interpreted as operating on sequences of data rather than on
 paths~\cite{kidger2019deep, levin2013}.
+In constrast, here we show that considering the path construction
+process is crucial for achieving competitive predictive
+performance: we reinterpret the task of constructing a continuous path,
+turning it from an embedding problem to an imputation problem, which we
+call \emph{path imputation}.
 %
-We show that this view is somewhat limiting and that, in order to
-achieve competitive predictive performance for real-world time series
-classification, it is crucial to consider the path construction process.
+While previous work on the signature transform
+focussed on its excellent theoretical properties, such as sampling
+independence~\citep[Proposition A.7]{kidger2019deep}, our findings show
+that this does not
+necessarily correspond to empirical performance.
+%
+However, since both observation rates and missingness itself are known to be
+informative for time series classification
+tasks~\citep{rubin1976inference}, we perform a thorough 
+investigation of multiple imputation schemes in combination with various
+models that can potentially employ signatures. Moreover, since we
+observe that access to uncertainty information \emph{during prediction}
+helps improve performance, we propose a novel extension to Gaussian
+process adapters~\citep{li2016scalable}, that is of independent interest.
+%
+% BR: This is already a summary of the experiments; we do not
+% necessarily have the space for this, I would say.
+%
+% We find that approaches
+% that have access to uncertainty information \emph{during prediction}
+% tend to outperform the competitors, even uncertainty-aware frameworks
+% for which this information is only available during \emph{training},
+% such as Gaussian Process~(GP) adapters~\citep{li2016scalable,
+% futoma2017mgp}~(for which we propose a novel extension to incorporate
+% uncertainty information, thus improving predictive performance).
+%
+% Throughout our experiments, we observe that \emph{deep signature models}~\citep{kidger2019deep} consistently
+% outperform other signature models~(which in turn suffer from increased
+% variance, thus reducing their efficacy).
+%
+We make our code publicly available under \url{https://osf.io/ktc96/?view_only=62d41b4e60f64d49a3fb100a45d08116}.
 
-Specifically, in this paper we reinterpret the task of
-constructing a continuous path, by turning it from an embedding problem
-into an imputation problem. To distinguish this from traditional
-imputation problems, we refer to this as \emph{path imputation}.
-%
-While a large part of the previous literature on the signature transform
-focused on its excellent theoretical properties, in particular sampling
-independence~\cite[Proposition A.7]{kidger2019deep},~\cite{signatorydocumentation},~\cite[Section 2]{toth2019gp}, our findings show that this does not
-necessarily correspond to excellent empirical performance.
-%
-However, it has previously been established that both observation rates
-and missingness itself can carry information in time series
-classification tasks~\citep{rubin1976inference, gelman2007dataanalysis}.
-%
-Our reinterpreted view of path construction as an imputation problem
-permits us to identify that this performance gap is likely another
-manifestation of the phenomenon of glossing over imputation details.
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % Introduction OLD
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-We therefore perform a thorough empirical investigation of various
-imputation schemes in combination with multiple models that can potentially
-employ signatures. We find that approaches that have access to
-uncertainty information \emph{during prediction} tend to outperform the
-competitors, even uncertainty-aware frameworks for which this
-information is only available during \emph{training}, such as Gaussian
-Process~(GP) adapters~\citep{li2016scalable, futoma2017mgp}.
-%
-Motivated by this, we propose a novel extension of GP adapters that
-directly incorporates uncertainty information into the prediction step,
-thus improving predictive performance.
-Throughout our experiments, we observe that the recently introduced
-\emph{deep signature models}~\citep{kidger2019deep} consistently
-outperform other signature models~(which in turn suffer from increased
-variance, thus reducing their efficay).
-%
-We make our code publicly available under XXXXXX.
+% \section{Introduction}
 
+% Originally described by \citet{Chen54, Chen57, Chen58} and popularised
+% in the theory of rough paths and controlled differential
+% equations~\cite{lyons1998differential, FritzVictoir10, lyons2014rough},
+% the \emph{signature transform}, also known as the \emph{path signature}
+% or simply \emph{signature}, acts on a continuous vector-valued path of
+% bounded variation, and returns a graded sequence of statistics, which
+% determine a path up to a negligible equivalence class. Moreover,
+% it can be shown~\cite[Proposition A.6]{kidger2019deep} that \emph{every}
+% continuous function of a path can be recovered by applying a linear
+% transform to this collection of statistics. This `universal
+% nonlinearity' property makes the signature a promising nonparametric
+% feature extractor with beneficial properties in both generative and
+% % TODO: consider adding more citations here
+% supervised learning scenarios~\citep{kidger2019deep}.
+% %
+% Given their similarities, it is natural to hope that the tools that
+% apply to continuous paths may \emph{also} be applied to multivariate
+% time series. Of course, multivariate time series are not continuous
+% paths---in fact, for signature techniques to be applied, one first needs
+% to construct a continuous path from this kind of data.
+
+% In previous work~\cite{kidger2019deep, levin2013, fermanian2019embedding}, this
+% construction has been characterised as an embedding problem, and was
+% typically glossed over as a rather unimportant detail.
+% %
+% This is exacerbated by the---perfectly sensible---behaviour of software
+% for computing the signature \cite{iisignature, signatory}, which
+% commonly considers a continuous piecewise linear path as an input,
+% % TODO: is there a better definition of 'knot'? I am aware of the
+% % meaning in terms of spline approximations, but maybe we could clarify
+% % this here.
+% described by its sequence of knots, i.e.\ values.
+% %
+% Since such sequences resemble a sequence of data, the signature is
+% sometimes interpreted as operating on sequences of data rather than on
+% paths~\cite{kidger2019deep, levin2013}.
+% %
+% We show that this view is somewhat limiting and that, in order to
+% achieve competitive predictive performance for real-world time series
+% classification, it is crucial to consider the path construction process.
+
+% Specifically, in this paper we reinterpret the task of
+% constructing a continuous path, by turning it from an embedding problem
+% into an imputation problem. To distinguish this from traditional
+% imputation problems, we refer to this as \emph{path imputation}.
+% %
+% While a large part of the previous literature on the signature transform
+% focused on its excellent theoretical properties, in particular sampling
+% independence~\cite[Proposition A.7]{kidger2019deep},~\cite{signatorydocumentation},~\cite[Section 2]{toth2019gp}, our findings show that this does not
+% necessarily correspond to excellent empirical performance.
+% %
+% However, it has previously been established that both observation rates
+% and missingness itself can carry information in time series
+% classification tasks~\citep{rubin1976inference, gelman2007dataanalysis}.
+% %
+% Our reinterpreted view of path construction as an imputation problem
+% permits us to identify that this performance gap is likely another
+% manifestation of the phenomenon of glossing over imputation details.
+
+% We therefore perform a thorough empirical investigation of various
+% imputation schemes in combination with multiple models that can potentially
+% employ signatures. We find that approaches that have access to
+% uncertainty information \emph{during prediction} tend to outperform the
+% competitors, even uncertainty-aware frameworks for which this
+% information is only available during \emph{training}, such as Gaussian
+% Process~(GP) adapters~\citep{li2016scalable, futoma2017mgp}.
+% %
+% Motivated by this, we propose a novel extension of GP adapters that
+% directly incorporates uncertainty information into the prediction step,
+% thus improving predictive performance.
+% Throughout our experiments, we observe that the recently introduced
+% \emph{deep signature models}~\citep{kidger2019deep} consistently
+% outperform other signature models~(which in turn suffer from increased
+% variance, thus reducing their efficay).
+% %
+% We make our code publicly available under XXXXXX.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Background}
+\section{Background} %NEW
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% TODO: can we summarise what we are doing here? What are the most
-% important points of this section?
-%
-% Maybe: 'In the following, we provide a cursory introduction to the
-% path signature methods. Please refer to XXX for a more in-depth
-% description.'
-
-\subsection{Path signatures}
-
-Given a continuous, piecewise differentiable path $f \colon [a, b] \to
-\reals^d$, the \emph{signature transform up to depth $N$} may be defined
-by
-%
+Let $f = (f_1, \dots, f_d) \colon [a, b] \to \reals^d$ be a continuous, piecewise
+differentiable path. Then the \emph{signature transform up to depth $N$}
+is
+% >> Single Column Equation:
 \begin{equation}
     \sig(f)=\left(\left(\underset{\,a<t_{1}<\cdots<t_{k}<b}{\int \cdots \int} \prod_{j=1}^{k} \frac{\mathrm{d} f_{i_{j}}}{\mathrm{d} t}\left(t_{j}\right) \mathrm{d} t_{1} \cdots \mathrm{d} t_{k}\right)_{1 \leq i_{1}, \ldots, i_{k} \leq d}\right)_{1 \leq k \leq N}.
 \end{equation}
 
-% \begin{wrapfigure}{l}{4cm}
-%     \centering
-%     \vspace{-2em}
-% 	\includegraphics[width=0.3\columnwidth]{figures/sig_path1.pdf}
-% 	\caption{Given a path, shown in bold, its Levy area is its signed area with respect to the chord joining its endpoints.}\label{fig:sig_path}
-% 	\vspace{-2em}
-% \end{wrapfigure}
-
-%This definition may be extended to paths of merely bounded variation by replacing these integrals with Riemann--Stieltjes integrals, and extended further to paths of bounded $p$-variation by replacing them with rough integrals \cite{lyons1998differential}.
-
+This definition can be extended to paths of bounded variation by
+replacing these integrals with Stieltjes integrals with respect to each
+$f_{i_j}$.
+%
 In brief, the signature transform may be interpreted as extracting
 information about \emph{order} and \emph{area} of a path.
 %
 One may interpret its terms as `the area/order of one channel with
 respect to some collection of other channels'.
-%
-% As an explicit example of the sort of information extracted, one of the things computed by the signature is the \emph{Levy area} of the path, shown for a one-dimensional example in Figure \ref{fig:sig_path}.
-%
 For an exposition on the properties of the signature transform and its
 use in machine learning, please refer to \citet{primer2016} or \citet[Appendix A]{kidger2019deep}.
-%
-%There is one fact that will prove important to our arguments later, however, so for completeness we repeat it here:
-%\begin{theorem}[Invariance to reparameterisation]\label{theorem:invariancetime}
-%Let $f \colon [a, b] \to \reals^d$ be a continuous piecewise differentiable path. Let $\psi \colon [a, b] \to [c, d]$ be continuously differentiable, increasing, and surjective. Then $\sig(f) = \sig(f \circ \psi)$.
-%\end{theorem}
-
-%\subsubsection{Comparison to the Fourier and wavelet transforms}
-%The signature transform exhibits a certain similarity to the one-dimensional Fourier or wavelet transforms. Both are integrals of paths. However, in reality these transforms are fundamentally different. Both the Fourier and wavelet transforms are linear transforms, and operate on each channel of the input path separately. In doing so they model the path as a linear combination of elements from some basis.
-%
-%Conversely, the signature transform is a nonlinear transform - indeed, it is a universal nonlinearity - and operates by combining information between different channels of the input path. In doing, the signature transform models \emph{functions of the path}; the universal nonlinearity property says that in some sense it provides a basis for such functions.
-
-%\subsubsection{Computing the signature transform}
-%Continuous piecewise linear paths are the paths of choice, computationally speaking, due to the fact that this is the only case for which efficient algorithms for computing the signature transform are known \cite{signatory}.
-%
-%This is not a serious hurdle when one wishes to compute the signature of a path $f$ that is not piecewise linear -- as the signature of piecewise linear approximations to $f$ will tend towards the signature of $f$ as the quality of the approximation increases -- but it does enforce this requirement on our imputation schemes.
-%
-%Thus all of the imputation schemes we examine will first seek to select a collection of points in data space (not necessarily only where we had data before), and then linear imputation will be performed to join them up into a piecewise linear path.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Notation}
+\paragraph{Notation}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Given some set $A$, let the space of time series over $A$ be defined by
+%
+Given a set $A$, we define the space of time series over $A$ by
+%
 \begin{equation}
     \seriesspace(A) = \{((t_1, x_1), \ldots, (t_n, x_n)) \,\vert\, t_i \in \reals, x_i \in A, n \in \naturals, \text{ such that } t_1 \leq \cdots \leq t_n\}.\label{eq:seriesspace}
 \end{equation}
+%Two column version:
+% \begin{equation}\label{eq:seriesspace}
+%   \begin{split}
+%     \seriesspace(A) = &\{((t_1, x_1), \ldots, (t_n, x_n)) \,\vert\, t_i \in \reals, x_i \in A,\\
+%                       &\hspace{7em}n \in \naturals, \text{ s.t. } t_1 \leq \cdots \leq t_n\}.
+%   \end{split}
+% \end{equation}
 %
-Note the subtle point that the $t_i$ are separated by $\leq$, not $<$.
-We make this slight change because it will later prove important for one
-of our studied imputation schemes. For example, contrast the
-corresponding definition in \citet[Section 1]{toth2019gp}.
-
-\paragraph{Time series and labels.}
-%
-Let $\lspace$ be a set and let $\dataspace_j = \reals$ for $j \in \{1,
+Furthermore, let $\lspace$ be a set and let $\dataspace_j = \reals$ for $j \in \{1,
 \ldots, d\}$ and $d \in \naturals$. Then we assume that we observe
 a dataset of labelled time series $(\mathbf{x}_k, y_k)$ for $k \in \{1,
 \ldots, N\}$, where $\mathbf{x}_k \in \seriesspace(\dataspace^*)$ and
@@ -279,9 +293,11 @@ allowing missing data, and $\lspace$ is the set of labels.
 % \subsubsection{Terminology for imputation schemes}
 % To avoid ambiguity, we will refer to standard imputation schemes, such as forward-fill, as a \emph{data-imputation} scheme, meaning to impute missing data points. In contrast we will use \emph{path-imputation} to describe the more general task of imputing the full continuous path.
 
-\subsection{Gaussian process adapter}\label{section:gpadapter}
-
-Some~(but not all) of the imputation schemes we consider are based on
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{Gaussian process adapter}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+Some of the imputation schemes we consider are based on
 the uncertainty aware-framework of multi-task Gaussian process
 adapters~\citep{li2016scalable, futoma2017mgp}.
 %
@@ -320,8 +336,138 @@ Alternatively, one may forgo allowing the uncertainty to propagate through $F$ b
 \argmin_{\mathbf{w} \in \mathcal{W},\bm{\eta} \in \mathcal{H}} \sum_{k=1}^N \ell(F(\mu(\,\cdot\,,\mathbf{x}_k, \eta), \mathbf{w}), y_k).
 \end{equation}
 
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \section{Background} %OLD
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\begin{comment}
+% % TODO: can we summarise what we are doing here? What are the most
+% % important points of this section?
+% %
+% % Maybe: 'In the following, we provide a cursory introduction to the
+% % path signature methods. Please refer to XXX for a more in-depth
+% % description.'
+
+% \subsection{Path signatures}
+
+% Given a continuous, piecewise differentiable path $f \colon [a, b] \to
+% \reals^d$, the \emph{signature transform up to depth $N$} may be defined
+% by
+% %
+% \begin{equation}
+%     \sig(f)=\left(\left(\underset{\,a<t_{1}<\cdots<t_{k}<b}{\int \cdots \int} \prod_{j=1}^{k} \frac{\mathrm{d} f_{i_{j}}}{\mathrm{d} t}\left(t_{j}\right) \mathrm{d} t_{1} \cdots \mathrm{d} t_{k}\right)_{1 \leq i_{1}, \ldots, i_{k} \leq d}\right)_{1 \leq k \leq N}.
+% \end{equation}
+
+% % \begin{wrapfigure}{l}{4cm}
+% %     \centering
+% %     \vspace{-2em}
+% % 	\includegraphics[width=0.3\columnwidth]{figures/sig_path1.pdf}
+% % 	\caption{Given a path, shown in bold, its Levy area is its signed area with respect to the chord joining its endpoints.}\label{fig:sig_path}
+% % 	\vspace{-2em}
+% % \end{wrapfigure}
+
+% %This definition may be extended to paths of merely bounded variation by replacing these integrals with Riemann--Stieltjes integrals, and extended further to paths of bounded $p$-variation by replacing them with rough integrals \cite{lyons1998differential}.
+
+% In brief, the signature transform may be interpreted as extracting
+% information about \emph{order} and \emph{area} of a path.
+% %
+% One may interpret its terms as `the area/order of one channel with
+% respect to some collection of other channels'.
+% %
+% % As an explicit example of the sort of information extracted, one of the things computed by the signature is the \emph{Levy area} of the path, shown for a one-dimensional example in Figure \ref{fig:sig_path}.
+% %
+% For an exposition on the properties of the signature transform and its
+% use in machine learning, please refer to \citet{primer2016} or \citet[Appendix A]{kidger2019deep}.
+% %
+% %There is one fact that will prove important to our arguments later, however, so for completeness we repeat it here:
+% %\begin{theorem}[Invariance to reparameterisation]\label{theorem:invariancetime}
+% %Let $f \colon [a, b] \to \reals^d$ be a continuous piecewise differentiable path. Let $\psi \colon [a, b] \to [c, d]$ be continuously differentiable, increasing, and surjective. Then $\sig(f) = \sig(f \circ \psi)$.
+% %\end{theorem}
+
+% %\subsubsection{Comparison to the Fourier and wavelet transforms}
+% %The signature transform exhibits a certain similarity to the one-dimensional Fourier or wavelet transforms. Both are integrals of paths. However, in reality these transforms are fundamentally different. Both the Fourier and wavelet transforms are linear transforms, and operate on each channel of the input path separately. In doing so they model the path as a linear combination of elements from some basis.
+% %
+% %Conversely, the signature transform is a nonlinear transform - indeed, it is a universal nonlinearity - and operates by combining information between different channels of the input path. In doing, the signature transform models \emph{functions of the path}; the universal nonlinearity property says that in some sense it provides a basis for such functions.
+
+% %\subsubsection{Computing the signature transform}
+% %Continuous piecewise linear paths are the paths of choice, computationally speaking, due to the fact that this is the only case for which efficient algorithms for computing the signature transform are known \cite{signatory}.
+% %
+% %This is not a serious hurdle when one wishes to compute the signature of a path $f$ that is not piecewise linear -- as the signature of piecewise linear approximations to $f$ will tend towards the signature of $f$ as the quality of the approximation increases -- but it does enforce this requirement on our imputation schemes.
+% %
+% %Thus all of the imputation schemes we examine will first seek to select a collection of points in data space (not necessarily only where we had data before), and then linear imputation will be performed to join them up into a piecewise linear path.
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \subsection{Notation}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Given some set $A$, let the space of time series over $A$ be defined by
+% \begin{equation}
+%     \seriesspace(A) = \{((t_1, x_1), \ldots, (t_n, x_n)) \,\vert\, t_i \in \reals, x_i \in A, n \in \naturals, \text{ such that } t_1 \leq \cdots \leq t_n\}.\label{eq:seriesspace}
+% \end{equation}
+% %
+% Note the subtle point that the $t_i$ are separated by $\leq$, not $<$.
+% We make this slight change because it will later prove important for one
+% of our studied imputation schemes. For example, contrast the
+% corresponding definition in \citet[Section 1]{toth2019gp}.
+
+% \paragraph{Time series and labels.}
+% %
+% Let $\lspace$ be a set and let $\dataspace_j = \reals$ for $j \in \{1,
+% \ldots, d\}$ and $d \in \naturals$. Then we assume that we observe
+% a dataset of labelled time series $(\mathbf{x}_k, y_k)$ for $k \in \{1,
+% \ldots, N\}$, where $\mathbf{x}_k \in \seriesspace(\dataspace^*)$ and
+% $y_k \in \lspace$, with $\dataspace^* = \prod_{j = 1}^d(\dataspace_j
+% \cup \{*\})$ and $*$ representing no observation.
+% %
+% We similarly define $\dataspace = \prod_{j = 1}^d\dataspace_j$. Thus,
+% $\dataspace$ is the data space, while $\dataspace^*$ is the data space
+% allowing missing data, and $\lspace$ is the set of labels.
+
+% % \subsubsection{Terminology for imputation schemes}
+% % To avoid ambiguity, we will refer to standard imputation schemes, such as forward-fill, as a \emph{data-imputation} scheme, meaning to impute missing data points. In contrast we will use \emph{path-imputation} to describe the more general task of imputing the full continuous path.
+
+% \subsection{Gaussian process adapter}\label{section:gpadapter}
+
+% Some~(but not all) of the imputation schemes we consider are based on
+% the uncertainty aware-framework of multi-task Gaussian process
+% adapters~\citep{li2016scalable, futoma2017mgp}.
+% %
+% Let $\mathcal{W}, \mathcal{H}$ be some sets. Let $\ell \colon \lspace
+% \times \lspace \to [0, \infty)$ be a loss function. Let $F \colon
+% \dataspace^{[a, b]} \times \mathcal{W} \to \lspace$, be some (typically
+% neural network) model, with $\mathcal{W}$ interpreted as a space of
+% parameters. Let \begin{align*} \mu \colon [a, b] \times
+% \seriesspace(\dataspace^*) \times \mathcal{H} &\to \dataspace\\ \Sigma
+% \colon [a, b] \times [a, b] \times \seriesspace(\dataspace^*) \times
+% \mathcal{H} &\to \dataspace    \end{align*} be mean and covariance
+% functions, with $\mathcal{H}$ interpreted as a space of
+% hyperparameters. The dependence on $\seriesspace(\dataspace^*)$ is to
+% represent conditioning on observed values.
+
+% Then the goal is to solve
+% \begin{equation}\label{eq:gp-mc}
+% \argmin_{\mathbf{w} \in \mathcal{W},\bm{\eta} \in \mathcal{H}} \sum_{k=1}^N \overbrace{\rule{0pt}{0.5cm} \mathbb{E}_{\mathbf{z}_k \sim \mathcal{N}\left( \mu(\cdot, \mathbf{x}_k, \eta), \Sigma(\cdot, \cdot, \mathbf{x}_k, \eta)\right) } \big[ \ell(F(\mathbf{z}_k, \mathbf{w}),
+% y_k) \big] }^{\text{$E_k$}}.
+% \end{equation}
+% %
+% As this expectation is typically not tractable, it is estimated by Monte
+% Carlo (MC) sampling with $S$ samples, i.e.\
+% \begin{equation}
+% E_k \approx \frac{1}{S} \sum_{s=1}^{S} \ell(F(\mathbf{z}_{s, k}, \mathbf{w}), y_k),
+% \end{equation}
+% %
+% where
+% %
+% \begin{equation}
+%     \mathbf{z}_{s, k} \sim \mathcal{N}\left( \mu(\,\cdot\,, \mathbf{x}_k, \eta), \Sigma(\,\cdot\,, \,\cdot\,, \mathbf{x}_k, \eta)\right).
+% \end{equation}
+
+% Alternatively, one may forgo allowing the uncertainty to propagate through $F$ by instead passing the posterior mean directly to $F$; this corresponds to solving
+% \begin{equation}\label{eq:gp-mean}
+% \argmin_{\mathbf{w} \in \mathcal{W},\bm{\eta} \in \mathcal{H}} \sum_{k=1}^N \ell(F(\mu(\,\cdot\,,\mathbf{x}_k, \eta), \mathbf{w}), y_k).
+% \end{equation}
+
+
+%\begin{comment}
 \subsubsection{Application beyond signatures}
 
 Whilst the task of converting observed data into a path in data space is particularly important for signatures, it also arises in the context of, for example, convolutional and recurrent neural networks.
@@ -334,8 +480,8 @@ although the $1/n$ scaling is really only justified in the case that the $t_i$ a
 
 Similarly, the connection between dynamical systems and recurrent neural networks are well known \cite{FUNAHASHI1993801, continuousrnn}, and these tend to use a similar setup.
 
-For non-signature methods as for signature methods, this implicit usage of data as a path in data space often seems to be swept under the rug, and we suspect it is one deserving further attention. However our focus here is specifically on solutions appropriate for signatures, and this larger problem is not one that we will explore further in this paper.
-\end{comment}
+For non-signature methods as for signature methods, this implicit usage of data as a path in data space often seems to be swept under the rug, and we suspect it is one deserving further attention.
+%\end{comment}
 
 \begin{figure}[t]
     \centering
@@ -347,7 +493,39 @@ For non-signature methods as for signature methods, this implicit usage of data 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Related work}
+\section{Related work NEW}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+A key motivation for this work is the use of the signature transform in
+machine learning: recent work~\citep{primer2016,
+kormilitzlin2016, yang2016rotation, li2017lpsnet, yang2017leveraging,
+PerezArribas2018, morrill2019sepsis} typically employed the signature transform
+as a nonparametric feature extractor, on top of which
+a model is learnt. Integrations into typical neural networks are also being
+actively discussed~\citep{jeremythesis, logsigrnn, kidger2019deep}, as
+well as kernel-based approaches~\citep{chevyrev2018signature, kiraly2019kernels}.
+\citep{toth2019gp} show how this kernel may be used to define a Gaussian process. To our
+knowledge, no prior work has regarded path calculation as an \emph{imputation
+problem}; typically, data is converted into a continuous path via
+linear/rectilinear interpolation~\citep{primer2016,
+fermanian2019embedding}, or a hybrid of the two~\citep{levin2013}.
+%
+The general problem of imputing data is well-known and well-studied~\citep[Chapter 25]{gelman2007dataanalysis}.
+%
+% Common simple imputation schemes are to impute missing values as the
+% mean of its channel, or to forward fill the last observed value,
+% although it has been observed that incautious use of such methods can
+% result in heavily biased models \cite{Molnar2008}.
+%
+Imputation methods typically only fill in missing discrete data
+points, and do not attempt to impute the underlying continuous path.
+Gaussian process adapters~\citep{li2016scalable}, by contrast, are
+capable of imputing a \emph{full} continuous path, from which we
+may sample arbitrarily. Hence, this framework also needs to be
+considered in this paper.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Related work} %(OLD)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 A key motivation for this work is the use of the signature transform in
@@ -675,12 +853,27 @@ To calculate the signature transform, we used the Signatory package of \cite{sig
   \label{fig: barplots}
 \end{figure*}
 
+% {\tiny
+% \begin{table}[h]
+%     \caption{\textbf{Physionet 2012}. The below methods are named as $<$imputation method$>-<$prediction model$>$. GP indicates an end-to-end trained Gaussian Process adapter, whereas PoM indicates our proposed extension, "posterior moments". The remaining imputation schemes have been applied as a preprocessing step, whereas the abbreviations "causal, ff, ind, lin, and zero" refer to: "causal, forward-filling, indicator, linear, and zero". Highlighting of the 3 best methods in decreasing order: bold as well as underlined, bold, and underlined.}
+%     %\input{tables/Physionet2012} %TODO: I need to update the result tables with repetitions including std estimates (curerntly hyperparameter search results - not repetitions.
+%     \input{tables/repetitions_Physionet2012}
+% \end{table}
+% }
+
 {\tiny
 \begin{table}[h]
-    \caption{\textbf{Physionet 2012}. The below methods are named as $<$imputation method$>-<$prediction model$>$. GP indicates an end-to-end trained Gaussian Process adapter, whereas PoM indicates our proposed extension, "posterior moments". The remaining imputation schemes have been applied as a preprocessing step, whereas the abbreviations "causal, ff, ind, lin, and zero" refer to: "causal, forward-filling, indicator, linear, and zero". Highlighting of the 3 best methods in decreasing order: bold as well as underlined, bold, and underlined.}
-    \input{tables/Physionet2012} %TODO: I need to update the result tables with repetitions including std estimates (curerntly hyperparameter search results - not repetitions.
+    \caption{\textbf{CharacterTrajectories}, Label-based subsampling}
+    \input{tables/repetitions_CharacterTrajectories_Label-based}
 \end{table}
 }
+{\tiny
+\begin{table}[h]
+    \caption{\textbf{PenDigits}, Label-based subsampling}
+    \input{tables/repetitions_PenDigits_Label-based}
+\end{table}
+}
+
 
 
 \section{Recommendations}
@@ -706,7 +899,8 @@ themselves.
 As a result, we are able to summarise with `recommendations for the practitioner' on the appropriateness of different techniques.
 
 \section*{Broader Impact}
-TODO
+
+While our focus here is specifically to study path constructions for signatures, we interpret it as the manifestation of a larger problem which deserves more attention.
 
 \begin{ack}
 TODO
@@ -846,7 +1040,7 @@ Describe here the further datasets, the subsampling types etc.
 \begin{table*}
     \begin{center}
 	\caption{PenDigits}
-	\input{tables/PenDigits}
+	\input{tables/repetitions_PenDigits}
 	\end{center}
 \end{table*}
 
@@ -855,7 +1049,7 @@ Describe here the further datasets, the subsampling types etc.
 \begin{table*}
     \begin{center}
 	\caption{LSST}
-	\input{tables/LSST}
+	\input{tables/repetitions_LSST}
 	\end{center}
 \end{table*}
 
@@ -864,7 +1058,7 @@ Describe here the further datasets, the subsampling types etc.
 \begin{table*}
     \begin{center}
 	\caption{Character Trajectories }
-	\input{tables/CharacterTrajectories}
+	\input{tables/repetitions_CharacterTrajectories}
 	\end{center}
 \end{table*}
 
