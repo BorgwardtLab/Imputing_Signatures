@@ -15,7 +15,7 @@
 \usepackage{wrapfig}
 \newcommand{\theHalgorithm}{\arabic{algorithm}}
 \usepackage{comment}
-
+\usepackage{multicol} %multicol in figure
 \PassOptionsToPackage{sort, numbers, compress}{natbib}
 
 \usepackage{neurips_2020} %[preprint]
@@ -991,6 +991,7 @@ standard deviation (error bars) of the performance metrics on the testing split.
   The bars display performance in terms of balanced accuracy (BAC), whereas the panels indicate the used subsampling. Left: Random (R), right: label-based (L).}
   \label{fig:results_main}
 \end{figure*}
+
 In Tables \ref{tab:character} and \ref{tab:pendigits}, the results for \texttt{Character Trajectories} and \texttt{PenDigits} under label-based subsampling are shown, respectively. For the remaining datasets and subsamplings, please refer to the Tables \ref{supp: tab character}--\ref{supp: tab physionet} in the appendix. 
 % In addition, \ref{fig:results_main} depicts a barplot visualization of the results for the \texttt{Character Trajectories} dataset~(please refer to supplemental Figure~\ref{fig:supp_results} for the other datasets).
 We observe that both \textsc{DeepSig} as well as the signature-free \textsc{RNN} perform well
@@ -1002,8 +1003,7 @@ imputation strategy. Figure \ref{fig:results_main} exemplifies this finding in a
 our novel \textsc{GP-PoM} strategy. In \texttt{PenDigits}, we encountered
 issues of numerical stability for the original GP adapter\footnote{They
 were addressed by jittering the diagonal in the Cholesky
-decomposition.}; not so for \textsc{GP-PoM}.
-
+decomposition.}; not so for \textsc{GP-PoM}. Furthermore, we found that \textsc{GP-PoM} tends to converge faster to a better performance than the original GP adapter, as exemplified in Supplementary Figure \ref{supp: gp-training}.
 
 \begin{table}[h]
     \caption{\textbf{CharacterTrajectories} Dataset under label-based subsampling. The top three methods are highlighted: bold \& underlined, bold, underlined.}
@@ -1280,6 +1280,16 @@ Pattern Mining'. The authors are grateful to Patrick Kidger for valuable discuss
   \label{supp: barplots2}
 \end{figure}
 
+\begin{figure}[tbp] 
+    \begin{center}
+    \includegraphics[width=0.95\linewidth]{plots/gp_training_plot.pdf}\quad%
+    % \includegraphics[width=0.48\linewidth]{plots/barplot_main_params_CharacterTrajectories-LabelBasedSubsampler.pdf}%
+  \end{center}
+  \caption{GP-PoM training illustrated for CharacterTrajectories as compared to conventional GP adapter.}
+  \label{supp: gp-training}
+\end{figure}
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Imputation strategies} \label{supp: Imputation}
@@ -1359,7 +1369,7 @@ a batch-size of~$32$.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{figure}[t]
     \centering
-    \includegraphics[width=0.45 \columnwidth]{figures/sig_path3.pdf}
+    \includegraphics[width=0.35 \columnwidth]{figures/sig_path3.pdf}
     \caption{
       L{\'e}vy area of the forward-fill imputed path. By changing
       $t_{3/2}$~(a \emph{single} unrelated observation!), we can make
