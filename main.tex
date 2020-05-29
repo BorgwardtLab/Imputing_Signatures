@@ -64,17 +64,10 @@
 \begin{abstract}
 The signature transform is a `universal nonlinearity' on the space of
 continuous vector-valued paths, and has received attention for use in
-machine learning. However, real-world temporal data is typically observed at discrete points in time, and must first be transformed into a continuous path before
-signature techniques can be applied.  We characterise this as an imputation
-problem, and empirically assess the impact of various imputation techniques, including Gaussian process~(GP) adapters,
-when applying signatures to irregular time series data. In our experiments, we find that the choice of imputation drastically affects shallow signature models,
-whereas deeper architectures are more robust. We also observe that
-uncertainty-aware \emph{predictions} are beneficial for predictive performance, even
-compared to the uncertainty-aware \emph{training} of GP adapters.
-Hence, we propose an extension
-of GP adapters by integrating uncertainty to the prediction step. This
-leads to competitive performance in general, and improves robustness of
-signature models in particular.
+machine learning. However, real-world temporal data is usually observed at discrete points in time, and must first be transformed into a continuous path before
+signature techniques can be applied. We make this (typically implicit) step explicit by characterising it as an imputation
+problem, and assess the impact of various imputation strategies when applying signatures to irregular time series data. For one of these strategies, Gaussian process~(GP) adapters, we propose an extension (GP-PoM) which makes uncertainty information directly available to the subsequent classifier while preventing costly monte-carlo (MC) sampling. In our experiments, we find that the choice of imputation  drastically affects shallow signature models, whereas deeper architectures are more robust. Next, we observe that
+uncertainty-aware \emph{predictions} (due to GP-PoM or indicator imputations) are beneficial for predictive performance, even compared to the uncertainty-aware \emph{training} of conventional GP adapters. In conclusion, we have demonstrated that the path construction is indeed crucial for signature models and that our proposed strategy leads to competitive performance in general, while improving robustness of signature models in particular.
 \end{abstract} % TODO: touch this up a bit, but I think the essential idea is there.
 
 
@@ -600,12 +593,12 @@ this formulation enables us to make explicit how the signature transform
 \paragraph{Path imputation strategies}
 We consider the following set of strategies for path imputation, i.e.\
 \begin{inparaenum}[(1)]
-    \item linear interpolation,
-    \item forward filling,
-    \item indicator imputation,
-    \item zero imputation,
-    \item causal imputation\footnote{This strategy is similar to the time-joined transformation \citep{levin2013}. For more details, please refer to Section \ref{sec:Causal signature imputation} in the appendix.}, and
-    \item Gaussian process adapters.
+    \item linear interpolation (lin),
+    \item forward filling (ff),
+    \item indicator imputation (ind),
+    \item zero imputation (zero),
+    \item causal imputation\footnote{This strategy is similar to the time-joined transformation \citep{levin2013}. For more details, please refer to Section \ref{sec:Causal signature imputation} in the appendix.} (causal), and
+    \item Gaussian process adapters (GP).
 \end{inparaenum}
 %
 Strategies 1--5 can be seen as a fixed preprocessing step, whereas GP
@@ -975,8 +968,8 @@ For each setting, we run a randomised hyperparameter search of $20$
 calls and train each of these fits until convergence~(at most 100
 epochs; we stop early if the performance on the validation
 split does not improve for 20 epochs). As for performance metrics, for
-binary classification tasks, we use average precision, for multi-class
-classification we focus on balanced accuracy~(BAC).
+binary classification tasks, we optimize average precision and also report AUROC. For multi-class
+classification, we optimize balanced accuracy~(BAC) and additionally report accuracy and weighted AUROC (w-AUROC)\footnote{AUROC is computed for each label and averaged as weighted by the support of each class}.
 %
 Having selected the best hyperparameter configuration for each setting,
 we repeat $5$ fits, per fit select the best model state in terms of the best validation performance, and finally report mean and
