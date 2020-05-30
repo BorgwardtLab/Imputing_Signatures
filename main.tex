@@ -256,7 +256,7 @@ transform may be used to define a \emph{kernel}---i.e.\ a symmetric,
 positive definite function that is typically used as a similarity
 measure---on path space, while \citet{toth2019gp} show how this kernel
 may be used to define a Gaussian process.
-
+%
 In much of this work, data has been converted into a continuous path via
 linear interpolation. Some authors~\citep{primer2016,
 fermanian2019embedding} have additionally considered `rectilinear'
@@ -266,7 +266,7 @@ the resulting path exhibits a causal dependence on the data.  However,
 to our knowledge, no prior work has regarded (and empirically investigated) this as an imputation
 problem.
 
-The general problem of imputing data is well-known and well-studied, and
+\paragraph{Imputation schemes} The general problem of imputing data is well-known and well-studied, and
 we will not attempt to describe it here; see for example \citet[Chapter 25]{gelman2007dataanalysis}.
 % Common simple imputation schemes are to impute missing values as the mean of its channel, or to forward fill the last observed value, although it has been observed that incautious use of such methods can result in heavily biased models \cite{Molnar2008}.
 Imputation methods typically only fill in missing discrete data
