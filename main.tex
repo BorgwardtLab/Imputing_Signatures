@@ -362,7 +362,7 @@ parameters. Let \begin{align*} \mu \colon [a, b] \times
 \colon [a, b] \times [a, b] \times \seriesspace(\dataspace^*) \times
 \mathcal{H} &\to \dataspace    \end{align*} be mean and covariance
 functions, with $\mathcal{H}$ interpreted as a space of
-hyperparameters. The dependence on $\seriesspace(\dataspace^*)$ is to
+hyperparameters. The dependence on $\seriesspace(\dataspace^*)$ is used to
 represent conditioning on observed values.
 
 Then the goal is to solve
@@ -371,21 +371,23 @@ Then the goal is to solve
 y_k) \big] }^{\text{$E_k$}}.
 \end{equation}
 %
-As this expectation is typically not tractable, it is estimated by Monte
-Carlo (MC) sampling with $S$ samples, i.e.\
+As this expectation is typically not tractable, it is estimated by MC
+sampling with $S$ samples, i.e.\
+%
 \begin{equation}
 E_k \approx \frac{1}{S} \sum_{s=1}^{S} \ell(F(\mathbf{z}_{s, k}, \mathbf{w}), y_k),
 \end{equation}
 %
 where
-%
+% BR: does this have to be a separate equation? Same goes for the
+% others, except for the mean calculation.
 \begin{equation}
     \mathbf{z}_{s, k} \sim \mathcal{N}\left( \mu(\,\cdot\,, \mathbf{x}_k, \eta), \Sigma(\,\cdot\,, \,\cdot\,, \mathbf{x}_k, \eta)\right).
 \end{equation}
-
+%
 Alternatively, one may forgo allowing the uncertainty to propagate through $F$ by instead passing the posterior mean directly to $F$; this corresponds to solving
 \begin{equation}\label{eq:gp-mean}
-\argmin_{\mathbf{w} \in \mathcal{W},\bm{\eta} \in \mathcal{H}} \sum_{k=1}^N \ell(F(\mu(\,\cdot\,,\mathbf{x}_k, \eta), \mathbf{w}), y_k).
+  \argmin_{\mathbf{w} \in \mathcal{W},\bm{\eta} \in \mathcal{H}} \sum_{k=1}^N \ell(F(\mu(\,\cdot\,,\mathbf{x}_k, \eta), \mathbf{w}), y_k).
 \end{equation}
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -569,9 +571,9 @@ For non-signature methods as for signature methods, this implicit usage of data 
 % may sample arbitrarily. Hence, this framework also needs to be
 % considered in this paper.
 
-
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Path imputations for signature models}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Signatures act on continuous paths. However, in real-world
 applications, temporal data typically appears as a discretised
@@ -596,72 +598,86 @@ objective:
     \label{eq:objective}
 \end{equation} 
 %
-Even though Equation \ref{eq:objective} could be formulated more
+Even though Equation~\eqref{eq:objective} could be formulated more
 \emph{implicitly}~(i.e.\ without any explicit imputation step),
 this formulation enables us to make explicit how the signature transform
 `interprets' the raw data for downstream classification tasks. 
 
 \paragraph{Path imputation strategies}
-We consider the following set of strategies for path imputation, i.e.\
+We consider the following set of strategies for path imputation, namely
 \begin{inparaenum}[(1)]
-    \item linear interpolation (lin),
-    \item forward filling (ff),
-    \item indicator imputation (ind),
-    \item zero imputation (zero),
-    \item causal imputation\footnote{This strategy is similar to the time-joined transformation \citep{levin2013}. For more details, please refer to Section \ref{sec:Causal signature imputation} in the appendix.} (causal), and
-    \item Gaussian process adapters (GP).
+    \item linear interpolation~(lin),
+    \item forward filling~(ff),
+    \item indicator imputation~(ind),
+    \item zero imputation~(zero),
+    \item causal imputation\footnote{This strategy is similar to the
+      time-joined transformation \citep{levin2013}. For more details,
+    please refer to Section \ref{sec:Causal signature imputation} in the
+  appendix.}~(causal), and
+    \item Gaussian process adapters~(GP).
 \end{inparaenum}
 %
 Strategies 1--5 can be seen as a fixed preprocessing step, whereas GP
 adapters~(strategy~6) are optimised end-to-end with the downstream task. For more
-details regarding these strategies, please refer to Section \ref{supp: Imputation} in the
+details regarding these strategies, please refer to Section~\ref{supp: Imputation} in the
 appendix.
-\paragraph{GP adapter with posterior moments}
+
 \begin{figure}[t]
     \centering
     \hspace*{1cm}
     \includegraphics[width=0.7\columnwidth]{figures/overview.pdf}
-    \caption{Overview of our proposed extension of GP adapters, GP-PoM, leveraging both posterior moments (mean and variance). In comparison, the conventional GP adapter feeds MC samples (faded colors in the background) drawn from the GP posterior into the classifier}
+    \caption{%
+      Overview of our proposed extension of GP adapters, GP-PoM,
+      leveraging both posterior moments~(mean and variance). In
+      comparison, the conventional GP adapter feeds MC samples~(faded
+      colours in the background) drawn from the GP posterior into the
+      classifier.
+    }
     \label{fig:overview}
 \end{figure}
 
+\paragraph{GP adapter with posterior moments}
+%
 For conventional GP adapters, one major drawback with the formulations
 of \citet{li2016scalable} and \citet{futoma2017mgp}, as described in
-equation \eqref{eq:gp-mc}, is that approximating the expectation outside
+Equation~\eqref{eq:gp-mc}, is that approximating the expectation outside
 of the loss function with MC sampling is expensive.
 %
 During prediction, \citet{li2016scalable} proposed to overcome this
 issue by sacrificing the uncertainty in the loss function and to simply
-pass the posterior mean, as in supplementary Equation
-\eqref{eq:gp-mean}\footnote{%
+pass the posterior mean, as in Equation~\eqref{eq:gp-mean}\footnote{%
+  % BR: This is too much detail for something that should be clear;
+  % consider removing it.
   Equations \eqref{eq:gp-mc} and \eqref{eq:gp-mean} are of course not in
   general equal, so following \citet{futoma2017mgp}, our standard GP
   adapter uses MC sampling both in training and testing.
 }.
 %
-
 To address both points, we propose to instead also pass the posterior
 covariance of the Gaussian process to the classifier $F$. This saves the
 cost of MC sampling whilst explicitly providing~$F$ with uncertainty
-information during the prediction\footnote{Even if MC sampling
+information during the prediction\footnote{%
+% BR: Why not make this a stand-alone sentence? 'Notice that...
+Even if MC sampling
 is used during prediction, $F$ has no per-sample access to
-uncertainty about the imputation.}.
+uncertainty about the imputation.
+}.
 %
 However, the full covariance matrix may become very large, and it is
 not obvious that all interactions are relevant to the subsequent
-classifier. \newline 
+classifier.
 This is  why we simplify matters by taking the posterior
 \emph{variance} at every point, and concatenate it with the posterior
 mean at every point, to produce a path whose evolution also captures the
 uncertainty at every point:
 %
-%\vspace{-0.08cm}
 \begin{align}
     \tau &\colon [a, b] \times \seriesspace(\dataspace^*) \times \mathcal{H} \to \dataspace \times \dataspace\\
     \tau &\colon t, \mathbf{x}, \eta \mapsto (\mu(t, \mathbf{x}, \eta), \Sigma(t, t, \mathbf{x}, \eta)).
 \end{align}
 %
 This corresponds to solving
+%
 \begin{equation}\label{eq:gp-moments}
 \argmin_{\mathbf{w} \in \mathcal{W},\bm{\eta} \in \mathcal{H}} \sum_{k=1}^N \ell(F(\tau(\,\cdot\,,\mathbf{x}_k, \eta), \mathbf{w}), y_k),
 \end{equation}
@@ -669,13 +685,17 @@ This corresponds to solving
 where instead now $F \colon (\dataspace \times \dataspace)^{[a, b]}
 \times \mathcal{W} \to \lspace$.
 %
-%
 Figure~\ref{fig:overview} depicts our proposed strategy \textsc{GP-PoM}. 
-
-In our context of interest, when $F$ is a signature model, it is now straightforward to
-compute the signature of the Gaussian process, simply by querying many
-points to construct a piecewise linear approximation to the process.
-The choice of kernel has nontrivial mathematical implications for this procedure: for example if a Mat{\'e}rn 1/2 kernel is chosen, then the resulting path is not of bounded variation and the definition of the signature transform given in equation \eqref{eq:signature} does not hold, and rough path theory \cite{lyons1998differential} must instead be invoked to define the signature transform.
+%
+In our context of interest, when $F$ is a signature model, it is now
+straightforward to compute the signature of the Gaussian process, simply
+by querying many points to construct a piecewise linear approximation to
+the process.  The choice of kernel has non-trivial mathematical
+implications for this procedure: for example if a Mat{\'e}rn 1/2 kernel
+is chosen, then the resulting path is not of bounded variation and the
+definition of the signature transform given in Equation~\eqref{eq:signature}
+does not hold, and rough path theory~\citep{lyons1998differential} must instead be invoked to define the
+signature transform.
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % \section{Path imputations} %OLD
