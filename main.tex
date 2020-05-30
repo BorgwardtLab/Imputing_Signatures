@@ -66,15 +66,29 @@ The signature transform is a `universal nonlinearity' on the space of
 continuous vector-valued paths, and has received attention for use in
 machine learning. However, real-world temporal data is usually observed at discrete points in time, and must first be transformed into a continuous path before
 signature techniques can be applied. We make this (typically implicit) step explicit by characterising it as an imputation
-problem, and assess the impact of various imputation strategies when applying signatures to irregular time series data. For one of these strategies, Gaussian process~(GP) adapters, we propose an extension (GP-PoM) which makes uncertainty information directly available to the subsequent classifier while preventing costly monte-carlo (MC) sampling. In our experiments, we find that the choice of imputation  drastically affects shallow signature models, whereas deeper architectures are more robust. Next, we observe that
-uncertainty-aware \emph{predictions} (due to GP-PoM or indicator imputations) are beneficial for predictive performance, even compared to the uncertainty-aware \emph{training} of conventional GP adapters. In conclusion, we have demonstrated that the path construction is indeed crucial for signature models and that our proposed strategy leads to competitive performance in general, while improving robustness of signature models in particular.
+problem, and assess the impact of various imputation strategies when
+applying signatures to irregular time series data. For one of these
+strategies, Gaussian process~(GP) adapters, we propose an
+extension~(GP-PoM) that makes uncertainty information directly available
+to the subsequent classifier while at the same time preventing costly
+Monte-Carlo~(MC) sampling. In our experiments, we find that the choice
+of imputation  drastically affects shallow signature models, whereas
+deeper architectures are more robust. Next, we observe that
+uncertainty-aware \emph{predictions}~(based on GP-PoM or indicator
+imputations) are beneficial for predictive performance, even compared to
+the uncertainty-aware \emph{training} of conventional GP adapters.
+%
+% BR: sounds a little bit like the ending of the paper already; consider
+% reformulating.
+In conclusion, we have demonstrated that the path construction is indeed
+crucial for signature models and that our proposed strategy leads to
+competitive performance in general, while improving robustness of
+signature models in particular.
 \end{abstract} % TODO: touch this up a bit, but I think the essential idea is there.
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Introduction (NEW)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Originally described by \citet{Chen54, Chen57, Chen58} and popularised
 in the theory of rough paths and controlled differential
