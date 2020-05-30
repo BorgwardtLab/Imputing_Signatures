@@ -100,7 +100,7 @@ determine a path up to a negligible equivalence class. Moreover,
 \emph{every} continuous function of a path can be recovered by applying
 a linear transform to this collection of statistics~\citep[Proposition
 A.6]{kidger2019deep}.
-
+%
 This `universal nonlinearity' property makes the signature a promising nonparametric
 feature extractor with beneficial properties in both generative and
 supervised learning scenarios.
@@ -109,38 +109,35 @@ Given their similarities, we may hope that tools that
 apply to continuous paths can \emph{also} be extended to multivariate
 time series. But since multivariate time series are not continuous
 paths, one first needs to construct a continuous path to apply signature techniques.
-%
-\newline
+
 Previous work~\citep{levin2013, kidger2019deep, fermanian2019embedding}
-characterise this construction as an embedding problem, and
-typically consider it a minor technical detail.
+characterised this construction as an embedding problem, and
+typically considered it a minor technical detail.
 This is exacerbated by the---perfectly sensible---behaviour of software
-for computing the signature \cite{iisignature, signatory}, which
+for computing the signature~\citep{iisignature, signatory}, which
 commonly considers a continuous piecewise linear path as an input,
 described by its sequence of knots, i.e.\ values.
 %
 Since such sequences resemble a sequence of data, the signature is
 sometimes interpreted as operating on sequences of data rather than on
 paths~\cite{kidger2019deep, levin2013}.
-In constrast, here we show that considering the path construction
+%
+By contrast, here we show that considering the path construction
 process is crucial for achieving competitive predictive
 performance: we reinterpret the task of constructing a continuous path,
 turning it from an embedding problem to an imputation problem, which we
 call \emph{path imputation}.
 %
 
-While previous work on the signature transform
+While previous research concerning the signature transform
 focussed on its excellent theoretical properties, such as sampling
 independence~\citep[Proposition A.7]{kidger2019deep}, our findings show
 that this does not
 necessarily correspond to empirical performance.
 %
-We perform a thorough investigation of multiple imputation schemes in combination with various models that can potentially employ signatures. \newline 
+We perform a thorough investigation of multiple imputation schemes in combination with various models that can potentially employ signatures.
 Furthermore, motivated by the fact that missingness itself can be
 informative for time series classification~\citep{rubin1976inference}, we propose a novel extension to Gaussian process adapters~\citep{li2016scalable} which exploits uncertainty information during each prediction step, which we show is beneficial for signature models, but also of independent interest.
-%
-% BR: This is already a summary of the experiments; we do not
-% necessarily have the space for this, I would say.
 %
 % We find that approaches
 % that have access to uncertainty information \emph{during prediction}
