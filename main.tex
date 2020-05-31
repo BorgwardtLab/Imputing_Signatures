@@ -1073,7 +1073,7 @@ Supplementary Figure~\ref{supp: gp-training}.
     \label{tab:character}
 \end{table}
 
-\begin{table}[h]
+\begin{table}[ht]
     \caption{\textbf{PenDigits} dataset under label-based subsampling. The top three methods are highlighted: bold \& underlined, bold, underlined.}
     \centering
     %\small{
@@ -1082,9 +1082,9 @@ Supplementary Figure~\ref{supp: gp-training}.
     %}
 \end{table}
 
-
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Discussion}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Our findings suggest that the choice of path imputation strategy can
 \emph{drastically} affect the performance of signature-based models. We
@@ -1118,7 +1118,11 @@ a promising feature extractor that can be easily integrated to neural
 networks. As we empirically demonstrated in this paper, the application
 of signature transforms to real-world temporal data is fraught with
 pitfalls---specifically, we found the choice of an imputation scheme to
-be crucial for obtaining high predictive performance. Moreover, by integrating uncertainty to the prediction step, our proposed \textsc{GP-PoM} has demonstrated overall competitive performance and in particular improved robustness in signature models when dealing with irregularly-spaced and asynchronous time series. 
+be crucial for obtaining high predictive performance. Moreover, by
+integrating uncertainty to the prediction step, our proposed
+\textsc{GP-PoM} has demonstrated overall competitive performance and in
+particular improved robustness in signature models when dealing with
+irregularly-spaced and asynchronous time series. 
 
 
 % \section{Experiments} %OLD
@@ -1219,7 +1223,8 @@ Convolutions are often thought of in terms of discrete sums, but they are perhap
 \end{equation*}
 although the $1/n$ scaling is really only justified in the case that the $t_i$ are equally spaced.\footnote{The $g_\theta$ is typically a step function in `normal' convolutional layers. Some works exists on replacing it with e.g. B-splines \cite{fey2018splinecnn} to better handle irregular data. The oddity of scaling by $1/n$ with irregular data has not been explicitly addressed in the literature, at least to our knowledge; indeed quite conversely we have seen it used without remark.} Thus we see that with convolutions, we are implicitly interpreting the observed data as a path in data space.
 
-Similarly, the connection between dynamical systems and recurrent neural networks are well known \cite{FUNAHASHI1993801, continuousrnn}, and these tend to use a similar setup.
+Similarly, the connection between dynamical systems and recurrent neural
+networks are well known~\citep{FUNAHASHI1993801, continuousrnn}, and these tend to use a similar setup.
 
 For non-signature methods as for signature methods, this implicit usage of data as a path in data space often seems to be swept under the rug, and we have demonstrated that this is deserving further attention.
 % While our focus here is specifically to study path constructions for signatures, we consider implicit path constructions as the manifestation of a larger problem which deserves more attention.
