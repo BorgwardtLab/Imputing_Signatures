@@ -1330,7 +1330,7 @@ We consider the following set of strategies for path imputation, i.e.\
 \begin{enumerate}
     \item linear interpolation: At a given imputation point, the previous and next observed data point are linearly interpolated.
     \item forward filling: At a given imputation point, the last observed value is carried forward.
-    \item indicator imputation: At a given imputation point, for each feature dimension, if no observation is available an binary missingness indicator variable is set to $1$, $0$ otherwise. The missing value is filled with $0$.
+    \item indicator imputation: At a given imputation point, for each feature dimension, if no observation is available a binary missingness indicator variable is set to $1$, $0$ otherwise. The missing value is filled with $0$.
     \item zero imputation: At a given imputation point, missing values are filled with $0$.
     \item causal imputation: This approach is related to forward filling
       and motivated by signature theory. As opposed to forward filling,
