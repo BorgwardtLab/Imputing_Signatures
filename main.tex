@@ -1026,33 +1026,55 @@ testing split.
   }
   \caption{Experimental Results visualized for Character Trajectories Dataset.
   %The rows indicate the subsampling type: Random (R) versus Label-based (L).
-  The bars display performance in terms of balanced accuracy (BAC), whereas the panels indicate the used subsampling. Left: Random (R), right: label-based (L).}
+  The bars display performance in terms of balanced accuracy (BAC),
+whereas the panels indicate the subsampling strategy.
+  %
+  % BR: very stupid, but it just occurred to me that we have the 'R'
+  % plot on the 'left', while the 'L' plot is on the 'right'. Can we
+  % just flip that? A cursory reviewer might get confused here.
+  Left: Random (R), right: label-based (L).}
   \label{fig:results_main}
 \end{figure*}
 
-In Tables \ref{tab:character} and \ref{tab:pendigits}, the results for \texttt{Character Trajectories} and \texttt{PenDigits} under label-based subsampling are shown, respectively. For the remaining datasets and subsamplings, please refer to the Tables \ref{supp: tab character}--\ref{supp: tab physionet} in the appendix. 
+In Tables \ref{tab:character} and \ref{tab:pendigits}, the results for
+\texttt{Character Trajectories} and \texttt{PenDigits} under label-based
+subsampling are shown, respectively. For the remaining datasets and
+subsampling strategies, please refer to Tables~\ref{supp: tab
+character}--\ref{supp: tab physionet} in the appendix. 
+%
 % In addition, \ref{fig:results_main} depicts a barplot visualization of the results for the \texttt{Character Trajectories} dataset~(please refer to supplemental Figure~\ref{fig:supp_results} for the other datasets).
+%
 We observe that both \textsc{DeepSig} as well as the signature-free \textsc{RNN} perform well
-over many scenarios. In particular, they are robust to various
-imputation schemes. However, we also see that certain signature models,
-in particular \textsc{Sig}, are heavily impacted by the choice of
-imputation strategy. Figure \ref{fig:results_main} exemplifies this finding in a barplot visualization; for the remaining visualisations including the number of parameters of the optimized models, please refer to the Supplementary Figures \ref{supp: barplots1} and \ref{supp: barplots2}. In the case of \texttt{Character Trajectories},
-\textsc{Sig} was only able to achieve acceptable performance through
-our novel \textsc{GP-PoM} strategy. In \texttt{PenDigits}, we encountered
-issues of numerical stability for the original GP adapter\footnote{They
-were addressed by jittering the diagonal in the Cholesky
-decomposition.}; not so for \textsc{GP-PoM}. Furthermore, we found that \textsc{GP-PoM} tends to converge faster to a better performance than the original GP adapter, as exemplified in Supplementary Figure \ref{supp: gp-training}.
+over many scenarios. In particular, they are impervious to the choice of
+several imputation schemes in the sense that it does not have a large
+impact on their predictive performance.
+%
+However, we also see that certain signature models, in particular
+\textsc{Sig}, are heavily impacted by the choice of imputation strategy.
+Figure~\ref{fig:results_main} exemplifies this finding in a barplot
+visualisation; for the remaining visualisations, including the number of
+parameters of the optimized models, please refer to Supplementary
+Figures~\ref{supp: barplots1} and~\ref{supp: barplots2}. In the case of
+\texttt{Character Trajectories}, \textsc{Sig} was only able to achieve
+acceptable performance through our novel \textsc{GP-PoM} strategy. In
+\texttt{PenDigits}, we encountered issues of numerical stability for the
+original GP adapter\footnote{They were addressed by jittering the
+diagonal in the Cholesky decomposition.}; not so for \textsc{GP-PoM}.
+Furthermore, we found that \textsc{GP-PoM} tends to converge faster to
+a better performance than the original GP adapter, as exemplified in
+Supplementary Figure~\ref{supp: gp-training}.
 
-\begin{table}[h]
-    \caption{\textbf{CharacterTrajectories} Dataset under label-based subsampling. The top three methods are highlighted: bold \& underlined, bold, underlined.}
+\begin{table}[t]
+    \caption{\textbf{CharacterTrajectories} dataset under label-based subsampling. The top three methods are highlighted: bold \& underlined, bold, underlined.}
     \centering
     %\small{
     \input{tables/repetitions_CharacterTrajectories_Label-based}
     %}
     \label{tab:character}
 \end{table}
+
 \begin{table}[h]
-    \caption{\textbf{PenDigits} Dataset under label-based subsampling. The top three methods are highlighted: bold \& underlined, bold, underlined.}
+    \caption{\textbf{PenDigits} dataset under label-based subsampling. The top three methods are highlighted: bold \& underlined, bold, underlined.}
     \centering
     %\small{
     \input{tables/repetitions_PenDigits_Label-based}
