@@ -1115,6 +1115,10 @@ explicitly uncertain \emph{about} its own prediction~(due to the
 variance of the MC sampled predictions), while the subsequent classifier
 has to be able to handle the doubled feature dimensionality.
 
+\paragraph{Recommendations for the practioner}
+When dealing with a challenging time series classification task, we recommend to use signatures as a powerful tool to encode paths with little loss of information. However, we have observed that this comes at a cost: Since the signature describes continuous paths (and not discrete time series), constructing this path from raw data is a delicate task that can heavily impact the signature and the performance of down-stream models. To this end, we recommend using \textsc{GP-PoM}, which explicitly indroduces uncertainty about the imputed path. 
+Furthermore, when applying signatures in online applications where during training no data should leak from the future (as this could impair performanceupon deployment in the online scenario), we recommend to use causal (or time-joined) path imputations as their design specifically prevents leakage from the future, even when interpreting the imputations as piece-wise linear paths. 
+
 \section{Conclusion}
 
 The signature transform has recently gained attention for being
