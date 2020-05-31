@@ -950,10 +950,12 @@ We analyse four real-world time series datasets, i.e.\
 For dataset statistics and necessary filtering steps, please refer to Section \ref{supp: Dataset stats} in the appendix.
 Moreover, to efficiently compute the signature, we
 sample the imputed path in a \emph{fixed} time resolution\footnote{For Physionet2012 hourly, for the other datasets once per originally ovserved time step}, resulting in
-a piecewise linear path . \newline
+a piecewise linear path.
+%
 For time series that are not irregularly spaced, we apply two types of random subsampling as an additional
 preprocessing step for all but the \texttt{Physionet2012} dataset,
 namely
+%
 \begin{inparaenum}[(1)]
     \item `Random': Missing at random; on the instance level, we discard 50\% of all observations.
     \item `Label-based': Missing not at random; for each
@@ -983,11 +985,10 @@ We study the following models:
   following \citet{kidger2019deep}.
 \end{inparaenum}
 %
-\newline
 Please refer to Supplementary Section~\ref{supp: Model Architectures} for more details about the
 architectures and implementations. We use the `Signatory' package to
 calculate the signature transform~\citep{signatory}, and implemented all GP
-adapters in the `GPyTorch' framework~\citep{gardner2018gpytorch}.
+adapters using the `GPyTorch' framework~\citep{gardner2018gpytorch}.
 
 \paragraph{Training and evaluation}
 %
@@ -1000,11 +1001,17 @@ calls and train each of these fits until convergence~(at most 100
 epochs; we stop early if the performance on the validation
 split does not improve for 20 epochs). As for performance metrics, for
 binary classification tasks, we optimize average precision and also report AUROC. For multi-class
-classification, we optimize balanced accuracy~(BAC) and additionally report accuracy and weighted AUROC (w-AUROC)\footnote{AUROC is computed for each label and averaged as weighted by the support of each class}.
+classification, we optimize balanced accuracy~(BAC) and additionally
+report accuracy and weighted AUROC~(w-AUROC)\footnote{%
+  AUROC is computed for each label and averaged weighted according to
+  the support of each class%
+}.
 %
 Having selected the best hyperparameter configuration for each setting,
-we repeat $5$ fits, per fit select the best model state in terms of the best validation performance, and finally report mean and
-standard deviation (error bars) of the performance metrics on the testing split.
+we repeat $5$ fits; for each fit, we select the best model state in
+terms of the best validation performance, and finally report mean and
+standard deviation~(error bars) of the performance metrics on the
+testing split.
 
 \paragraph{Results}
 %
