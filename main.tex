@@ -138,7 +138,7 @@ necessarily correspond to empirical performance.
 %
 We perform a thorough investigation of multiple imputation schemes in combination with various models that can potentially employ signatures.
 Furthermore, motivated by the fact that missingness itself can be
-informative for time series classification~\citep{rubin1976inference}, we propose a novel extension to Gaussian process adapters~\citep{li2016scalable} which exploits uncertainty information during each prediction step, which we show is beneficial for signature models, but also of independent interest.
+informative for time series classification~\citep{rubin1976inference}, for one of the considered schemes, Gaussian process adapters~\citep{li2016scalable}, we propose a novel extension which exploits uncertainty information during each prediction step, which we show is beneficial for signature models, but also of independent interest.
 %
 % We find that approaches
 % that have access to uncertainty information \emph{during prediction}
@@ -686,7 +686,9 @@ This corresponds to solving
 where instead now $F \colon (\dataspace \times \dataspace)^{[a, b]}
 \times \mathcal{W} \to \lspace$.
 %
-Figure~\ref{fig:overview} depicts our proposed strategy \textsc{GP-PoM}. 
+As this approach leverages information from both posterior moments (mean and variance), we refer to it as posterior moments GP adapter, or short \textsc{GP-PoM}.
+%
+Figure~\ref{fig:overview} gives an overview of \textsc{GP-PoM}. 
 %
 In our context of interest, when $F$ is a signature model, it is now
 straightforward to compute the signature of the Gaussian process, simply
@@ -953,8 +955,8 @@ Moreover, to efficiently compute the signature, we
 sample the imputed path in a \emph{fixed} time resolution\footnote{For Physionet2012 hourly, for the other datasets once per originally ovserved time step}, resulting in
 a piecewise linear path.
 %
-For time series that are not irregularly spaced, we apply two types of random subsampling as an additional
-preprocessing step for all but the \texttt{Physionet2012} dataset,
+For time series that are not irregularly spaced (this applies to all datasets but \texttt{Physionet2012}), we employ two types of random subsampling as an additional
+preprocessing step,
 namely
 %
 \begin{inparaenum}[(1)]
@@ -1038,7 +1040,7 @@ whereas the panels indicate the subsampling strategy.
 \end{figure*}
 
 In Tables \ref{tab:character} and \ref{tab:pendigits}, the results for
-\texttt{Character Trajectories} and \texttt{PenDigits} under label-based
+\texttt{CharacterTrajectories} and \texttt{PenDigits} under label-based
 subsampling are shown, respectively. For the remaining datasets and
 subsampling strategies, please refer to Tables~\ref{supp: tab
 character}--\ref{supp: tab physionet} in the appendix. 
@@ -1056,7 +1058,7 @@ Figure~\ref{fig:results_main} exemplifies this finding in a barplot
 visualisation; for the remaining visualisations, including the number of
 parameters of the optimized models, please refer to Supplementary
 Figures~\ref{supp: barplots1} and~\ref{supp: barplots2}. In the case of
-\texttt{Character Trajectories}, \textsc{Sig} was only able to achieve
+\texttt{CharacterTrajectories}, \textsc{Sig} was only able to achieve
 acceptable performance through our novel \textsc{GP-PoM} strategy. In
 \texttt{PenDigits}, we encountered issues of numerical stability for the
 original GP adapter\footnote{They were addressed by jittering the
