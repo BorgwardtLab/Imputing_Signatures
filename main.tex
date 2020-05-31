@@ -950,10 +950,12 @@ We analyse four real-world time series datasets, i.e.\
 For dataset statistics and necessary filtering steps, please refer to Section \ref{supp: Dataset stats} in the appendix.
 Moreover, to efficiently compute the signature, we
 sample the imputed path in a \emph{fixed} time resolution\footnote{For Physionet2012 hourly, for the other datasets once per originally ovserved time step}, resulting in
-a piecewise linear path . \newline
+a piecewise linear path.
+%
 For time series that are not irregularly spaced, we apply two types of random subsampling as an additional
 preprocessing step for all but the \texttt{Physionet2012} dataset,
 namely
+%
 \begin{inparaenum}[(1)]
     \item `Random': Missing at random; on the instance level, we discard 50\% of all observations.
     \item `Label-based': Missing not at random; for each
@@ -983,11 +985,10 @@ We study the following models:
   following \citet{kidger2019deep}.
 \end{inparaenum}
 %
-\newline
 Please refer to Supplementary Section~\ref{supp: Model Architectures} for more details about the
 architectures and implementations. We use the `Signatory' package to
 calculate the signature transform~\citep{signatory}, and implemented all GP
-adapters in the `GPyTorch' framework~\citep{gardner2018gpytorch}.
+adapters using the `GPyTorch' framework~\citep{gardner2018gpytorch}.
 
 \paragraph{Training and evaluation}
 %
@@ -1000,11 +1001,17 @@ calls and train each of these fits until convergence~(at most 100
 epochs; we stop early if the performance on the validation
 split does not improve for 20 epochs). As for performance metrics, for
 binary classification tasks, we optimize average precision and also report AUROC. For multi-class
-classification, we optimize balanced accuracy~(BAC) and additionally report accuracy and weighted AUROC (w-AUROC)\footnote{AUROC is computed for each label and averaged as weighted by the support of each class}.
+classification, we optimize balanced accuracy~(BAC) and additionally
+report accuracy and weighted AUROC~(w-AUROC)\footnote{%
+  AUROC is computed for each label and averaged weighted according to
+  the support of each class%
+}.
 %
 Having selected the best hyperparameter configuration for each setting,
-we repeat $5$ fits, per fit select the best model state in terms of the best validation performance, and finally report mean and
-standard deviation (error bars) of the performance metrics on the testing split.
+we repeat $5$ fits; for each fit, we select the best model state in
+terms of the best validation performance, and finally report mean and
+standard deviation~(error bars) of the performance metrics on the
+testing split.
 
 \paragraph{Results}
 %
@@ -1019,33 +1026,55 @@ standard deviation (error bars) of the performance metrics on the testing split.
   }
   \caption{Experimental Results visualized for Character Trajectories Dataset.
   %The rows indicate the subsampling type: Random (R) versus Label-based (L).
-  The bars display performance in terms of balanced accuracy (BAC), whereas the panels indicate the used subsampling. Left: Random (R), right: label-based (L).}
+  The bars display performance in terms of balanced accuracy (BAC),
+whereas the panels indicate the subsampling strategy.
+  %
+  % BR: very stupid, but it just occurred to me that we have the 'R'
+  % plot on the 'left', while the 'L' plot is on the 'right'. Can we
+  % just flip that? A cursory reviewer might get confused here.
+  Left: Random (R), right: label-based (L).}
   \label{fig:results_main}
 \end{figure*}
 
-In Tables \ref{tab:character} and \ref{tab:pendigits}, the results for \texttt{Character Trajectories} and \texttt{PenDigits} under label-based subsampling are shown, respectively. For the remaining datasets and subsamplings, please refer to the Tables \ref{supp: tab character}--\ref{supp: tab physionet} in the appendix. 
+In Tables \ref{tab:character} and \ref{tab:pendigits}, the results for
+\texttt{Character Trajectories} and \texttt{PenDigits} under label-based
+subsampling are shown, respectively. For the remaining datasets and
+subsampling strategies, please refer to Tables~\ref{supp: tab
+character}--\ref{supp: tab physionet} in the appendix. 
+%
 % In addition, \ref{fig:results_main} depicts a barplot visualization of the results for the \texttt{Character Trajectories} dataset~(please refer to supplemental Figure~\ref{fig:supp_results} for the other datasets).
+%
 We observe that both \textsc{DeepSig} as well as the signature-free \textsc{RNN} perform well
-over many scenarios. In particular, they are robust to various
-imputation schemes. However, we also see that certain signature models,
-in particular \textsc{Sig}, are heavily impacted by the choice of
-imputation strategy. Figure \ref{fig:results_main} exemplifies this finding in a barplot visualization; for the remaining visualisations including the number of parameters of the optimized models, please refer to the Supplementary Figures \ref{supp: barplots1} and \ref{supp: barplots2}. In the case of \texttt{Character Trajectories},
-\textsc{Sig} was only able to achieve acceptable performance through
-our novel \textsc{GP-PoM} strategy. In \texttt{PenDigits}, we encountered
-issues of numerical stability for the original GP adapter\footnote{They
-were addressed by jittering the diagonal in the Cholesky
-decomposition.}; not so for \textsc{GP-PoM}. Furthermore, we found that \textsc{GP-PoM} tends to converge faster to a better performance than the original GP adapter, as exemplified in Supplementary Figure \ref{supp: gp-training}.
+over many scenarios. In particular, they are impervious to the choice of
+several imputation schemes in the sense that it does not have a large
+impact on their predictive performance.
+%
+However, we also see that certain signature models, in particular
+\textsc{Sig}, are heavily impacted by the choice of imputation strategy.
+Figure~\ref{fig:results_main} exemplifies this finding in a barplot
+visualisation; for the remaining visualisations, including the number of
+parameters of the optimized models, please refer to Supplementary
+Figures~\ref{supp: barplots1} and~\ref{supp: barplots2}. In the case of
+\texttt{Character Trajectories}, \textsc{Sig} was only able to achieve
+acceptable performance through our novel \textsc{GP-PoM} strategy. In
+\texttt{PenDigits}, we encountered issues of numerical stability for the
+original GP adapter\footnote{They were addressed by jittering the
+diagonal in the Cholesky decomposition.}; not so for \textsc{GP-PoM}.
+Furthermore, we found that \textsc{GP-PoM} tends to converge faster to
+a better performance than the original GP adapter, as exemplified in
+Supplementary Figure~\ref{supp: gp-training}.
 
-\begin{table}[h]
-    \caption{\textbf{CharacterTrajectories} Dataset under label-based subsampling. The top three methods are highlighted: bold \& underlined, bold, underlined.}
+\begin{table}[t]
+    \caption{\textbf{CharacterTrajectories} dataset under label-based subsampling. The top three methods are highlighted: bold \& underlined, bold, underlined.}
     \centering
     %\small{
     \input{tables/repetitions_CharacterTrajectories_Label-based}
     %}
     \label{tab:character}
 \end{table}
-\begin{table}[h]
-    \caption{\textbf{PenDigits} Dataset under label-based subsampling. The top three methods are highlighted: bold \& underlined, bold, underlined.}
+
+\begin{table}[ht]
+    \caption{\textbf{PenDigits} dataset under label-based subsampling. The top three methods are highlighted: bold \& underlined, bold, underlined.}
     \centering
     %\small{
     \input{tables/repetitions_PenDigits_Label-based}
@@ -1053,9 +1082,9 @@ decomposition.}; not so for \textsc{GP-PoM}. Furthermore, we found that \textsc{
     %}
 \end{table}
 
-
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Discussion}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Our findings suggest that the choice of path imputation strategy can
 \emph{drastically} affect the performance of signature-based models. We
@@ -1089,7 +1118,11 @@ a promising feature extractor that can be easily integrated to neural
 networks. As we empirically demonstrated in this paper, the application
 of signature transforms to real-world temporal data is fraught with
 pitfalls---specifically, we found the choice of an imputation scheme to
-be crucial for obtaining high predictive performance. Moreover, by integrating uncertainty to the prediction step, our proposed \textsc{GP-PoM} has demonstrated overall competitive performance and in particular improved robustness in signature models when dealing with irregularly-spaced and asynchronous time series. 
+be crucial for obtaining high predictive performance. Moreover, by
+integrating uncertainty to the prediction step, our proposed
+\textsc{GP-PoM} has demonstrated overall competitive performance and in
+particular improved robustness in signature models when dealing with
+irregularly-spaced and asynchronous time series. 
 
 
 % \section{Experiments} %OLD
@@ -1190,7 +1223,8 @@ Convolutions are often thought of in terms of discrete sums, but they are perhap
 \end{equation*}
 although the $1/n$ scaling is really only justified in the case that the $t_i$ are equally spaced.\footnote{The $g_\theta$ is typically a step function in `normal' convolutional layers. Some works exists on replacing it with e.g. B-splines \cite{fey2018splinecnn} to better handle irregular data. The oddity of scaling by $1/n$ with irregular data has not been explicitly addressed in the literature, at least to our knowledge; indeed quite conversely we have seen it used without remark.} Thus we see that with convolutions, we are implicitly interpreting the observed data as a path in data space.
 
-Similarly, the connection between dynamical systems and recurrent neural networks are well known \cite{FUNAHASHI1993801, continuousrnn}, and these tend to use a similar setup.
+Similarly, the connection between dynamical systems and recurrent neural
+networks are well known~\citep{FUNAHASHI1993801, continuousrnn}, and these tend to use a similar setup.
 
 For non-signature methods as for signature methods, this implicit usage of data as a path in data space often seems to be swept under the rug, and we have demonstrated that this is deserving further attention.
 % While our focus here is specifically to study path constructions for signatures, we consider implicit path constructions as the manifestation of a larger problem which deserves more attention.
