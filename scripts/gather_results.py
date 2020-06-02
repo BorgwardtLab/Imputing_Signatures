@@ -10,7 +10,6 @@ import seaborn as sns
 import matplotlib.pyplot as plt   
 from IPython import embed
 
-
 test_metrics = [
      'testing.balanced_accuracy',
      'testing.auroc_weighted',
@@ -339,12 +338,15 @@ def highlight_best_with_std(df, df_s, top=3):
         top_n = df[col].nlargest(top).index.tolist()
         rest = list(df[col].index)
         for i, best in enumerate(top_n):
-            df[col][best] = '$ ' + formats[i][0] + f'{df[col][best]:.4g} \pm {df_s[col][best]:.2g}' + formats[i][1] + ' $'
+            #df[col][best] = '$ ' + formats[i][0] + f'{prec(df[col][best],4)} \pm {prec(df_s[col][best],2)}' + formats[i][1] + ' $'
+            df[col][best] = '$ ' + formats[i][0] + f'{100*df[col][best]:.3f} \pm {100*df_s[col][best]:.3f}' + formats[i][1] + ' $'
             rest.remove(best)
         #this manual step was trying to get conistently 5 decimals as df.round did not do it.
         #however, there is the same issue here as well.. 
         for row in rest:
-            df[col][row] =  f'$ {df[col][row]:.4g} \pm {df_s[col][row]:.2g} $'
+            #df[col][row] =  f'$ {prec(df[col][row],4)} \pm {prec(df_s[col][row],2)} $'
+            df[col][row] =  f'$ {100*df[col][row]:.3f} \pm {100*df_s[col][row]:.3f} $'
+
         #df_s[col][rest] = df_s[col][rest].apply(lambda x: '$ {:g} $'.format(float('{:.5g}'.format(float(x))))) 
     return df
 
@@ -386,6 +388,18 @@ def extract_and_tex_single_datasets(df):
         curr_piv.to_latex(f'results/tables/{dat}.tex', escape=False)
     return dfs
 
+def rearrange_rows(df):
+    """ This manuel reordering is necessary as alphabetic ordering does not group imputations together
+    """
+    order = df.index.tolist()
+    to_change = order[0] 
+    if to_change != 'GP-DeepSig': #defensive programing to check that our assumption is valid
+        embed()
+    order.remove(to_change)
+    order.insert(4,to_change)
+    df = df.reindex(order) 
+    return df 
+
 def extract_and_tex_single_datasets_with_std(df):
     """ return dict of dataset-wise results in df format"""
     dfs = defaultdict()
@@ -414,6 +428,8 @@ def extract_and_tex_single_datasets_with_std(df):
         cols_to_drop = [col for col in cols if 'val' in col]
         print(cols_to_drop)
         curr_piv = curr_piv.drop(columns=cols_to_drop)
+        
+        
         #rearrange columns (show hypersearch obj first)
         cols = list(curr_piv.columns)
         if 'Accuracy' in cols: #multivariate dataset
@@ -425,9 +441,15 @@ def extract_and_tex_single_datasets_with_std(df):
         if type(curr_piv.index[0]) == tuple:
             #write table for each subsampling scheme:
             for subsampling in curr_piv.index.levels[0]:
-                curr_piv.loc[subsampling].to_latex(f'results/tables/repetitions_{dat}_{subsampling}.tex', escape=False)
+                #rearrange rows (such that all imputations are grouped), do it here as we only have single index here   
+                df_out = curr_piv.loc[subsampling]
+                df_out = rearrange_rows(df_out)
+                df_out.to_latex(f'results/tables/repetitions_{dat}_{subsampling}.tex', escape=False)
         else:
-            curr_piv.to_latex(f'results/tables/repetitions_{dat}.tex', escape=False)
+            #rearrange rows (such that all imputations are grouped), do it here as we only have single index here   
+            df_out = curr_piv
+            df_out = rearrange_rows(df_out)
+            df_out.to_latex(f'results/tables/repetitions_{dat}.tex', escape=False)
     return dfs
 
 
@@ -457,8 +479,6 @@ def convert_to_df(data, repetitions=False, n_repetitions=5, param_flag=False, pl
                     imputation, model_name = model_name.rsplit('-', 1) 
                     if not param_flag:
                         found_reps = len(data[dataset][model][metric]['raw']) 
-                        if found_reps < n_repetitions: 
-                            print(f'For {dataset}{subsampling} {model} found {found_reps} completed repetitions!')    
                         for rep in np.arange(found_reps): # cave: this rep must not coincide with the exact rep nr that was used in the command!
                             if plot:
                                 record = {  'long_dataset': os.path.join(dataset_name, subsampling),
