@@ -1,7 +1,6 @@
-# Path Imputation Strategies for Signature Models
+# Path Imputation Strategies for Signature Models of Irregularly Time Series
  
-The goal of this project is to extend signature models to the real-world setting of classifying irregularly spaced and incompletely observed time series. 
-
+Anonymous code submission. Below commands assume that a GPU is available.
 
 ## Environment
 Please install the dependencies as indicated in the Pipfile 
@@ -43,9 +42,9 @@ Again, as with the hyperparameter search:
 ## Quick fitting, testing
 ### Train a end-to-end, posterior moments GP-imputed Signature Model, specifying signature depth (truncation level) to 3
 
-```> python exp/train_model.py with model.GPSignatureModel dataset.Physionet2012 model.parameters.sampling_type=moments model.parameters.sig_depth=3```
-```> python exp/train_model.py with model.GPSignatureModel dataset.Physionet2012 model.parameters.sampling_type=monte_carlo model.parameters.sig_depth=2```
-```> python exp/train_model.py with model.GPGRUSignatureModel dataset.Physionet2012 model.parameters.sampling_type=moments model.parameters.sig_depth=2```
+```> python exp/train_model.py with model.GPSignatureModel dataset.Physionet2012 model.parameters.sampling_type=moments model.parameters.sig_depth=3```  
+```> python exp/train_model.py with model.GPSignatureModel dataset.Physionet2012 model.parameters.sampling_type=monte_carlo model.parameters.sig_depth=2```  
+```> python exp/train_model.py with model.GPGRUSignatureModel dataset.Physionet2012 model.parameters.sampling_type=moments model.parameters.sig_depth=2```  
 
 ### Manually start one hyperparameter search: for the hypersearches, the models and datasets are defined (and extended with hyperparameter spaces) in /exp/hypersearch_configs.py
 
@@ -57,6 +56,6 @@ Again, as with the hyperparameter search:
 
 # Paper configurations  
 The configurations used in the paper (repetition configs as determined by hyperparameter search), are accessible in the path `experiments/train_model`  
-Train a model with a stored ```config.json```:
+Train a model with a stored ```config.json```:  
 ```> python exp/train_model.py with path/to/config.json```
 
