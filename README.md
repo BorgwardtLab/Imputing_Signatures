@@ -22,7 +22,7 @@ if you want to use a gpu scheduler, simply install this one via:
 ```> pip install simple_gpu_scheduler ```
 
 ### generate hypersearch commands:
-```> python scripts/generate_hypersearch_commands.py
+```> python scripts/generate_hypersearch_commands.py```
 
 This script generates multiple command files, one for GP-based methods and one for the other imputed methods (usually requiring less memory).
 For instance, this one: ```scripts/commands/command_LSST_imputed_hypersearches.csv```
@@ -39,14 +39,14 @@ This script assumes that the results of the hyperparameter search are stored in 
 Again, as with the hyperparameter search:
 ```> simple_gpu_scheduler --gpus 0,1,2 < command_LSST_imputed_repetitions.csv ```
 
-# Quick fitting, testing
-## Train a end-to-end, posterior moments GP-imputed Signature Model, specifying signature depth (truncation level) to 3
+## Quick fitting, testing
+### Train a end-to-end, posterior moments GP-imputed Signature Model, specifying signature depth (truncation level) to 3
 
 ```> python exp/train_model.py with model.GPSignatureModel dataset.Physionet2012 model.parameters.sampling_type=moments model.parameters.sig_depth=3```
 ```> python exp/train_model.py with model.GPSignatureModel dataset.Physionet2012 model.parameters.sampling_type=monte_carlo model.parameters.sig_depth=2```
 ```> python exp/train_model.py with model.GPGRUSignatureModel dataset.Physionet2012 model.parameters.sampling_type=moments model.parameters.sig_depth=2```
 
-## Manually start one hyperparameter search: for the hypersearches, the models and datasets are defined (and extended with hyperparameter spaces) in /exp/hypersearch_configs.py
+### Manually start one hyperparameter search: for the hypersearches, the models and datasets are defined (and extended with hyperparameter spaces) in /exp/hypersearch_configs.py
 
 ```>python exp/hyperparameter_search.py -F exp_runs/SignatureModel with GP_mom_SignatureModel Physionet2012 ```
 
@@ -55,6 +55,6 @@ Again, as with the hyperparameter search:
 ```> python exp/train_model.py print_config with model.GPSignatureModel dataset.Physionet2012 model.parameters.sampling_type=moments model.parameters.sig_depth=3```
 
 
-## Paper configurations  
+# Paper configurations  
 The configurations used in the paper (repetition configs as determined by hyperparameter search), are accessible in the path `experiments/train_model`  
 
