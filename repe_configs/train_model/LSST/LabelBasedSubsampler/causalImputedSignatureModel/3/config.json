@@ -1,0 +1,53 @@
+{
+  "batch_size": 64,
+  "data_format": "causal",
+  "dataset": {
+    "__doc__": "Dataset configuration.",
+    "name": "UEADataset",
+    "parameters": {
+      "dataset_name": "LSST",
+      "use_disk_cache": true
+    }
+  },
+  "device": "cuda:0",
+  "drop_last": false,
+  "early_stopping": 20,
+  "evaluation": {
+    "active": true,
+    "evaluate_on": "validation"
+  },
+  "imputation_params": {
+    "grid_spacing": 1.0,
+    "max_root": 25,
+    "n_mc_smps": 10
+  },
+  "learning_rate": 0.002765176786258027,
+  "model": {
+    "__doc__": "Model configuration.",
+    "name": "ImputedSignatureModel",
+    "parameters": {
+      "channel_groups": 3,
+      "extra_channels": 9,
+      "final_network": [
+        30,
+        30
+      ],
+      "include_original": true,
+      "sig_depth": 2
+    }
+  },
+  "n_epochs": 100,
+  "n_params_limit": 1500000.0,
+  "num_workers": 1,
+  "quiet": true,
+  "seed": 771860110,
+  "subsampler_name": "LabelBasedSubsampler",
+  "subsampler_parameters": {
+    "probability_ranges": [
+      0.4,
+      0.6
+    ]
+  },
+  "virtual_batch_size": null,
+  "weight_decay": 0.005846882118006067
+}

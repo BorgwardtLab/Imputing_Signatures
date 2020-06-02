@@ -1,0 +1,48 @@
+{
+  "batch_size": 128,
+  "data_format": "forwardfill",
+  "dataset": {
+    "__doc__": "Dataset configuration.",
+    "name": "UEADataset",
+    "parameters": {
+      "dataset_name": "CharacterTrajectories",
+      "use_disk_cache": true
+    }
+  },
+  "device": "cuda:0",
+  "drop_last": false,
+  "early_stopping": 20,
+  "evaluation": {
+    "active": true,
+    "evaluate_on": "validation"
+  },
+  "imputation_params": {
+    "grid_spacing": 1.0,
+    "max_root": 25,
+    "n_mc_smps": 10
+  },
+  "learning_rate": 0.00027393502459470344,
+  "model": {
+    "__doc__": "Model configuration.",
+    "name": "ImputedDeepSignatureModel",
+    "parameters": {
+      "batch_norm": true,
+      "hidden_channels1": 8,
+      "hidden_channels2": 7,
+      "include_original": true,
+      "kernel_size": 5,
+      "sig_depth": 3
+    }
+  },
+  "n_epochs": 100,
+  "n_params_limit": 1500000.0,
+  "num_workers": 1,
+  "quiet": true,
+  "seed": 249040430,
+  "subsampler_name": "MissingAtRandomSubsampler",
+  "subsampler_parameters": {
+    "probability": 0.5
+  },
+  "virtual_batch_size": null,
+  "weight_decay": 0.0018478033905516946
+}

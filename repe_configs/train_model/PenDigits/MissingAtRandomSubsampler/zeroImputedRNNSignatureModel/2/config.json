@@ -1,0 +1,49 @@
+{
+  "batch_size": 256,
+  "data_format": "zero",
+  "dataset": {
+    "__doc__": "Dataset configuration.",
+    "name": "UEADataset",
+    "parameters": {
+      "dataset_name": "PenDigits",
+      "use_disk_cache": true
+    }
+  },
+  "device": "cuda:0",
+  "drop_last": false,
+  "early_stopping": 20,
+  "evaluation": {
+    "active": true,
+    "evaluate_on": "validation"
+  },
+  "imputation_params": {
+    "grid_spacing": 1.0,
+    "max_root": 25,
+    "n_mc_smps": 10
+  },
+  "learning_rate": 0.008130166395625638,
+  "model": {
+    "__doc__": "Model configuration.",
+    "name": "ImputedRNNSignatureModel",
+    "parameters": {
+      "channel_groups": 3,
+      "extra_channels": 5,
+      "include_original": true,
+      "length": 4,
+      "rnn_channels": 64,
+      "rnn_type": "gru",
+      "sig_depth": 3
+    }
+  },
+  "n_epochs": 100,
+  "n_params_limit": 1500000.0,
+  "num_workers": 1,
+  "quiet": true,
+  "seed": 621965744,
+  "subsampler_name": "MissingAtRandomSubsampler",
+  "subsampler_parameters": {
+    "probability": 0.3
+  },
+  "virtual_batch_size": null,
+  "weight_decay": 0.0008525969905816584
+}

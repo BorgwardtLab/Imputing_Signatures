@@ -1,0 +1,55 @@
+{
+  "batch_size": 32,
+  "data_format": "GP",
+  "dataset": {
+    "__doc__": "Dataset configuration.",
+    "name": "UEADataset",
+    "parameters": {
+      "dataset_name": "PenDigits",
+      "use_disk_cache": true
+    }
+  },
+  "device": "cuda:0",
+  "drop_last": false,
+  "early_stopping": 20,
+  "evaluation": {
+    "active": true,
+    "evaluate_on": "validation"
+  },
+  "imputation_params": {
+    "grid_spacing": 1.0,
+    "max_root": 25,
+    "n_mc_smps": 10
+  },
+  "learning_rate": 0.00048702182682981975,
+  "model": {
+    "__doc__": "Model configuration.",
+    "name": "GPDeepSignatureModel",
+    "parameters": {
+      "batch_norm": true,
+      "hidden_channels1": 11,
+      "hidden_channels2": 9,
+      "include_original": true,
+      "kernel_size": 6,
+      "n_devices": 1,
+      "n_mc_smps": 1,
+      "output_device": "cuda:0",
+      "sampling_type": "moments",
+      "sig_depth": 3
+    }
+  },
+  "n_epochs": 100,
+  "n_params_limit": 1500000.0,
+  "num_workers": 1,
+  "quiet": true,
+  "seed": 700134501,
+  "subsampler_name": "LabelBasedSubsampler",
+  "subsampler_parameters": {
+    "probability_ranges": [
+      0.2,
+      0.4
+    ]
+  },
+  "virtual_batch_size": 32,
+  "weight_decay": 0.009332640008209868
+}

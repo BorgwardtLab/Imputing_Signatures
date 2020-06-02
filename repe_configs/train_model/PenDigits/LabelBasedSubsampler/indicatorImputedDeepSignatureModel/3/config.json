@@ -1,0 +1,51 @@
+{
+  "batch_size": 128,
+  "data_format": "indicator",
+  "dataset": {
+    "__doc__": "Dataset configuration.",
+    "name": "UEADataset",
+    "parameters": {
+      "dataset_name": "PenDigits",
+      "use_disk_cache": true
+    }
+  },
+  "device": "cuda:0",
+  "drop_last": false,
+  "early_stopping": 20,
+  "evaluation": {
+    "active": true,
+    "evaluate_on": "validation"
+  },
+  "imputation_params": {
+    "grid_spacing": 1.0,
+    "max_root": 25,
+    "n_mc_smps": 10
+  },
+  "learning_rate": 0.0011289770284504317,
+  "model": {
+    "__doc__": "Model configuration.",
+    "name": "ImputedDeepSignatureModel",
+    "parameters": {
+      "batch_norm": true,
+      "hidden_channels1": 12,
+      "hidden_channels2": 10,
+      "include_original": true,
+      "kernel_size": 6,
+      "sig_depth": 2
+    }
+  },
+  "n_epochs": 100,
+  "n_params_limit": 1500000.0,
+  "num_workers": 1,
+  "quiet": true,
+  "seed": 771860110,
+  "subsampler_name": "LabelBasedSubsampler",
+  "subsampler_parameters": {
+    "probability_ranges": [
+      0.2,
+      0.4
+    ]
+  },
+  "virtual_batch_size": null,
+  "weight_decay": 0.00016981363742859197
+}

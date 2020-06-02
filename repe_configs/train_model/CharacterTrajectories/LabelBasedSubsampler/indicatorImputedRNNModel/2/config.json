@@ -1,0 +1,47 @@
+{
+  "batch_size": 32,
+  "data_format": "indicator",
+  "dataset": {
+    "__doc__": "Dataset configuration.",
+    "name": "UEADataset",
+    "parameters": {
+      "dataset_name": "CharacterTrajectories",
+      "use_disk_cache": true
+    }
+  },
+  "device": "cuda:0",
+  "drop_last": false,
+  "early_stopping": 20,
+  "evaluation": {
+    "active": true,
+    "evaluate_on": "validation"
+  },
+  "imputation_params": {
+    "grid_spacing": 1.0,
+    "max_root": 25,
+    "n_mc_smps": 10
+  },
+  "learning_rate": 0.005416279580979247,
+  "model": {
+    "__doc__": "Model configuration.",
+    "name": "ImputedRNNModel",
+    "parameters": {
+      "hidden_size": 256,
+      "rnn_type": "gru"
+    }
+  },
+  "n_epochs": 100,
+  "n_params_limit": 1500000.0,
+  "num_workers": 1,
+  "quiet": true,
+  "seed": 621965744,
+  "subsampler_name": "LabelBasedSubsampler",
+  "subsampler_parameters": {
+    "probability_ranges": [
+      0.4,
+      0.6
+    ]
+  },
+  "virtual_batch_size": null,
+  "weight_decay": 0.00017748956864869524
+}

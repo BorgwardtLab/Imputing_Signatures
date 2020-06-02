@@ -1,0 +1,49 @@
+{
+  "batch_size": 32,
+  "data_format": "GP",
+  "dataset": {
+    "__doc__": "Dataset configuration.",
+    "name": "Physionet2012",
+    "parameters": {}
+  },
+  "device": "cuda:0",
+  "drop_last": false,
+  "early_stopping": 20,
+  "evaluation": {
+    "active": true,
+    "evaluate_on": "validation"
+  },
+  "imputation_params": {
+    "grid_spacing": 1.0,
+    "max_root": 25,
+    "n_mc_smps": 10
+  },
+  "learning_rate": 0.0011731266343095361,
+  "model": {
+    "__doc__": "Model configuration.",
+    "name": "GPSignatureModel",
+    "parameters": {
+      "channel_groups": 5,
+      "extra_channels": 6,
+      "final_network": [
+        30,
+        30
+      ],
+      "include_original": false,
+      "n_devices": 1,
+      "n_mc_smps": 10,
+      "output_device": "cuda:0",
+      "sampling_type": "monte_carlo",
+      "sig_depth": 3
+    }
+  },
+  "n_epochs": 100,
+  "n_params_limit": 1500000.0,
+  "num_workers": 1,
+  "quiet": true,
+  "seed": 700134501,
+  "subsampler_name": null,
+  "subsampler_parameters": {},
+  "virtual_batch_size": 256,
+  "weight_decay": 0.006367337662382577
+}
