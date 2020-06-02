@@ -31,10 +31,11 @@ For instance, this one: ```scripts/commands/command_LSST_imputed_hypersearches.c
 ```> simple_gpu_scheduler --gpus 0,1,2 < command_LSST_imputed_hypersearches.csv ```
 
 If there is a configuration problem with the virtual environment and the gpu scheduler, alternatively those python commands could be started manually
-or sequentially via ```> source scripts/commands/command_LSST_imputed_hypersearches.csv
+or sequentially via  
+```> source scripts/commands/command_LSST_imputed_hypersearches.csv```  
 
 ### After having run a hyperparameter search, create repetitions:
-```> python scripts/generate_repetitions.py  
+```> python scripts/generate_repetitions.py``` 
 This script assumes that the results of the hyperparameter search are stored in experiments/hyperparameter_search 
 Again, as with the hyperparameter search:
 ```> simple_gpu_scheduler --gpus 0,1,2 < command_LSST_imputed_repetitions.csv ```
@@ -54,7 +55,8 @@ Again, as with the hyperparameter search:
 ### For instance, to inspect all set parameters in one of the commands above, use:
 ```> python exp/train_model.py print_config with model.GPSignatureModel dataset.Physionet2012 model.parameters.sampling_type=moments model.parameters.sig_depth=3```
 
-
 # Paper configurations  
 The configurations used in the paper (repetition configs as determined by hyperparameter search), are accessible in the path `experiments/train_model`  
+Train a model with a stored ```config.json```:
+```> python exp/train_model.py with path/to/config.json```
 
