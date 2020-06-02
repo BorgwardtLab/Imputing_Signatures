@@ -13,9 +13,10 @@
 \usepackage{hyperref}
 \usepackage{paralist}
 \usepackage{wrapfig}
+\usepackage{siunitx}
+\usepackage{etoolbox}
 \newcommand{\theHalgorithm}{\arabic{algorithm}}
 \usepackage{comment}
-\usepackage{multicol} %multicol in figure
 \PassOptionsToPackage{sort, numbers, compress}{natbib}
 
 \usepackage{neurips_2020} %[preprint]
@@ -64,10 +65,10 @@
 \begin{abstract}
 The signature transform is a `universal nonlinearity' on the space of
 continuous vector-valued paths, and has received attention for use in
-machine learning. However, real-world temporal data is usually observed at discrete points in time, and must first be transformed into a continuous path before
-signature techniques can be applied. We make this (typically implicit) step explicit by characterising it as an imputation
+machine learning on time series. However, real-world temporal data is typically observed at discrete points in time, and must first be transformed into a continuous path before
+signature techniques can be applied. We make this step explicit by characterising it as an imputation
 problem, and empirically assess the impact of various imputation strategies when
-applying signatures to irregular time series data. For one of these
+applying signature-based neural nets to irregular time series data. For one of these
 strategies, Gaussian process~(GP) adapters, we propose an
 extension~(GP-PoM) that makes uncertainty information directly available
 to the subsequent classifier while at the same time preventing costly
@@ -77,9 +78,6 @@ deeper architectures are more robust. Next, we observe that
 uncertainty-aware \emph{predictions}~(based on GP-PoM or indicator
 imputations) are beneficial for predictive performance, even compared to
 the uncertainty-aware \emph{training} of conventional GP adapters.
-%
-% BR: sounds a little bit like the ending of the paper already; consider
-% reformulating.
 In conclusion, we have demonstrated that the path construction is indeed
 crucial for signature models and that our proposed strategy leads to
 competitive performance in general, while improving robustness of
@@ -105,11 +103,12 @@ This `universal nonlinearity' property makes the signature a promising nonparame
 feature extractor with beneficial properties in both generative and
 supervised learning scenarios.
 %
-For example, a signature-based model won the 2019 Physionet Challenge as one of $853$ submissions~\citep{reyna2019early, morrill2019signature}.
-Given their similarities, we may hope that tools that
+These theoretical properties were further supported by outstanding empirical
+results when applied to clinical time series classification tasks~\citep{reyna2019early, morrill2019signature}.
+Due to their similarities, we may hope that tools that
 apply to continuous paths can \emph{also} be extended to multivariate
 time series. But since multivariate time series are not continuous
-paths, one first needs to construct a continuous path to apply signature techniques.
+paths, one first needs to construct a continuous path before signature techniques are applicable.
 
 Previous work~\citep{levin2013, kidger2019deep, fermanian2019embedding}
 characterised this construction as an embedding problem, and
@@ -131,14 +130,14 @@ call \emph{path imputation}.
 %
 
 While previous research concerning the signature transform
-focussed on its excellent theoretical properties, such as sampling
+focused on its excellent theoretical properties, such as sampling
 independence~\citep[Proposition A.7]{kidger2019deep}, our findings show
 that this does not
 necessarily correspond to empirical performance.
 %
 We perform a thorough investigation of multiple imputation schemes in combination with various models that can potentially employ signatures.
 Furthermore, motivated by the fact that missingness itself can be
-informative for time series classification~\citep{rubin1976inference}, for one of the considered schemes, Gaussian process adapters~\citep{li2016scalable}, we propose a novel extension which exploits uncertainty information during each prediction step, which we show is beneficial for signature models, but also of independent interest.
+informative for time series classification~\citep{rubin1976inference}, we propose a novel strategy: an extension of Gaussian Process adapters \citep{li2016scalable, futoma2017mgp}, which exploits uncertainty information during each prediction step and is beneficial for signature models, but also of independent interest.
 %
 % We find that approaches
 % that have access to uncertainty information \emph{during prediction}
@@ -152,91 +151,7 @@ informative for time series classification~\citep{rubin1976inference}, for one o
 % outperform other signature models~(which in turn suffer from increased
 % variance, thus reducing their efficacy).
 %
-We make our code anonymously available under \url{https://osf.io/ktc96/?view_only=62d41b4e60f64d49a3fb100a45d08116}.
-
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% % Introduction OLD
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% \section{Introduction}
-
-% Originally described by \citet{Chen54, Chen57, Chen58} and popularised
-% in the theory of rough paths and controlled differential
-% equations~\cite{lyons1998differential, FritzVictoir10, lyons2014rough},
-% the \emph{signature transform}, also known as the \emph{path signature}
-% or simply \emph{signature}, acts on a continuous vector-valued path of
-% bounded variation, and returns a graded sequence of statistics, which
-% determine a path up to a negligible equivalence class. Moreover,
-% it can be shown~\cite[Proposition A.6]{kidger2019deep} that \emph{every}
-% continuous function of a path can be recovered by applying a linear
-% transform to this collection of statistics. This `universal
-% nonlinearity' property makes the signature a promising nonparametric
-% feature extractor with beneficial properties in both generative and
-% % TODO: consider adding more citations here
-% supervised learning scenarios~\citep{kidger2019deep}.
-% %
-% Given their similarities, it is natural to hope that the tools that
-% apply to continuous paths may \emph{also} be applied to multivariate
-% time series. Of course, multivariate time series are not continuous
-% paths---in fact, for signature techniques to be applied, one first needs
-% to construct a continuous path from this kind of data.
-
-% In previous work~\cite{kidger2019deep, levin2013, fermanian2019embedding}, this
-% construction has been characterised as an embedding problem, and was
-% typically glossed over as a rather unimportant detail.
-% %
-% This is exacerbated by the---perfectly sensible---behaviour of software
-% for computing the signature \cite{iisignature, signatory}, which
-% commonly considers a continuous piecewise linear path as an input,
-% % TODO: is there a better definition of 'knot'? I am aware of the
-% % meaning in terms of spline approximations, but maybe we could clarify
-% % this here.
-% described by its sequence of knots, i.e.\ values.
-% %
-% Since such sequences resemble a sequence of data, the signature is
-% sometimes interpreted as operating on sequences of data rather than on
-% paths~\cite{kidger2019deep, levin2013}.
-% %
-% We show that this view is somewhat limiting and that, in order to
-% achieve competitive predictive performance for real-world time series
-% classification, it is crucial to consider the path construction process.
-
-% Specifically, in this paper we reinterpret the task of
-% constructing a continuous path, by turning it from an embedding problem
-% into an imputation problem. To distinguish this from traditional
-% imputation problems, we refer to this as \emph{path imputation}.
-% %
-% While a large part of the previous literature on the signature transform
-% focused on its excellent theoretical properties, in particular sampling
-% independence~\cite[Proposition A.7]{kidger2019deep},~\cite{signatorydocumentation},~\cite[Section 2]{toth2019gp}, our findings show that this does not
-% necessarily correspond to excellent empirical performance.
-% %
-% However, it has previously been established that both observation rates
-% and missingness itself can carry information in time series
-% classification tasks~\citep{rubin1976inference, gelman2007dataanalysis}.
-% %
-% Our reinterpreted view of path construction as an imputation problem
-% permits us to identify that this performance gap is likely another
-% manifestation of the phenomenon of glossing over imputation details.
-
-% We therefore perform a thorough empirical investigation of various
-% imputation schemes in combination with multiple models that can potentially
-% employ signatures. We find that approaches that have access to
-% uncertainty information \emph{during prediction} tend to outperform the
-% competitors, even uncertainty-aware frameworks for which this
-% information is only available during \emph{training}, such as Gaussian
-% Process~(GP) adapters~\citep{li2016scalable, futoma2017mgp}.
-% %
-% Motivated by this, we propose a novel extension of GP adapters that
-% directly incorporates uncertainty information into the prediction step,
-% thus improving predictive performance.
-% Throughout our experiments, we observe that the recently introduced
-% \emph{deep signature models}~\citep{kidger2019deep} consistently
-% outperform other signature models~(which in turn suffer from increased
-% variance, thus reducing their efficay).
-% %
-% We make our code publicly available under XXXXXX.
-
+We make our code anonymously available under \url{https://osf.io/bg9cw/?view_only=5193e93118d84a5f9be4f261df4c0a06}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Related work} %(NEW)
@@ -249,9 +164,7 @@ PerezArribas2018, morrill2019sepsis} typically employed the signature transform 
 a model is learnt. A growing body of work has also investigated how to
 integrate the signature transform more tightly with neural networks; 
 \citet{jeremythesis}, \citet{logsigrnn}, and \citet{kidger2019deep} all
-study how to use the signature transform\footnote{And the related
-logsignature transform; the difference between them will not be
-important for us.} within typical neural network models.
+study how to use the signature transform (or variants thereof) within typical neural network models.
 \citet{chevyrev2018signature, kiraly2019kernels} study how the signature
 transform may be used to define a \emph{kernel}---i.e.\ a symmetric,
 positive definite function that is typically used as a similarity
@@ -288,8 +201,9 @@ considered more closely in this paper.
 % resampling, but because they provide a full continuous path, which we may
 % sample arbitrarily.
 We note that there are also other approaches that
-perform continuous-time imputation~\citep{shukla2018interpolationprediction},
-or methods that skip an explicit imputation step altogether to directly classify irregular time series~\citep{che2018recurrent, rubanova2019latent, kidger2020neuralcde}. However, for the scope of this work, i.e. assessing the impact of path imputations for the signature, we will not further investigate these approaches.
+perform imputation end-to-end with a downstream classifier~\citep{shukla2018interpolationprediction}
+and methods that skip the imputation step altogether based on recently proposed Neural-ODE like architectures~\citep{rubanova2019latent, kidger2020neuralcde}, variants of recurrent neural networks \cite{che2018recurrent} or set functions~\cite{horn2019set}.
+However, the scope of this work is to specifically assess the impact of path imputations for the signature, hence we deem the larger comparison to imputation-free scenarios interesting for future work, but bypassing the central point of this paper.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Background} %NEW
@@ -522,23 +436,6 @@ Alternatively, one may forgo allowing the uncertainty to propagate through $F$ b
 % \end{equation}
 
 
-\begin{comment}
-\subsubsection{Application beyond signatures}
-
-Whilst the task of converting observed data into a path in data space is particularly important for signatures, it also arises in the context of, for example, convolutional and recurrent neural networks.
-
-Convolutions are often thought of in terms of discrete sums, but they are perhaps more naturally described as the integral cross-correlation between the underlying data path $f$ and the learnt filter $g_\theta$. Given sample points $t_1, \ldots, t_n \in [0, T]$, this integral is then approximated via numerical quadrature:
-\begin{equation*}
-    \frac{1}{T}\int_0^T f(t) g_\theta(t) \mathrm{d}t \approx \frac{1}{n}\sum_{i = 1}^n f(t_i) g_\theta(t_i),
-\end{equation*}
-although the $1/n$ scaling is really only justified in the case that the $t_i$ are equally spaced.\footnote{The $g_\theta$ is typically a step function in `normal' convolutional layers. Some works exists on replacing it with e.g. B-splines \cite{fey2018splinecnn} to better handle irregular data. The oddity of scaling by $1/n$ with irregular data has not been explicitly addressed in the literature, at least to our knowledge; indeed quite conversely we have seen it used without remark.} Thus we see that with convolutions, we are implicitly interpreting the observed data as a path in data space.
-
-Similarly, the connection between dynamical systems and recurrent neural networks are well known \cite{FUNAHASHI1993801, continuousrnn}, and these tend to use a similar setup.
-
-For non-signature methods as for signature methods, this implicit usage of data as a path in data space often seems to be swept under the rug, and we suspect it is one deserving further attention.
-\end{comment}
-
-
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % \section{Related work} %Artemiss
@@ -698,7 +595,7 @@ implications for this procedure: for example if a Mat{\'e}rn 1/2 kernel
 is chosen, then the resulting path is not of bounded variation and the
 definition of the signature transform given in Equation~\eqref{eq:signature}
 does not hold, and rough path theory~\citep{lyons1998differential} must instead be invoked to define the
-signature transform.
+signature transform. However, in this work we use RBF kernels, and therefore, this caveat does not apply to our case.
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % \section{Path imputations} %OLD
@@ -955,7 +852,7 @@ Moreover, to efficiently compute the signature, we
 sample the imputed path in a \emph{fixed} time resolution\footnote{For Physionet2012 hourly, for the other datasets once per originally ovserved time step}, resulting in
 a piecewise linear path.
 %
-For time series that are not irregularly spaced (this applies to all datasets but \texttt{Physionet2012}), we employ two types of random subsampling as an additional
+For time series that are not irregularly spaced~(this applies to all datasets but \texttt{Physionet2012}), we employ two types of random subsampling as an additional
 preprocessing step,
 namely
 %
@@ -1007,7 +904,7 @@ split does not improve for 20 epochs). As for performance metrics, for
 binary classification tasks, we optimize average precision and also report AUROC. For multi-class
 classification, we optimize balanced accuracy~(BAC) and additionally
 report accuracy and weighted AUROC~(w-AUROC)\footnote{%
-  AUROC is computed for each label and averaged weighted according to
+  AUROC is computed for each label and averaged with weights according to
   the support of each class%
 }.
 %
@@ -1028,7 +925,7 @@ testing split.
     \includegraphics[width=0.48\linewidth]{plots/barplot_main_CharacterTrajectories-LabelBasedSubsampler.pdf}\quad%
     % \includegraphics[width=0.48\linewidth]{plots/barplot_main_params_CharacterTrajectories-LabelBasedSubsampler.pdf}%
   }
-  \caption{Experimental Results visualized for Character Trajectories Dataset.
+  \caption{Experimental Results visualised for \texttt{CharacterTrajectories} Dataset.
   %The rows indicate the subsampling type: Random (R) versus Label-based (L).
   The bars display performance in terms of balanced accuracy (BAC),
 whereas the panels indicate the subsampling strategy.
@@ -1036,7 +933,7 @@ whereas the panels indicate the subsampling strategy.
   % BR: very stupid, but it just occurred to me that we have the 'R'
   % plot on the 'left', while the 'L' plot is on the 'right'. Can we
   % just flip that? A cursory reviewer might get confused here.
-  Left: Random (R), right: label-based (L).}
+  Left: Random subsampling (R), right: label-based subsampling (L).}
   \label{fig:results_main}
 \end{figure*}
 
@@ -1069,7 +966,7 @@ a better performance than the original GP adapter, as exemplified in
 Supplementary Figure~\ref{supp: gp-training}.
 
 \begin{table}[t]
-    \caption{\textbf{CharacterTrajectories} dataset under label-based subsampling. The top three methods are highlighted: bold \& underlined, bold, underlined.}
+    \caption{\texttt{CharacterTrajectories} dataset under label-based subsampling. The top three methods are highlighted: bold \& underlined, bold, underlined. All measures are reported as percentage points.}
     \centering
     %\small{
     \input{tables/repetitions_CharacterTrajectories_Label-based}
@@ -1078,7 +975,7 @@ Supplementary Figure~\ref{supp: gp-training}.
 \end{table}
 
 \begin{table}[ht]
-    \caption{\textbf{PenDigits} dataset under label-based subsampling. The top three methods are highlighted: bold \& underlined, bold, underlined.}
+    \caption{\texttt{PenDigits} dataset under label-based subsampling. The top three methods are highlighted: bold \& underlined, bold, underlined. All measures are reported as percentage points.}
     \centering
     %\small{
     \input{tables/repetitions_PenDigits_Label-based}
@@ -1092,9 +989,8 @@ Supplementary Figure~\ref{supp: gp-training}.
 
 Our findings suggest that the choice of path imputation strategy can
 \emph{drastically} affect the performance of signature-based models. We
-observe this most prominently in `shallow' signature models. Among
-signature models, we found that deep signature models~(\textsc{DeepSig})
-are most robust in tackling irregular time series over different
+observe this most prominently in `shallow' signature models, whereas deep signature models~(\textsc{DeepSig})
+are more robust in tackling irregular time series over different
 imputations---comparable to non-signature RNNs, yet on average being
 more parameter-efficient.
 
@@ -1115,9 +1011,10 @@ explicitly uncertain \emph{about} its own prediction~(due to the
 variance of the MC sampled predictions), while the subsequent classifier
 has to be able to handle the doubled feature dimensionality.
 
-\paragraph{Recommendations for the practioner}
-When dealing with a challenging time series classification task, we recommend to use signatures as a powerful tool to encode paths with little loss of information. However, we have observed that this comes at a cost: Since the signature describes continuous paths (and not discrete time series), constructing this path from raw data is a delicate task that can heavily impact the signature and the performance of down-stream models. To this end, we recommend using \textsc{GP-PoM}, which explicitly indroduces uncertainty about the imputed path. 
-Furthermore, when applying signatures in online applications where during training no data should leak from the future (as this could impair performanceupon deployment in the online scenario), we recommend to use causal (or time-joined) path imputations as their design specifically prevents leakage from the future, even when interpreting the imputations as piece-wise linear paths. 
+\paragraph{Recommendations for the practitioner}
+%
+When dealing with a challenging time series classification task, we recommend to consider signatures as a powerful tool to encode paths with little loss of information. However, we observe that this comes at a certain cost: since the signature describes continuous paths~(and not discrete time series), constructing this path from raw data is a delicate task that can heavily impact the signature and the performance of downstream models. To this end, we recommend using \textsc{GP-PoM}, which explicitly captures uncertainty in the imputed path. 
+Furthermore, when applying signatures in online applications or settings, where during training no data should leak from the future~(e.g. in online settings, this could impair performance upon deployment), we recommend to use causal~(or time-joined) path imputations: their design specifically prevents leakage from the future, even if the signature interprets the imputations as knots of a piece-wise linear path. 
 
 \section{Conclusion}
 
@@ -1132,95 +1029,6 @@ integrating uncertainty to the prediction step, our proposed
 particular improved robustness in signature models when dealing with
 irregularly-spaced and asynchronous time series. 
 
-
-% \section{Experiments} %OLD
-% % The flaws we have identified have been theoretically identified, and so we have been able to correct them theoretically as well. Nonetheless we have also performed experiments, testing different imputation schemes across several different signature-based models.
-% For our empirical analysis, let us first introduce our experimental setup by specifying the investigated datasets, models, imputation schemes as well as prediction tasks at hand. Subsequently, we present and discuss our quantitative results.
-% \subsection{Datasets}
-% We make use of four real-world time series datasets: Physionet2012 challenge \cite{goldberger2000physiobank},
-%     PenDigits \cite{Dua2019}, LSST \cite{allam2018photometric}, and CharacterTrajectories \cite{Dua2019}.
-
-% \subsection{Models} 
-% We study the following set of models:
-% \begin{enumerate}
-%     \item Sig, a simple signature model which involves a linear augmentation, the signature transform (signature block) and a final module of dense layers.
-%     \item RNNSig, which extends the signature transform to a window-based stream of signatures, and where the final neural module is a GRU sliding over the stream of signatures.
-%     %\item DeepSig, where two signature blocks are stacked.
-%     \item RNN, a straight-forward RNN model using gated recurrent units (GRU) as RNN cells.
-% \end{enumerate}
-% For more details with respect to architectures and implemenation, please refer to the supplementary Sectoin XXXX.
-% First, we examined the PhysioNet 2012 Mortality Prediction Dataset.
-
-% We performed several experiments, testing different imputation schemes across several different signature models.
-% To calculate the signature transform, we used the Signatory package of \cite{signatory}.
-
-% \begin{figure*}[tbp]
-%   \subcaptionbox{CharacterTrajectories-R}{%
-%     \includegraphics[width=0.48\linewidth]{plots/barplot_main_CharacterTrajectories-MissingAtRandomSubsampler.pdf}\quad%
-%     \includegraphics[width=0.48\linewidth]{plots/barplot_main_params_CharacterTrajectories-MissingAtRandomSubsampler.pdf}%
-%   }\\%
-%   \subcaptionbox{CharacterTrajectories-L}{%
-%     \includegraphics[width=0.48\linewidth]{plots/barplot_main_CharacterTrajectories-LabelBasedSubsampler.pdf}\quad%
-%     \includegraphics[width=0.48\linewidth]{plots/barplot_main_params_CharacterTrajectories-LabelBasedSubsampler.pdf}%
-%   }\\%
-%   \subcaptionbox{LSST-R}{%
-%     \includegraphics[width=0.48\linewidth]{plots/barplot_main_LSST-MissingAtRandomSubsampler.pdf}\quad%
-%     \includegraphics[width=0.48\linewidth]{plots/barplot_main_params_LSST-MissingAtRandomSubsampler.pdf}%
-%   }\\%
-%   \subcaptionbox{LSST-L}{%
-%     \includegraphics[width=0.48\linewidth]{plots/barplot_main_LSST-LabelBasedSubsampler.pdf}\quad%
-%     \includegraphics[width=0.48\linewidth]{plots/barplot_main_params_LSST-LabelBasedSubsampler.pdf}
-%   }\\%
-%   \subcaptionbox{PenDigits-R}{%
-%      \includegraphics[width=0.48\linewidth]{plots/barplot_main_PenDigits-MissingAtRandomSubsampler.pdf}\quad%
-%      \includegraphics[width=0.48\linewidth]{plots/barplot_main_params_PenDigits-MissingAtRandomSubsampler.pdf}
-%   }\\%
-%   \subcaptionbox{PenDigits-L}{%
-%     \includegraphics[width=0.48\linewidth]{plots/barplot_main_PenDigits-LabelBasedSubsampler.pdf}\quad%
-%     \includegraphics[width=0.48\linewidth]{plots/barplot_main_params_PenDigits-LabelBasedSubsampler.pdf}
-%   }\\ %
-%   \subcaptionbox{Physionet2012}{%
-%     \includegraphics[width=0.48\linewidth]{plots/barplot_main_Physionet2012-.pdf}\quad%
-%     \includegraphics[width=0.48\linewidth]{plots/barplot_main_params_Physionet2012-.pdf}
-%   }
-%   \caption{%
-%     Experimental results.
-%   }
-%   \label{fig: barplots}
-% \end{figure*}
-
-% {\tiny
-% \begin{table}[h]
-%     \caption{\textbf{Physionet 2012}. The below methods are named as $<$imputation method$>-<$prediction model$>$. GP indicates an end-to-end trained Gaussian Process adapter, whereas PoM indicates our proposed extension, "posterior moments". The remaining imputation schemes have been applied as a preprocessing step, whereas the abbreviations "causal, ff, ind, lin, and zero" refer to: "causal, forward-filling, indicator, linear, and zero". Highlighting of the 3 best methods in decreasing order: bold as well as underlined, bold, and underlined.}
-%     %\input{tables/Physionet2012} %TODO: I need to update the result tables with repetitions including std estimates (curerntly hyperparameter search results - not repetitions.
-%     \input{tables/repetitions_Physionet2012}
-% \end{table}
-% }
-
-
-
-% \section{Recommendations} %OLD
-% We finish with some recommendations for the practitioner, based on our findings.
-
-% Whether causality is a concern or not, then causal signature imputation is simple to implement and effective at correcting the identified issues. If one takes the point of view that the signature transform is defined on data (rather than paths), then all that is necessary is to pick one's favourite imputation scheme, apply it as usual, and then apply the $\Phi$ of equation \eqref{eq:phi} to the imputed data, before using it. In more complicated models such as those proposed by \cite{kidger2019deep}, then a perfectly valid `zero thought' approach is to precompose $\Phi$ of equation \eqref{eq:phi} to every usage of the signature transform.
-
-% If causality is not a concern, then we recommend the variation of a Gaussian process adapter proposed in section \ref{section:ourgpadapter}. The implementation of this is much less straightforward, however. It remains a reasonable compromise to use linear data-imputation, which is unique in avoiding the flaw of dependence on unrelated channels, whilst accepting that there may be slight inconsistencies at either end of a partially observed time series.
-
-% We do not recommend applying any standard imputation scheme unless it has been modified by causal signature imputation.
-
-% \section{Conclusion} %OLD
-% When using the signature transform in machine learning, we have identified a novel issue in the greater-than-usual importance of the choice of imputation strategy.
-
-% We have identified two key flaws that can arise when mishandling this issue, and show that they are necessarily exhibited by all conventional imputation strategies not specifically adapted for use with the signature transform.
-
-% We have then proposed two practical, novel, solutions to overcome them,
-% namely causal signature imputation and a Gaussian process adapter, the
-% latter of which is of independent interest in other scenarios due to the
-% way it incorporates uncertainty information about the \emph{predictions}
-% themselves.
-
-% As a result, we are able to summarise with `recommendations for the practitioner' on the appropriateness of different techniques.
-
 \section*{Broader Impact}
 
 Whilst the task of converting observed data into a path in data space is particularly important for signatures, it also arises in the context of, for example, convolutional and recurrent neural networks.
@@ -1231,11 +1039,13 @@ Convolutions are often thought of in terms of discrete sums, but they are perhap
 \end{equation*}
 although the $1/n$ scaling is really only justified in the case that the $t_i$ are equally spaced.\footnote{The $g_\theta$ is typically a step function in `normal' convolutional layers. Some works exists on replacing it with e.g. B-splines \cite{fey2018splinecnn} to better handle irregular data. The oddity of scaling by $1/n$ with irregular data has not been explicitly addressed in the literature, at least to our knowledge; indeed quite conversely we have seen it used without remark.} Thus we see that with convolutions, we are implicitly interpreting the observed data as a path in data space.
 
-Similarly, the connection between dynamical systems and recurrent neural
+Similarly, the connections between dynamical systems and recurrent neural
 networks are well known~\citep{FUNAHASHI1993801, continuousrnn}, and these tend to use a similar setup.
-
+%
 For non-signature methods as for signature methods, this implicit usage of data as a path in data space often seems to be swept under the rug, and we have demonstrated that this is deserving further attention.
 % While our focus here is specifically to study path constructions for signatures, we consider implicit path constructions as the manifestation of a larger problem which deserves more attention.
+
+With respect to ethical considerations, we acknowledge that time series models in general can be used for better or for worse. On top of that, implicit biases underlying models as well as datasets can have unintended harmful consequences. By shedding light on the impact of implicit usage of paths in data space we hope to forward understanding and accountability of black-box models. Even if our work focuses on signature models, we believe that the principle of making underlying assumptions explicit is relevant far beyond this class of models. 
 
 \begin{ack}
 M.M, M.H, and C.B were supported by the SNSF Starting Grant `Significant
@@ -1253,7 +1063,7 @@ Pattern Mining'. The authors are grateful to Patrick Kidger for valuable discuss
 
 \begin{table}[htbp]
     \begin{center}
-	\caption{Character Trajectories, random subsampling}
+	\caption{\texttt{CharacterTrajectories}, random subsampling}
 	%\small{
 	\input{tables/repetitions_CharacterTrajectories_Random}
 	\label{supp: tab character}
@@ -1263,7 +1073,7 @@ Pattern Mining'. The authors are grateful to Patrick Kidger for valuable discuss
 
 \begin{table}[htbp]
     \begin{center}
-	\caption{PenDigits, random subsampling}
+	\caption{\texttt{PenDigits}, random subsampling}
 	%\small{
 	\input{tables/repetitions_PenDigits_Random}
 	\label{supp: tab pendigits}
@@ -1273,7 +1083,7 @@ Pattern Mining'. The authors are grateful to Patrick Kidger for valuable discuss
 
 \begin{table}[htbp]
     \begin{center}
-	\caption{LSST, label-based subsampling}
+	\caption{\texttt{LSST}, label-based subsampling}
 	%\small{
 	\input{tables/repetitions_LSST_Label-based}
 	\label{supp: tab lsst label-based}
@@ -1283,7 +1093,7 @@ Pattern Mining'. The authors are grateful to Patrick Kidger for valuable discuss
 
 \begin{table}[htbp]
     \begin{center}
-	\caption{LSST, random subsampling}
+	\caption{\texttt{LSST}, random subsampling}
 	%\small{
 	\input{tables/repetitions_LSST_Random}
 	\label{supp: tab lsst random}
@@ -1303,7 +1113,7 @@ Pattern Mining'. The authors are grateful to Patrick Kidger for valuable discuss
 
 \begin{table}[htbp]
     \begin{center}
-	\caption{Physionet 2012 }
+	\caption{\texttt{Physionet 2012} }
 	%\small{
 	\input{tables/repetitions_Physionet2012}
 	\label{supp: tab physionet}
@@ -1431,7 +1241,7 @@ a parameter explosion. All models were optimized using Adam
 were drawn log-uniformly between $10^{-4}$ and $10^{-2}$. We allowed
 for the following batch-sizes: $(32, 64, 128, 256)$. For GP-based
 models, to save memory, we used virtual batching based on
-a batch-size of~$32$. 
+a batch-size of~$32$. Furthermore, for standard GP adapters we used $10$ MC samples, conforming with recent literature \citep{futoma2017mgp, moor2019early}. All approaches were constrained to have no more than $1.5$ million trainable parameters.
     
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
