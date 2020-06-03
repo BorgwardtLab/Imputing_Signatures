@@ -914,6 +914,24 @@ terms of the best validation performance, and finally report mean and
 standard deviation~(error bars) of the performance metrics on the
 testing split.
 
+\begin{table}[tbp] %
+    \caption{\texttt{CharacterTrajectories} dataset under label-based subsampling. The top three methods are highlighted: bold \& underlined, bold, underlined. All measures are reported as percentage points. Balanced accuracy (BAC) is the metric we optimized for. We further report accuracy and weighted AUROC (w-AUROC).}
+    \centering
+    %\small{
+    \input{tables/repetitions_CharacterTrajectories_Label-based}
+    %}
+    \label{tab:character}
+\end{table}
+
+\begin{table}[tbp]
+    \caption{\texttt{PenDigits} dataset under label-based subsampling. The top three methods are highlighted: bold \& underlined, bold, underlined. All measures are reported as percentage points. Balanced accuracy (BAC) is the metric we optimized for. We further report accuracy and weighted AUROC (w-AUROC)}
+    \centering
+    %\small{
+    \input{tables/repetitions_PenDigits_Label-based}
+    \label{tab:pendigits}
+    %}
+\end{table}
+
 \paragraph{Results}
 %
 \begin{figure*}[tbp]
@@ -965,23 +983,23 @@ Furthermore, we found that \textsc{GP-PoM} tends to converge faster to
 a better performance than the original GP adapter, as exemplified in
 Supplementary Figure~\ref{supp: gp-training}.
 
-\begin{table}[h!] %tbp
-    \caption{\texttt{CharacterTrajectories} dataset under label-based subsampling. The top three methods are highlighted: bold \& underlined, bold, underlined. All measures are reported as percentage points. Balanced accuracy (BAC) is the metric we optimized for. We further report accuracy and weighted AUROC (w-AUROC).}
-    \centering
-    %\small{
-    \input{tables/repetitions_CharacterTrajectories_Label-based}
-    %}
-    \label{tab:character}
-\end{table}
+% \begin{table}[tbp] %
+%     \caption{\texttt{CharacterTrajectories} dataset under label-based subsampling. The top three methods are highlighted: bold \& underlined, bold, underlined. All measures are reported as percentage points. Balanced accuracy (BAC) is the metric we optimized for. We further report accuracy and weighted AUROC (w-AUROC).}
+%     \centering
+%     %\small{
+%     \input{tables/repetitions_CharacterTrajectories_Label-based}
+%     %}
+%     \label{tab:character}
+% \end{table}
 
-\begin{table}[htbp]
-    \caption{\texttt{PenDigits} dataset under label-based subsampling. The top three methods are highlighted: bold \& underlined, bold, underlined. All measures are reported as percentage points. Balanced accuracy (BAC) is the metric we optimized for. We further report accuracy and weighted AUROC (w-AUROC)}
-    \centering
-    %\small{
-    \input{tables/repetitions_PenDigits_Label-based}
-    \label{tab:pendigits}
-    %}
-\end{table}
+% \begin{table}[tbp]
+%     \caption{\texttt{PenDigits} dataset under label-based subsampling. The top three methods are highlighted: bold \& underlined, bold, underlined. All measures are reported as percentage points. Balanced accuracy (BAC) is the metric we optimized for. We further report accuracy and weighted AUROC (w-AUROC)}
+%     \centering
+%     %\small{
+%     \input{tables/repetitions_PenDigits_Label-based}
+%     \label{tab:pendigits}
+%     %}
+% \end{table}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Discussion}
