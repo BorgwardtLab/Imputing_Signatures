@@ -477,7 +477,7 @@ Signatures act on continuous paths. However, in real-world
 applications, temporal data typically appears as a discretised
 collection of measurements, potentially irregularly-spaced and
 asynchronously observed. To apply the signature to this data,
-it first has to be imputed into a continuous path.
+it first has to be converted in to a continuous path. 
 %
 We believe this step to have a significant impact on the
 resulting signature, and thus also on models employing the signature.
@@ -499,7 +499,7 @@ objective:
 Even though Equation~\eqref{eq:objective} could be formulated more
 \emph{implicitly}~(i.e.\ without any explicit imputation step),
 this formulation enables us to make explicit how the signature transform
-`interprets' the raw data for downstream classification tasks. 
+`interprets' the raw data for downstream classification tasks. In Section~\ref{sec:Fragile dependence} we further motivate the need for assessing the path construction by showing that a single imputed value can affect the area which is computed with the signature. 
 
 \paragraph{Path imputation strategies}
 We consider the following set of strategies for path imputation, namely
@@ -965,8 +965,8 @@ Furthermore, we found that \textsc{GP-PoM} tends to converge faster to
 a better performance than the original GP adapter, as exemplified in
 Supplementary Figure~\ref{supp: gp-training}.
 
-\begin{table}[t]
-    \caption{\texttt{CharacterTrajectories} dataset under label-based subsampling. The top three methods are highlighted: bold \& underlined, bold, underlined. All measures are reported as percentage points.}
+\begin{table}[h!] %tbp
+    \caption{\texttt{CharacterTrajectories} dataset under label-based subsampling. The top three methods are highlighted: bold \& underlined, bold, underlined. All measures are reported as percentage points. Balanced accuracy (BAC) is the metric we optimized for. We further report accuracy and weighted AUROC (w-AUROC).}
     \centering
     %\small{
     \input{tables/repetitions_CharacterTrajectories_Label-based}
@@ -974,8 +974,8 @@ Supplementary Figure~\ref{supp: gp-training}.
     \label{tab:character}
 \end{table}
 
-\begin{table}[ht]
-    \caption{\texttt{PenDigits} dataset under label-based subsampling. The top three methods are highlighted: bold \& underlined, bold, underlined. All measures are reported as percentage points.}
+\begin{table}[htbp]
+    \caption{\texttt{PenDigits} dataset under label-based subsampling. The top three methods are highlighted: bold \& underlined, bold, underlined. All measures are reported as percentage points. Balanced accuracy (BAC) is the metric we optimized for. We further report accuracy and weighted AUROC (w-AUROC)}
     \centering
     %\small{
     \input{tables/repetitions_PenDigits_Label-based}
@@ -1013,7 +1013,7 @@ has to be able to handle the doubled feature dimensionality.
 
 \paragraph{Recommendations for the practitioner}
 %
-When dealing with a challenging time series classification task, we recommend to consider signatures as a powerful tool to encode paths with little loss of information. However, we observe that this comes at a certain cost: since the signature describes continuous paths~(and not discrete time series), constructing this path from raw data is a delicate task that can heavily impact the signature and the performance of downstream models. To this end, we recommend using \textsc{GP-PoM}, which explicitly captures uncertainty in the imputed path. 
+When dealing with a challenging time series classification task, we recommend to consider signatures as a powerful tool to encode paths with little loss of information. However, we observe that this comes at a certain cost: since the signature describes continuous paths~(and not discrete time series), constructing this path from raw data is a delicate task that can heavily impact the signature and the performance of downstream models. To this end, we recommend using \textsc{GP-PoM}, which explicitly captures uncertainty in the imputed path. Given our findings, indicator imputation is a very simple but promising go-to strategy, however we caution its use together with shallow signature models since we observed detrimental effects in terms of predictive performance. \newline
 Furthermore, when applying signatures in online applications or settings, where during training no data should leak from the future~(e.g. in online settings, this could impair performance upon deployment), we recommend to use causal~(or time-joined) path imputations: their design specifically prevents leakage from the future, even if the signature interprets the imputations as knots of a piece-wise linear path. 
 
 \section{Conclusion}
@@ -1030,7 +1030,6 @@ particular improved robustness in signature models when dealing with
 irregularly-spaced and asynchronous time series. 
 
 \section*{Broader Impact}
-
 Whilst the task of converting observed data into a path in data space is particularly important for signatures, it also arises in the context of, for example, convolutional and recurrent neural networks.
 
 Convolutions are often thought of in terms of discrete sums, but they are perhaps more naturally described as the integral cross-correlation between the underlying data path $f$ and the learnt filter $g_\theta$. Given sample points $t_1, \ldots, t_n \in [0, T]$, this integral is then approximated via numerical quadrature:
@@ -1180,8 +1179,8 @@ Pattern Mining'. The authors are grateful to Patrick Kidger for valuable discuss
 
 We consider the following set of strategies for path imputation, i.e.\
 \begin{enumerate}
-    \item linear interpolation: At a given imputation point, the previous and next observed data point are linearly interpolated.
-    \item forward filling: At a given imputation point, the last observed value is carried forward.
+    \item linear interpolation: At a given imputation point, the previous and next observed data point are linearly interpolated. Missing values at the start or end of the time series are imputed with $0$ which for standardized data also corresponds to the mean.
+    \item forward filling: At a given imputation point, the last observed value is carried forward. Missing values at the start of the time series are imputed with $0$.
     \item indicator imputation: At a given imputation point, for each feature dimension, if no observation is available a binary missingness indicator variable is set to $1$, $0$ otherwise. The missing value is filled with $0$.
     \item zero imputation: At a given imputation point, missing values are filled with $0$.
     \item causal imputation: This approach is related to forward filling
@@ -1321,7 +1320,7 @@ concluding step.
 However, when there is missing data at the start or the end of
 a partially observed times series, then there is no `next observation'
 which linear imputation may use. So in general, we cannot uniformly
-apply the linear data-imputation scheme, and must choose another scheme.
+apply the linear data-imputation scheme, and must choose another scheme or find ad-hoc solutions for missing data at the start or the end of the time series. Furthermore, it is plausible to assume that linear interpolation suffers from low expressivity as an imputation scheme which might empirically mask this benefit.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Causal signature imputation}\label{sec:Causal signature imputation}
