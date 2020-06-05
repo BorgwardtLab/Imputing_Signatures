@@ -18,6 +18,32 @@
 \newcommand{\theHalgorithm}{\arabic{algorithm}}
 \usepackage{comment}
 \PassOptionsToPackage{sort, numbers, compress}{natbib}
+\usepackage{tikz}
+\usepackage{tikz-cd}
+\usepackage{pgfplots}
+\usetikzlibrary{calc}
+\usetikzlibrary{patterns}
+\usepgfplotslibrary{fillbetween}
+\pgfplotsset{compat=1.16}
+\definecolor{cardinal} {RGB}{196, 30, 58}
+\definecolor{bleu}     {RGB}{ 49,140,231}
+\definecolor{lightgrey}{RGB}{230,230,230}
+
+% \pgfplotsset{%
+%   function/.style = {%
+%     axis x line*     = bottom,
+%     axis y line*     = left,
+%     enlargelimits    = false,
+%     grid style       = {
+%       draw = lightgray,
+%     },
+%     tick align       = outside,
+%     tick label style = {%
+%       font = \scriptsize,
+%     },
+%   }
+% }
+
 
 \usepackage{neurips_2020} %[preprint]
 \setcitestyle{square}
@@ -100,16 +126,15 @@ a linear transform to this collection of statistics~\citep[Proposition
 A.6]{kidger2019deep}.
 %
 This `universal nonlinearity' property makes the signature a promising nonparametric
-feature extractor with beneficial properties in both generative and
-supervised learning scenarios.
+feature extractor in both generative and
+discriminative learning scenarios.
 %
-These theoretical properties were further supported by outstanding empirical
-results when applied to clinical time series classification tasks~\citep{reyna2019early, morrill2019signature}.
+Further properties include the signature's uniqueness~\citep{hambly2010uniqueness}, as well as factorial decay of its higher order terms~\citep{lyons1998differential}. These theoretical foundations have been accompanied by outstanding empirical results when applying signatures to clinical time series classification tasks~\citep{reyna2019early, morrill2019signature}.
 Due to their similarities, we may hope that tools that
-apply to continuous paths can \emph{also} be extended to multivariate
+apply to continuous paths can \emph{also} be applied to multivariate
 time series. But since multivariate time series are not continuous
 paths, one first needs to construct a continuous path before signature techniques are applicable.
-
+%
 Previous work~\citep{levin2013, kidger2019deep, fermanian2019embedding}
 characterised this construction as an embedding problem, and
 typically considered it a minor technical detail.
@@ -137,7 +162,7 @@ necessarily correspond to empirical performance.
 %
 We perform a thorough investigation of multiple imputation schemes in combination with various models that can potentially employ signatures.
 Furthermore, motivated by the fact that missingness itself can be
-informative for time series classification~\citep{rubin1976inference}, we propose a novel strategy: an extension of Gaussian Process adapters \citep{li2016scalable, futoma2017mgp}, which exploits uncertainty information during each prediction step and is beneficial for signature models, but also of independent interest.
+informative for time series classification~\citep{rubin1976inference}, we propose a novel imputation strategy: an extension of Gaussian process adapters~\citep{li2016scalable, futoma2017mgp}, which exploits uncertainty information during each prediction step and which is beneficial for signature models, but also of independent interest.
 %
 % We find that approaches
 % that have access to uncertainty information \emph{during prediction}
@@ -164,7 +189,7 @@ PerezArribas2018, morrill2019sepsis} typically employed the signature transform 
 a model is learnt. A growing body of work has also investigated how to
 integrate the signature transform more tightly with neural networks; 
 \citet{jeremythesis}, \citet{logsigrnn}, and \citet{kidger2019deep} all
-study how to use the signature transform (or variants thereof) within typical neural network models.
+study how to use the signature transform~(or variants thereof) within typical neural network models.
 \citet{chevyrev2018signature, kiraly2019kernels} study how the signature
 transform may be used to define a \emph{kernel}---i.e.\ a symmetric,
 positive definite function that is typically used as a similarity
@@ -202,8 +227,8 @@ considered more closely in this paper.
 % sample arbitrarily.
 We note that there are also other approaches that
 perform imputation end-to-end with a downstream classifier~\citep{shukla2018interpolationprediction}
-and methods that skip the imputation step altogether based on recently proposed Neural-ODE like architectures~\citep{rubanova2019latent, kidger2020neuralcde}, variants of recurrent neural networks \cite{che2018recurrent} or set functions~\cite{horn2019set}.
-However, the scope of this work is to specifically assess the impact of path imputations for the signature, hence we deem the larger comparison to imputation-free scenarios interesting for future work, but bypassing the central point of this paper.
+and methods that skip the imputation step altogether based on recently-proposed Neural-ODE like architectures~\citep{rubanova2019latent, kidger2020neuralcde}, variants of recurrent neural networks \cite{che2018recurrent} or set functions~\cite{horn2019set}.
+However, the scope of this work is to specifically assess the impact of path imputations for the signature, hence we deem the larger comparison including imputation-free scenarios interesting for future work, while it bypasses the central point of this paper.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Background} %NEW
@@ -225,9 +250,76 @@ In brief, the signature transform may be interpreted as extracting
 information about \emph{order} and \emph{area} of a path.
 %
 One may interpret its terms as `the area/order of one channel with
-respect to some collection of other channels'.
-For an exposition on the properties of the signature transform and its
-use in machine learning, please refer to \citet{primer2016} or \citet[Appendix A]{kidger2019deep}.
+respect to some collection of other channels'. To give an explicit example: first level terms simply describe the increment of the path with respect to one channel, whereas second-order terms are related to the \emph{Levy area} of the path, as shown for a one-dimensional example in Figure~\ref{fig:sig_path}.
+
+\begin{wrapfigure}{3}{3.5cm}
+    \centering
+    \vspace{-1em}
+	\includegraphics[width=0.25\columnwidth]{figures/sig_path1.pdf}
+	\caption{Given a path (bold), its Levy area is its signed area with respect to the chord joining its endpoints.}\label{fig:sig_path}
+	\vspace{-2em}
+\end{wrapfigure}
+
+For an exposition on the properties of the signature transform and its use in machine learning, please refer to \citet{primer2016} or \citet[Appendix A]{kidger2019deep}.
+
+
+% % Signatures of order $1$, i.e.\ terms of the form $\signature_{a,b}^i$ correspond to the \emph{increment} of a path. Terms of order $2$, i.e.\   $\signature_{a,b}^{i,j}$, for $i \neq j$, correspond to
+% %     \emph{signed} areas above and below of a path.
+% %     %
+    
+% \begin{figure*}[tbp]
+%   \centering
+%   \subcaptionbox{x}{
+%               \begin{tikzpicture}
+%                 \begin{axis}[function,
+%                   scale              = 0.5,
+%                   unit vector ratio* = 1 1 1,
+%                   enlargelimits      = 0.05,
+%                   clip               = false,
+%                 ]%
+%                   \addplot[no marks, smooth] table {data/Function.txt};
+%                   \draw[cardinal] (-1.0, -1.0) -- node[anchor=west]
+%                   {} (-1.0, 3.00); %{\scriptsize $\signature^1_{a,b}$}
+%                 \end{axis}
+%               \end{tikzpicture}
+%     }%
+%     \subcaptionbox{y}{   
+%           \begin{tikzpicture}
+%             \begin{axis}[function,
+%               scale              = 0.5,
+%               unit vector ratio* = 1 1 1,
+%               enlargelimits      = 0.05,
+%               clip               = false,
+%             ]%
+%               \addplot[no marks, name path=F, smooth] table {data/Function.txt};
+%               \path[name path=A] (-1, 3) -- ( 3, 3);
+%               \path[name path=B] (-1,-1) -- (-1, 3);
+%               \addplot[pattern=north west lines, pattern color=cardinal] fill between[of=F and A];
+%               \draw[cardinal] (-1, 3) -- ( 3, 3);
+%               \draw[cardinal] (-1,-1) -- (-1, 3);
+%               %\node at (1.75,1.5) {$\signature^{1,2}_{a,b}$};
+%             \end{axis}
+%           \end{tikzpicture}
+%     }%
+%     \subcaptionbox{z}{
+%           \begin{tikzpicture}
+%             \begin{axis}[function,
+%               scale              = 0.5,
+%               unit vector ratio* = 1 1 1,
+%               enlargelimits      = 0.05,
+%               clip               = false,
+%             ]%
+%               \addplot[no marks, name path=F, smooth] table {data/Function.txt};
+%               \path[name path=A] (-1,-1) -- ( 3,-1);
+%               \path[name path=B] ( 3,-1) -- ( 3, 3);
+%               \addplot[pattern=north west lines, pattern color=bleu] fill between[of=F and A];
+%               \draw[bleu] (-1,-1) -- ( 3,-1);
+%               \draw[bleu] ( 3,-1) -- ( 3, 3);
+%               %\node at (0.5,0.5) {$\signature^{2,1}_{a,b}$};
+%             \end{axis}
+%           \end{tikzpicture}
+%          }%
+% \end{figure*}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \paragraph{Notation}
@@ -235,16 +327,16 @@ use in machine learning, please refer to \citet{primer2016} or \citet[Appendix A
 %
 Given a set $A$, we define the space of time series over $A$ by
 %
-\begin{equation}
-    \seriesspace(A) = \{((t_1, x_1), \ldots, (t_n, x_n)) \,\vert\, t_i \in \reals, x_i \in A, n \in \naturals, \text{ such that } t_1 \leq \cdots \leq t_n\}.\label{eq:seriesspace}
-\end{equation}
-%Two column version:
-% \begin{equation}\label{eq:seriesspace}
-%   \begin{split}
-%     \seriesspace(A) = &\{((t_1, x_1), \ldots, (t_n, x_n)) \,\vert\, t_i \in \reals, x_i \in A,\\
-%                       &\hspace{7em}n \in \naturals, \text{ s.t. } t_1 \leq \cdots \leq t_n\}.
-%   \end{split}
+% \begin{equation}
+%     \seriesspace(A) = \{((t_1, x_1), \ldots, (t_n, x_n)) \,\vert\, t_i \in \reals, x_i \in A, n \in \naturals, \text{ such that } t_1 \leq \cdots \leq t_n\}.\label{eq:seriesspace}
 % \end{equation}
+%Two column version:
+\begin{equation}\label{eq:seriesspace}
+  \begin{split}
+    \seriesspace(A) = &\{((t_1, x_1), \ldots, (t_n, x_n)) \,\vert\, t_i \in \reals, x_i \in A,\\
+                      &\hspace{7em}n \in \naturals, \text{ s.t. } t_1 \leq \cdots \leq t_n\}.
+  \end{split}
+\end{equation}
 %
 Furthermore, let $\lspace$ be a set and let $\dataspace_j = \reals$ for $j \in \{1,
 \ldots, d\}$ and $d \in \naturals$. Then we assume that we observe
@@ -499,10 +591,10 @@ objective:
 Even though Equation~\eqref{eq:objective} could be formulated more
 \emph{implicitly}~(i.e.\ without any explicit imputation step),
 this formulation enables us to make explicit how the signature transform
-`interprets' the raw data for downstream classification tasks. In Section~\ref{sec:Fragile dependence} we further motivate the need for assessing the path construction by showing that a single imputed value can affect the area which is computed with the signature. 
+`interprets' the raw data for downstream classification tasks. We further motivate this need for assessing the path construction in Section~\ref{sec:Fragile dependence} by showing that a single imputed value can affect the Levy area which is computed with the signature. 
 
 \paragraph{Path imputation strategies}
-We consider the following set of strategies for path imputation, namely
+For our analysis, we consider the following set of strategies for path imputation, namely
 \begin{inparaenum}[(1)]
     \item linear interpolation~(lin),
     \item forward filling~(ff),
@@ -901,7 +993,7 @@ For each setting, we run a randomised hyperparameter search of $20$
 calls and train each of these fits until convergence~(at most 100
 epochs; we stop early if the performance on the validation
 split does not improve for 20 epochs). As for performance metrics, for
-binary classification tasks, we optimize average precision and also report AUROC. For multi-class
+binary classification tasks, we optimize area under the precision-recall curve (as approximated via average precision) and also report AUROC. For multi-class
 classification, we optimize balanced accuracy~(BAC) and additionally
 report accuracy and weighted AUROC~(w-AUROC)\footnote{%
   AUROC is computed for each label and averaged with weights according to
@@ -983,24 +1075,6 @@ Furthermore, we found that \textsc{GP-PoM} tends to converge faster to
 a better performance than the original GP adapter, as exemplified in
 Supplementary Figure~\ref{supp: gp-training}.
 
-% \begin{table}[tbp] %
-%     \caption{\texttt{CharacterTrajectories} dataset under label-based subsampling. The top three methods are highlighted: bold \& underlined, bold, underlined. All measures are reported as percentage points. Balanced accuracy (BAC) is the metric we optimized for. We further report accuracy and weighted AUROC (w-AUROC).}
-%     \centering
-%     %\small{
-%     \input{tables/repetitions_CharacterTrajectories_Label-based}
-%     %}
-%     \label{tab:character}
-% \end{table}
-
-% \begin{table}[tbp]
-%     \caption{\texttt{PenDigits} dataset under label-based subsampling. The top three methods are highlighted: bold \& underlined, bold, underlined. All measures are reported as percentage points. Balanced accuracy (BAC) is the metric we optimized for. We further report accuracy and weighted AUROC (w-AUROC)}
-%     \centering
-%     %\small{
-%     \input{tables/repetitions_PenDigits_Label-based}
-%     \label{tab:pendigits}
-%     %}
-% \end{table}
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Discussion}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1019,7 +1093,7 @@ irregularly-spaced time series for classification.
 Crucially, uncertainty information has to be accessible during the
 \emph{prediction step}. We find that this is indeed not the case for
 the standard GP adapter~(despite the naming of `uncertainty-aware
-framework'), since for each MC sample, the GP adapter model has no access
+framework'), since for each MC sample, the downstream classifier has no access
 to missingness or uncertainty about the underlying imputation.
 \textsc{GP-PoM}, our proposed end-to-end imputation strategy, shows
 competitive classification performance, while considerably improving
@@ -1031,8 +1105,9 @@ has to be able to handle the doubled feature dimensionality.
 
 \paragraph{Recommendations for the practitioner}
 %
-When dealing with a challenging time series classification task, we recommend to consider signatures as a powerful tool to encode paths with little loss of information. However, we observe that this comes at a certain cost: since the signature describes continuous paths~(and not discrete time series), constructing this path from raw data is a delicate task that can heavily impact the signature and the performance of downstream models. To this end, we recommend using \textsc{GP-PoM}, which explicitly captures uncertainty in the imputed path. Given our findings, indicator imputation is a very simple but promising go-to strategy, however we caution its use together with shallow signature models since we observed detrimental effects in terms of predictive performance. \newline
-Furthermore, when applying signatures in online applications or settings, where during training no data should leak from the future~(e.g. in online settings, this could impair performance upon deployment), we recommend to use causal~(or time-joined) path imputations: their design specifically prevents leakage from the future, even if the signature interprets the imputations as knots of a piece-wise linear path. 
+When dealing with a challenging time series classification task, we recommend to consider signatures as a powerful tool to encode paths with little loss of information. However, we observe that this comes at a certain cost: since the signature describes continuous paths~(and not discrete time series), constructing this path from raw data is a delicate task that can heavily impact the signature and the performance of downstream models. To this end, we recommend using \textsc{GP-PoM}, which explicitly captures uncertainty in the imputed path. Given our findings, indicator imputation is a very simple but promising go-to strategy, however we caution its use together with shallow signature models since we observed detrimental effects in terms of predictive performance.
+%
+Furthermore, when applying signatures in online applications or settings, where during training no data should leak from the future~(e.g.\ in online settings, this could impair performance upon deployment), we recommend to use causal~(or time-joined) path imputations: their design specifically prevents leakage from the future, even if the signature interprets the imputations as knots of a piece-wise linear path. 
 
 \section{Conclusion}
 
@@ -1044,10 +1119,7 @@ pitfalls---specifically, we found the choice of an imputation scheme to
 be crucial for obtaining high predictive performance. Moreover, by
 integrating uncertainty to the prediction step, our proposed
 \textsc{GP-PoM} has demonstrated overall competitive performance and in
-particular improved robustness in signature models when dealing with
-irregularly-spaced and asynchronous time series. 
-
-\clearpage
+particular improved robustness in signature models when classifying irregularly-spaced and asynchronous time series. 
 
 \section*{Broader Impact}
 Whilst the task of converting observed data into a path in data space is particularly important for signatures, it also arises in the context of, for example, convolutional and recurrent neural networks.
