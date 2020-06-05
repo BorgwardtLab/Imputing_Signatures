@@ -235,7 +235,7 @@ However, the scope of this work is to specifically assess the impact of path imp
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Background: Signature transform and Gaussian process adapters} % \section{Background}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+\paragraph{Path signatures}
 Let $f = (f_1, \dots, f_d) \colon [a, b] \to \reals^d$ be a continuous, piecewise
 differentiable path. Then the \emph{signature transform up to depth $N$}
 is
@@ -262,83 +262,30 @@ respect to some collection of other channels'. To give an explicit example: firs
 	\vspace{-2em}
 \end{wrapfigure}
 
-For an exposition on the properties of the signature transform and its use in machine learning, please refer to \citet{primer2016} or \citet[Appendix A]{kidger2019deep}.
+For an exposition on the properties of the signature transform and its use in machine learning, please refer to \citet{primer2016} or \citet[Appendix A]{kidger2019deep}. For building more intuition, in Section~\ref{sec: comparison fourier} of the appendix, we compare the signature to more well-known transforms.
 
+\paragraph{Computing the signature transform} \label{sec: computing sig}
+Continuous piecewise linear paths are the paths of choice, computationally speaking, due to the fact that this is the only case for which efficient algorithms for computing the signature transform are known \cite{signatory}.
 
-% % Signatures of order $1$, i.e.\ terms of the form $\signature_{a,b}^i$ correspond to the \emph{increment} of a path. Terms of order $2$, i.e.\   $\signature_{a,b}^{i,j}$, for $i \neq j$, correspond to
-% %     \emph{signed} areas above and below of a path.
-% %     %
-    
-% \begin{figure*}[tbp]
-%   \centering
-%   \subcaptionbox{x}{
-%               \begin{tikzpicture}
-%                 \begin{axis}[function,
-%                   scale              = 0.5,
-%                   unit vector ratio* = 1 1 1,
-%                   enlargelimits      = 0.05,
-%                   clip               = false,
-%                 ]%
-%                   \addplot[no marks, smooth] table {data/Function.txt};
-%                   \draw[cardinal] (-1.0, -1.0) -- node[anchor=west]
-%                   {} (-1.0, 3.00); %{\scriptsize $\signature^1_{a,b}$}
-%                 \end{axis}
-%               \end{tikzpicture}
-%     }%
-%     \subcaptionbox{y}{   
-%           \begin{tikzpicture}
-%             \begin{axis}[function,
-%               scale              = 0.5,
-%               unit vector ratio* = 1 1 1,
-%               enlargelimits      = 0.05,
-%               clip               = false,
-%             ]%
-%               \addplot[no marks, name path=F, smooth] table {data/Function.txt};
-%               \path[name path=A] (-1, 3) -- ( 3, 3);
-%               \path[name path=B] (-1,-1) -- (-1, 3);
-%               \addplot[pattern=north west lines, pattern color=cardinal] fill between[of=F and A];
-%               \draw[cardinal] (-1, 3) -- ( 3, 3);
-%               \draw[cardinal] (-1,-1) -- (-1, 3);
-%               %\node at (1.75,1.5) {$\signature^{1,2}_{a,b}$};
-%             \end{axis}
-%           \end{tikzpicture}
-%     }%
-%     \subcaptionbox{z}{
-%           \begin{tikzpicture}
-%             \begin{axis}[function,
-%               scale              = 0.5,
-%               unit vector ratio* = 1 1 1,
-%               enlargelimits      = 0.05,
-%               clip               = false,
-%             ]%
-%               \addplot[no marks, name path=F, smooth] table {data/Function.txt};
-%               \path[name path=A] (-1,-1) -- ( 3,-1);
-%               \path[name path=B] ( 3,-1) -- ( 3, 3);
-%               \addplot[pattern=north west lines, pattern color=bleu] fill between[of=F and A];
-%               \draw[bleu] (-1,-1) -- ( 3,-1);
-%               \draw[bleu] ( 3,-1) -- ( 3, 3);
-%               %\node at (0.5,0.5) {$\signature^{2,1}_{a,b}$};
-%             \end{axis}
-%           \end{tikzpicture}
-%          }%
-% \end{figure*}
+This is not a serious hurdle when one wishes to compute the signature of a path $f$ that is not piecewise linear---as the signature of piecewise linear approximations to $f$ will tend towards the signature of $f$ as the quality of the approximation increases---but it does enforce this requirement on our imputation schemes.
+Thus, all of the imputation schemes we examine will first seek to select a collection of points in data space (not necessarily only where we had data before), and for computing the signature we join them up into a piecewise linear path.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \paragraph{Notation}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-Given a set $A$, we define the space of time series over $A$ by
+We define the space of time series over a set $A$ by
 %
-% \begin{equation}
-%     \seriesspace(A) = \{((t_1, x_1), \ldots, (t_n, x_n)) \,\vert\, t_i \in \reals, x_i \in A, n \in \naturals, \text{ such that } t_1 \leq \cdots \leq t_n\}.\label{eq:seriesspace}
-% \end{equation}
-%Two column version:
-\begin{equation}\label{eq:seriesspace}
-  \begin{split}
-    \seriesspace(A) = &\{((t_1, x_1), \ldots, (t_n, x_n)) \,\vert\, t_i \in \reals, x_i \in A,\\
-                      &\hspace{7em}n \in \naturals, \text{ s.t. } t_1 \leq \cdots \leq t_n\}.
-  \end{split}
+\begin{equation}
+    \seriesspace(A) = \{((t_1, x_1), \ldots, (t_n, x_n)) \,\vert\, t_i \in \reals, x_i \in A, n \in \naturals, \text{ such that } t_1 \leq \cdots \leq t_n\}.\label{eq:seriesspace}
 \end{equation}
+%Two column version:
+% \begin{equation}\label{eq:seriesspace}
+%   \begin{split}
+%     \seriesspace(A) = &\{((t_1, x_1), \ldots, (t_n, x_n)) \,\vert\, t_i \in \reals, x_i \in A,\\
+%                       &\hspace{7em}n \in \naturals, \text{ s.t. } t_1 \leq \cdots \leq t_n\}.
+%   \end{split}
+% \end{equation}
 %
 Furthermore, let $\lspace$ be a set and let $\dataspace_j = \reals$ for $j \in \{1,
 \ldots, d\}$ and $d \in \naturals$. Then we assume that we observe
@@ -571,7 +518,7 @@ Signatures act on continuous paths. However, in real-world
 applications, temporal data typically appears as a discretised
 collection of measurements, potentially irregularly-spaced and
 asynchronously observed. To apply the signature to this data,
-it first has to be converted in to a continuous path. 
+it first has to be converted into a continuous path. 
 %
 We believe this step to have a significant impact on the
 resulting signature, and thus also on models employing the signature.
@@ -611,8 +558,7 @@ For our analysis, we consider the following set of strategies for path imputatio
 %
 Strategies 1--5 can be seen as a fixed preprocessing step, whereas GP
 adapters~(strategy~6) are optimised end-to-end with the downstream task. For more
-details regarding these strategies, please refer to Section~\ref{supp: Imputation} in the
-appendix.
+details regarding these strategies, please refer to Section~\ref{supp: Imputation} in the appendix. As indicated in Section~\ref{sec: computing sig}, for computing the signature efficiently~(i.e.\ computed in terms of standard tensor operations \citep[Proposition A.3]{kidger2019deep}), the imputed time series are transformed into piecewise linear paths beforehand.
 
 \begin{figure}[t]
     \centering
@@ -932,7 +878,7 @@ architectures) before presenting and discussing quantitative results.
 \paragraph{Datasets and preprocessing}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-We classify four real-world time series datasets, i.e.\
+We classify time series from four real-world datasets, i.e.\
 %
 \begin{inparaenum}[(i)]
   \item \texttt{Physionet2012}~\citep{goldberger2000physiobank},
@@ -960,7 +906,7 @@ namely
 Since \texttt{PenDigits} consists of particularly short time series~(8
 steps, 2 dimensions), we use more moderate frequencies of $30\%$
 and $20$--$40\%$, respectively, for discarding observations.
-Finally, we standardize all time series channels using the empirical mean and standard deviation as determined on the entire training split.
+Finally, we standardise all time series channels using the empirical mean and standard deviation as determined on the entire training split.
 
 \paragraph{Models}
 %
@@ -995,8 +941,8 @@ For each setting, we run a randomised hyperparameter search of $20$
 calls and train each of these fits until convergence~(at most 100
 epochs; we stop early if the performance on the validation
 split does not improve for 20 epochs). As for performance metrics, for
-binary classification tasks, we optimize area under the precision-recall curve (as approximated via average precision) and also report AUROC. For multi-class
-classification, we optimize balanced accuracy~(BAC) and additionally
+binary classification tasks, we optimise area under the precision-recall curve (as approximated via average precision) and also report AUROC. For multi-class
+classification, we optimise balanced accuracy~(BAC) and additionally
 report accuracy and weighted AUROC~(w-AUROC)\footnote{%
   AUROC is computed for each label and averaged with weights according to
   the support of each class%
@@ -1009,7 +955,7 @@ standard deviation~(error bars) of the performance metrics on the
 testing split.
 
 \begin{table}[tbp] %
-    \caption{\texttt{CharacterTrajectories} dataset under label-based subsampling. The top three methods are highlighted: bold \& underlined, bold, underlined. All measures are reported as percentage points. Balanced accuracy (BAC) is the metric we optimized for. We further report accuracy and weighted AUROC (w-AUROC).}
+    \caption{\texttt{CharacterTrajectories} dataset under label-based subsampling. The top three methods are highlighted: bold \& underlined, bold, underlined. All measures are reported as percentage points. Balanced accuracy (BAC) is the metric we optimised for. We further report accuracy and weighted AUROC (w-AUROC).}
     \centering
     %\small{
     \input{tables/repetitions_CharacterTrajectories_Label-based}
@@ -1018,7 +964,7 @@ testing split.
 \end{table}
 
 \begin{table}[tbp]
-    \caption{\texttt{PenDigits} dataset under label-based subsampling. The top three methods are highlighted: bold \& underlined, bold, underlined. All measures are reported as percentage points. Balanced accuracy (BAC) is the metric we optimized for. We further report accuracy and weighted AUROC (w-AUROC)}
+    \caption{\texttt{PenDigits} dataset under label-based subsampling. The top three methods are highlighted: bold \& underlined, bold, underlined. All measures are reported as percentage points. Balanced accuracy (BAC) is the metric we optimised for. We further report accuracy and weighted AUROC (w-AUROC)}
     \centering
     %\small{
     \input{tables/repetitions_PenDigits_Label-based}
@@ -1037,7 +983,7 @@ testing split.
     \includegraphics[width=0.48\linewidth]{plots/barplot_main_CharacterTrajectories-LabelBasedSubsampler.pdf}\quad%
     % \includegraphics[width=0.48\linewidth]{plots/barplot_main_params_CharacterTrajectories-LabelBasedSubsampler.pdf}%
   }
-  \caption{Experimental Results visualised for \texttt{CharacterTrajectories} Dataset.
+  \caption{Experimental results visualised for \texttt{CharacterTrajectories} dataset.
   %The rows indicate the subsampling type: Random (R) versus Label-based (L).
   The bars display performance in terms of balanced accuracy (BAC),
 whereas the panels indicate the subsampling strategy.
@@ -1066,7 +1012,7 @@ However, we also see that certain signature models, in particular
 \textsc{Sig}, are heavily impacted by the choice of imputation strategy.
 Figure~\ref{fig:results_main} exemplifies this finding in a barplot
 visualization; for the remaining visualizations, including the number of
-parameters of the optimized models, please refer to Supplementary
+parameters of the optimised models, please refer to Supplementary
 Figures~\ref{supp: barplots1} and~\ref{supp: barplots2}. In the case of
 \texttt{CharacterTrajectories}, \textsc{Sig} was only able to achieve
 acceptable performance through our novel \textsc{GP-PoM} strategy. In
@@ -1273,7 +1219,7 @@ Pattern Mining'. The authors are grateful to Patrick Kidger for valuable discuss
 
 We consider the following set of strategies for path imputation, i.e.\
 \begin{enumerate}
-    \item linear interpolation: At a given imputation point, the previous and next observed data point are linearly interpolated. Missing values at the start or end of the time series are imputed with $0$ which for standardized data also corresponds to the mean.
+    \item linear interpolation: At a given imputation point, the previous and next observed data point are linearly interpolated. Missing values at the start or end of the time series are imputed with $0$ which for standardised data also corresponds to the mean.
     \item forward filling: At a given imputation point, the last observed value is carried forward. Missing values at the start of the time series are imputed with $0$.
     \item indicator imputation: At a given imputation point, for each feature dimension, if no observation is available a binary missingness indicator variable is set to $1$, $0$ otherwise. The missing value is filled with $0$.
     \item zero imputation: At a given imputation point, missing values are filled with $0$.
@@ -1300,8 +1246,8 @@ For \texttt{PenDigits}~\citep{Dua2019}, we count $10992$ samples, featuring $2$ 
 \paragraph{LSST}
 LSST~\citep{allam2018photometric} contains $4925$ instances featuring $6$ channel dimensions and $36$ time steps. This dataset contains $14$ classes.
 
- \paragraph{CharacterTrajectories~\citep{Dua2019}}
- This dataset contains $2858$ instances, featuring $3$ channel dimensions, $182$ time steps and $20$ classes.
+ \paragraph{CharacterTrajectories}
+ This dataset contains $2858$ instances, featuring $3$ channel dimensions, $182$ time steps and $20$ classes~\citep{Dua2019}.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1329,7 +1275,7 @@ We use a simple signature model that involves one        signature block compris
 
 For all signature-based models, we allowed a signature truncation
 depth of $2$--$4$, as we observed that larger values quickly led to
-a parameter explosion. All models were optimized using Adam
+a parameter explosion. All models were optimised using Adam
 \citep{kingma2014adam}. Both the learning rates and weight decay
 were drawn log-uniformly between $10^{-4}$ and $10^{-2}$. We allowed
 for the following batch-sizes: $(32, 64, 128, 256)$. For GP-based
@@ -1570,6 +1516,12 @@ and rectilinear embeddings: it is rectilinear with respect to an
 ordering of $t$ and $(x^1, \ldots, x^n)$, and linear on $(x^1, \ldots,
 x^n)$.
 Furthermore, the time-joined transformation \cite{levin2013} is pursuing a very similar goal to the here described causal signature imputation. This is also why we do not consider this imputation strategy as a novel contribution of this work.
+
+
+\subsubsection{Comparison to the Fourier and wavelet transforms}\label{sec: comparison fourier}
+The signature transform exhibits a certain similarity to the one-dimensional Fourier or wavelet transforms. Both are integrals of paths. However, in reality these transforms are fundamentally different. Both the Fourier and wavelet transforms are linear transforms, and operate on each channel of the input path separately. In doing so they model the path as a linear combination of elements from some basis.
+
+Conversely, the signature transform is a nonlinear transform - indeed, it is a universal nonlinearity - and operates by combining information between different channels of the input path. In doing, the signature transform models \emph{functions of the path}; the universal nonlinearity property says that in some sense it provides a basis for such functions.
 
 \end{document}
 
