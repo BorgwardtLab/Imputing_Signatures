@@ -598,14 +598,14 @@ this formulation enables us to make explicit how the signature transform
 \paragraph{Path imputation strategies}
 For our analysis, we consider the following set of strategies for path imputation, namely
 \begin{inparaenum}[(1)]
-    \item linear interpolation~(lin),
-    \item forward filling~(ff),
-    \item indicator imputation~(ind),
-    \item zero imputation~(zero),
+    \item linear interpolation,
+    \item forward filling,
+    \item indicator imputation,
+    \item zero imputation,
     \item causal imputation\footnote{This strategy is similar to the
       time-joined transformation \citep{levin2013}. For more details,
     please refer to Section \ref{sec:Causal signature imputation} in the
-  appendix.}~(causal), and
+  appendix.}, and
     \item Gaussian process adapters~(GP).
 \end{inparaenum}
 %
@@ -943,7 +943,7 @@ We classify four real-world time series datasets, i.e.\
 %
 For dataset statistics and necessary filtering steps, please refer to Section \ref{supp: Dataset stats} in the appendix.
 Moreover, to efficiently compute the signature, we
-sample the imputed path in a \emph{fixed} time resolution\footnote{For Physionet2012 hourly, for the other datasets once per originally ovserved time step}, resulting in
+sample the imputed path in a \emph{fixed} time resolution\footnote{For Physionet2012 hourly, for the other datasets once per originally observed time step}, resulting in
 a piecewise linear path.
 %
 For time series that are not irregularly spaced~(this applies to all datasets but \texttt{Physionet2012}), we employ two types of random subsampling as an additional
