@@ -1,12 +1,12 @@
 # Fdb version 3
-["bibtex main"] 1591434188 "main.aux" "main.bbl" "main" 1591434238
+["bibtex main"] 1591440693 "main.aux" "main.bbl" "main" 1591440730
   "/usr/local/texlive/2020/texmf-dist/bibtex/bst/base/apalike.bst" 1292289607 24635 604dafcc79f521a11ea73e506e1fbd98 ""
-  "main.aux" 1591434238 21374 d76c15a4a25e1fdb13452d6781e67add "pdflatex"
+  "main.aux" 1591440729 21374 e99248e3611b159eca9ff7fa4194b62c "pdflatex"
   "ref.bib" 1591124207 14582 f2e0ceeb4d566dce2de143327d9dc01a ""
   (generated)
   "main.blg"
   "main.bbl"
-["pdflatex"] 1591434236 "main.tex" "main.pdf" "main" 1591434238
+["pdflatex"] 1591440728 "main.tex" "main.pdf" "main" 1591440730
   "/usr/local/texlive/2020/texmf-dist/fonts/enc/dvips/base/8r.enc" 1165713224 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/usr/local/texlive/2020/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc" 1136849721 2971 def0b6c1f0b107b3b936def894055589 ""
   "/usr/local/texlive/2020/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
@@ -174,10 +174,10 @@
   "figures/overview.pdf" 1590480826 74956 18f2a91041b1a570b2a98b087ce9eee6 ""
   "figures/sig_path1.pdf" 1588852019 26795 a59894e74ec5c60c3382e796729a51ed ""
   "figures/sig_path3.pdf" 1588852019 31812 2fbfdda2f30fc3c326c0a1616169ea02 ""
-  "main.aux" 1591434238 21374 d76c15a4a25e1fdb13452d6781e67add "pdflatex"
-  "main.bbl" 1591434188 11876 dda869a931e0f702e37c6b3e26ad6943 "bibtex main"
-  "main.out" 1591434237 0 d41d8cd98f00b204e9800998ecf8427e "pdflatex"
-  "main.tex" 1591434235 58001 de9d386b5bca5171e25473fc129b66f0 ""
+  "main.aux" 1591440729 21374 e99248e3611b159eca9ff7fa4194b62c "pdflatex"
+  "main.bbl" 1591440693 11876 dda869a931e0f702e37c6b3e26ad6943 "bibtex main"
+  "main.out" 1591440728 0 d41d8cd98f00b204e9800998ecf8427e "pdflatex"
+  "main.tex" 1591440726 58032 7f3c5dfc20b932d9929ebfa559bdb61f ""
   "plots/barplot_main_CharacterTrajectories-LabelBasedSubsampler.pdf" 1588852019 15231 eb461ccc274c09a66bacba64c5334fb0 ""
   "plots/barplot_main_CharacterTrajectories-MissingAtRandomSubsampler.pdf" 1588852019 15222 0347387119ae9f988bf6ac858abb26eb ""
   "plots/barplot_main_LSST-LabelBasedSubsampler.pdf" 1588852019 15655 afe0a08086c377da68b4bc6b7f6b7cba ""
@@ -201,7 +201,7 @@
   "tables/repetitions_PenDigits_Random.tex" 1591385554 5682 e698f83b41e53f49e024ebb28714090d ""
   "tables/repetitions_Physionet2012.tex" 1591385554 4295 242c53fca1e5f80874248857aa77b24b ""
   (generated)
-  "main.pdf"
-  "main.log"
-  "main.out"
   "main.aux"
+  "main.out"
+  "main.log"
+  "main.pdf"
