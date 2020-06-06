@@ -1,0 +1,40 @@
+\begin{tabular}{llll}
+\toprule
+Imputation                       & Model   &                                         AUROC &                              Average Precision \\
+\midrule
+\multirow{4}{*}{GP-PoM}          & DeepSig &                           $ 82.084 \pm 0.836 $ &                           $ 47.858 \pm 1.362 $ \\
+                                 & RNN     &                           $ 83.222 \pm 0.570 $ &                           $ 49.263 \pm 1.115 $ \\
+                                 & RNNSig  &                           $ 77.879 \pm 1.072 $ &                           $ 40.157 \pm 0.539 $ \\
+                                 & Sig     &                           $ 74.388 \pm 2.211 $ &                           $ 33.909 \pm 2.902 $ \\
+\midrule
+\multirow{4}{*}{GP}              & DeepSig &                           $ 82.164 \pm 0.245 $ &                           $ 47.707 \pm 0.971 $ \\
+                                 & RNN     &                           $ 81.196 \pm 0.953 $ &                           $ 47.322 \pm 1.642 $ \\
+                                 & RNNSig  &                           $ 74.665 \pm 1.763 $ &                           $ 36.585 \pm 1.549 $ \\
+                                 & Sig     &                           $ 70.984 \pm 1.611 $ &                           $ 30.886 \pm 2.115 $ \\
+\midrule
+\multirow{4}{*}{causal}          & DeepSig &                           $ 83.487 \pm 0.574 $ &                           $ 48.924 \pm 0.935 $ \\
+                                 & RNN     &            $  \underline{ 84.689 \pm 0.325 } $ &  $  \mathbf{ \underline{ 52.646 \pm 0.460 }} $ \\
+                                 & RNNSig  &                           $ 82.074 \pm 0.080 $ &                           $ 47.691 \pm 0.214 $ \\
+                                 & Sig     &                           $ 83.499 \pm 0.597 $ &                           $ 47.809 \pm 0.783 $ \\
+\midrule
+\multirow{4}{*}{forward-filling} & DeepSig &                           $ 82.766 \pm 0.646 $ &                           $ 47.971 \pm 1.562 $ \\
+                                 & RNN     &  $  \mathbf{ \underline{ 84.954 \pm 0.157 }} $ &               $  \mathbf{ 52.427 \pm 0.521 } $ \\
+                                 & RNNSig  &                           $ 80.916 \pm 0.607 $ &                           $ 44.979 \pm 1.347 $ \\
+                                 & Sig     &                           $ 84.328 \pm 0.213 $ &                           $ 51.043 \pm 0.547 $ \\
+\midrule
+\multirow{4}{*}{indicator}       & DeepSig &                           $ 82.332 \pm 0.467 $ &                           $ 47.150 \pm 1.020 $ \\
+                                 & RNN     &               $  \mathbf{ 84.906 \pm 0.211 } $ &            $  \underline{ 51.887 \pm 0.713 } $ \\
+                                 & RNNSig  &                           $ 83.651 \pm 0.199 $ &                           $ 49.872 \pm 0.570 $ \\
+                                 & Sig     &                           $ 81.570 \pm 0.473 $ &                           $ 45.807 \pm 1.318 $ \\
+\midrule
+\multirow{4}{*}{linear}          & DeepSig &                           $ 83.168 \pm 0.650 $ &                           $ 48.937 \pm 1.291 $ \\
+                                 & RNN     &                           $ 84.367 \pm 0.176 $ &                           $ 50.431 \pm 0.340 $ \\
+                                 & RNNSig  &                           $ 77.336 \pm 0.469 $ &                           $ 41.888 \pm 0.583 $ \\
+                                 & Sig     &                           $ 83.354 \pm 0.223 $ &                           $ 48.900 \pm 0.480 $ \\
+\midrule
+\multirow{4}{*}{zero}            & DeepSig &                           $ 80.101 \pm 2.126 $ &                           $ 44.340 \pm 3.076 $ \\
+                                 & RNN     &                           $ 83.571 \pm 0.227 $ &                           $ 49.304 \pm 0.597 $ \\
+                                 & RNNSig  &                           $ 76.246 \pm 1.436 $ &                           $ 39.502 \pm 2.232 $ \\
+                                 & Sig     &                           $ 80.645 \pm 0.097 $ &                           $ 44.728 \pm 0.264 $ \\
+\bottomrule
+\end{tabular}

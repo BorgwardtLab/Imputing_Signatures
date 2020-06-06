@@ -1,0 +1,28 @@
+\addplot[
+	name path=A, 
+	mark=none,
+	line width=2pt,
+	domain=0.2:2.8,
+	samples=201
+	]
+	{0.9*(x-1.6)^3 - (x-1.6) + 1.1 + x/2};
+	
+\addplot[
+	name path=B,
+	mark=none,
+	dashed,
+	]
+	coordinates {(0.2,0.13) (2.8,2.855)};
+
+\addplot[] fill between [of=A and B,split,every segment no 0/.style={color=green!50},every segment no 1/.style={color=red!50},];
+
+\node at (axis cs: 1, 1.4) {\huge$\mathbf{+}$};
+\node at (axis cs: 2.3, 2.1) {\huge$\mathbf{-}$};
+
+\coordinate (p1) at (axis cs: 0.2,0.13);
+\coordinate (pt1) at (axis cs: 0.2,-1);
+\draw[dash pattern=on 1pt off 1pt, gray] (p1) -- (pt1);
+
+\coordinate (p2) at (axis cs: 2.8,2.855);
+\coordinate (pt2) at (axis cs: 2.8,-1);
+\draw[dash pattern=on 1pt off 1pt, gray] (p2) -- (pt2);

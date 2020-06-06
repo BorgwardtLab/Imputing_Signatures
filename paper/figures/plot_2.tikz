@@ -1,0 +1,22 @@
+% Add lower path	
+\addplot[
+	name path=A, 
+	mark=none,
+	line width=2pt
+	]			
+	coordinates {(0.2,0.2) (2.8,2.8)};
+
+%\coordinate (p3) at (axis cs: 3,3);
+
+% Add connectors		
+\coordinate (p1) at (axis cs: 0.2,0.2);
+\coordinate (pX11) at (axis cs: -1,0.2);
+\coordinate (pt1) at (axis cs: 0.2,-1);
+\draw[dash pattern=on 1pt off 1pt, gray] (p1) -- (pX11);
+\draw[dash pattern=on 1pt off 1pt, gray] (p1) -- (pt1);
+
+\coordinate (p3) at (axis cs: 2.8,2.8);
+\coordinate (pX12) at (axis cs: -1,2.8);
+\coordinate (pt2) at (axis cs: 2.8,-1);
+\draw[dash pattern=on 1pt off 1pt, gray] (p3) -- (pX12);
+\draw[dash pattern=on 1pt off 1pt, gray] (p3) -- (pt2);
