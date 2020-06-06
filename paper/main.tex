@@ -42,6 +42,7 @@
 
 %\usepackage{neurips_2020} %[preprint]
 \setcitestyle{square}
+\setlength{\parindent}{0pt}
 
 \renewcommand{\subsubsection}[1]{\textbf{#1}
 
@@ -99,7 +100,7 @@
 \maketitle
 
 \begin{abstract}
-The signature transform is a `universal nonlinearity' on the space of
+\noindent The signature transform is a `universal nonlinearity' on the space of
 continuous vector-valued paths, and has received attention for use in
 machine learning on time series. However, real-world temporal data is typically observed at discrete points in time, and must first be transformed into a continuous path before
 signature techniques can be applied. We make this step explicit by characterising it as an imputation
@@ -140,6 +141,7 @@ feature extractor in both generative and
 discriminative learning scenarios.
 %
 Further properties include the signature's uniqueness~\citep{hambly2010uniqueness}, as well as factorial decay of its higher order terms~\citep{lyons1998differential}. These theoretical foundations have been accompanied by outstanding empirical results when applying signatures to clinical time series classification tasks~\citep{reyna2019early, morrill2019signature}.
+
 Due to their similarities, we may hope that tools that
 apply to continuous paths can \emph{also} be applied to multivariate
 time series. But since multivariate time series are not continuous
