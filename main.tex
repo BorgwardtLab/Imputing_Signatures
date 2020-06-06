@@ -1,4 +1,18 @@
-\documentclass{article}
+\documentclass[11pt, DIV=17, abstract, headings=normal]{scrartcl}
+
+\usepackage[sc]{mathpazo}
+\linespread{1.05}
+\usepackage[T1]{fontenc}
+
+\usepackage{etoolbox}
+\AtBeginEnvironment{abstract}{\footnotesize}
+
+\usepackage{etoolbox}
+
+\setkomafont{sectioning}{\scshape}
+\setkomafont{author}{\small}
+
+%\documentclass{article}
 
 \usepackage{microtype}
 \usepackage{graphicx}
@@ -17,11 +31,12 @@
 \usepackage{etoolbox}
 \newcommand{\theHalgorithm}{\arabic{algorithm}}
 \usepackage{comment}
+\usepackage[inline]{enumitem}
+\usepackage[sort, numbers, compress]{natbib}
 \usepackage{multirow} 
 \PassOptionsToPackage{sort, numbers, compress}{natbib}
 
-
-\usepackage{neurips_2020} %[preprint]
+%\usepackage{neurips_2020} %[preprint]
 \setcitestyle{square}
 
 \renewcommand{\subsubsection}[1]{\textbf{#1}
@@ -39,27 +54,42 @@
 \newtheorem{theorem}{Theorem}
 \newcommand{\data}[1]{\mbox{\textsc{#1}}}   % can be used to typeset arbitrary data set set names
 
-\title{Path Imputation Strategies for Signature Models of Irregular Time Series}
-% Alternative Title:
-%% Path Imputation Strategies with Signature Models for Irregularly Sampled Partially Observed Multivariate Time Series.
+%\title{Path Imputation Strategies for Signature Models of Irregular Time Series}
+%
+%\author{
+%    Michael Moor
+%    \And
+%	Max Horn
+%	\And
+%	Christian Bock
+%	\And
+%	Bastian Rieck
+%	\And
+%	Karsten Borgwardt
+%	\AND \\[-12pt]
+%	Department of Biosystems Science and Engineering, ETH Zurich
+%	\\
+%	\hspace{-6.5em}\texttt{\{michael.moor, max.horn, christian.bock,}
+%	\\
+%	\hspace{6.5em}\texttt{bastian.rieck, karsten.borgwardt\}@\hspace{0.1pt}bsse.ethz.ch}
+%}
+
+\makeatletter
+\patchcmd{\@maketitle}{\titlefont\huge}{\titlefont\small}{}{}
+\makeatother
+
+\title{\LARGE Path Imputation Strategies for Signature Models of Irregular Time Series}
 
 \author{
-    Michael Moor
-    \And
-	Max Horn
-	\And
-	Christian Bock
-	\And
-	Bastian Rieck
-	\And
-	Karsten Borgwardt
-	\AND \\[-12pt]
-	Department of Biosystems Science and Engineering, ETH Zurich
-	\\
-	\hspace{-6.5em}\texttt{\{michael.moor, max.horn, christian.bock,}
-	\\
-	\hspace{6.5em}\texttt{bastian.rieck, karsten.borgwardt\}@\hspace{0.1pt}bsse.ethz.ch}
+  Michael Moor$^{1,2}$, Max Horn$^{1,2}$, Christian Bock$^{1,2}$, Karsten Borgwardt$^{1,2}$, Bastian Rieck$^{1,2}$\\[0.5cm]
+  \footnotesize\textsc{$^{1}$Department of Biosystems Science and Engineering, ETH Zurich, Switzerland}\\
+  \footnotesize\textsc{$^{2}$SIB Swiss Institute of Bioinformatics, Switzerland}\\
+  \footnotesize\texttt{\{firstname.lastname@bsse.ethz.ch\}}
 }
+
+\date{}
+
+
 
 \begin{document}
 \maketitle
@@ -84,7 +114,7 @@ In conclusion, we have demonstrated that the path construction is indeed
 crucial for signature models and that our proposed strategy leads to
 competitive performance in general, while improving robustness of
 signature models in particular.
-\end{abstract} % TODO: touch this up a bit, but I think the essential idea is there.
+\end{abstract} 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
@@ -203,7 +233,7 @@ information about \emph{order} and \emph{area} of a path.
 One may interpret its terms as `the area/order of one channel with
 respect to some collection of other channels'. To give an explicit example: first level terms simply describe the increment of the path with respect to one channel, whereas second-order terms are related to the \emph{Levy area} of the path, as shown for a one-dimensional example in Figure~\ref{fig:sig_path}.
 
-\begin{wrapfigure}{3}{3.5cm}
+\begin{wrapfigure}{3}{5cm}
     \centering
     \vspace{-1em}
 	\includegraphics[width=0.25\columnwidth]{figures/sig_path1.pdf}
@@ -611,10 +641,10 @@ For non-signature methods as for signature methods, this implicit usage of data 
 
 With respect to ethical considerations, we acknowledge that time series models in general can be used for better or for worse. On top of that, implicit biases underlying models as well as datasets can have unintended harmful consequences. By shedding light on the impact of implicit usage of paths in data space we hope to forward understanding and accountability of black-box models. Even if our work focuses on signature models, we believe that the principle of making underlying assumptions explicit is relevant far beyond this class of models. 
 
-\begin{ack}
+\section{Acknowledgements}
 M.M, M.H, and C.B were supported by the SNSF Starting Grant `Significant
 Pattern Mining'. The authors are grateful to Patrick Kidger for valuable discussions, guidance, and code contributions.
-\end{ack}
+
 
 \bibliography{ref}
 \bibliographystyle{apalike}
