@@ -2,12 +2,14 @@
  
 This repository contains code for the following paper:
 
-```@article{moor2020path,
+```
+@article{moor2020path,
   title={Path Imputation Strategies for Signature Models},
   author={Moor, Michael and Horn, Max and Bock, Christian and Borgwardt, Karsten and Rieck, Bastian},
   journal={arXiv preprint arXiv:2005.12359},
-  year={2020}
-}```
+  year={2020},
+}
+```  
 
 Below commands assume that a GPU is available.
 
