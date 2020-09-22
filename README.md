@@ -14,12 +14,11 @@ This repository contains code for the following paper:
 Below commands assume that a GPU is available.
 
 ## Environment
-Please install the dependencies as indicated in the Pipfile 
-```> pipenv install --skip-lock```  
-```> pipenv shell```
+Please install the dependencies as indicated in the ```requirements.txt``` or ```pyproject.toml``` file:  
+```> poetry install```  
+```> poetry shell```
 
-Note, that the newer GPytorch versions ( >1.0.0 ) tend to overwrite the torch version in pipenv. If this happens (e.g. with GPytorch 1.0.1), a working solution was to just ```>pip intall torch==1.2.0``` 
-after the pipenv install
+Note, that when alternatively using pipenv the newer GPytorch versions ( >1.0.0 ) tend to overwrite the torch version. If this happens (e.g. with GPytorch 1.0.1), a working solution was to just ```>pip intall torch==1.2.0``` after the pipenv was installed with ```>pipenv install --skip-lock```  
 
 ## Setting up data:
 The physionet 2012 dataset has to be downloaded with the following shell script:  
