@@ -24,7 +24,8 @@ Note that if you alternatively use pipenv, the newer GPytorch versions ( >1.0.0 
 ## Setting up data:
 The physionet 2012 dataset has to be downloaded with the following shell script:  
 ```>source data/physionet_2012/download.sh```   
-The other datasets are already in data/Multivariate_ts
+The other datasets can be downloaded via: 
+```>python3 src/datasets/download_uea_data.py``` and can then be found in data/Multivariate_ts
 
 ## Hypersearch Commands
 Below commands for training a model assume that a GPU is available, however CPU-only execution is also possible (see argparse).
