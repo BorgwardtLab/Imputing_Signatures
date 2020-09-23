@@ -1,6 +1,7 @@
 # Path Imputation Strategies for Signature Models of Irregularly Time Series
  
-This repository contains code for the following paper:
+## Reference  
+This repository contains code for the following [paper](https://arxiv.org/abs/2005.12359):
 
 ```
 @article{moor2020path,
@@ -9,9 +10,9 @@ This repository contains code for the following paper:
   journal={arXiv preprint arXiv:2005.12359},
   year={2020},
 }
-```  
+```   
+Furthermore, this work was subsumed in this [short paper](https://openreview.net/forum?id=P0DL7M6T57o) which was accepted for presentation at the ICML 2020 workshop on the art of learning with missing values (Artemiss).
 
-Below commands assume that a GPU is available.
 
 ## Environment
 Please install the dependencies as indicated in the ```requirements.txt``` or ```pyproject.toml``` file:  
@@ -26,6 +27,8 @@ The physionet 2012 dataset has to be downloaded with the following shell script:
 The other datasets are already in data/Multivariate_ts
 
 ## Hypersearch Commands
+Below commands for training a model assume that a GPU is available, however CPU-only execution is also possible (see argparse).
+
 ### gpu scheduler
 if you want to use a gpu scheduler, simply install this one via:
 ```> pip install simple_gpu_scheduler ```
