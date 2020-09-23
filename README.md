@@ -19,7 +19,7 @@ Please install the dependencies as indicated in the ```requirements.txt``` or ``
 ```> poetry install```  
 ```> poetry shell```
 
-Note, that when alternatively using pipenv the newer GPytorch versions ( >1.0.0 ) tend to overwrite the torch version. If this happens (e.g. with GPytorch 1.0.1), a working solution was to just ```>pip intall torch==1.2.0``` after the pipenv was installed with ```>pipenv install --skip-lock```  
+Note that if you alternatively use pipenv, the newer GPytorch versions ( >1.0.0 ) tend to overwrite the torch version. If this happens (e.g. with GPytorch 1.0.1), a hacky but working solution was to just ```>pip intall torch==1.2.0``` after the pipenv was installed with ```>pipenv install --skip-lock```  
 
 ## Setting up data:
 The physionet 2012 dataset has to be downloaded with the following shell script:  
