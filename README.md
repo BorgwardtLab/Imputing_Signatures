@@ -28,7 +28,7 @@ The other datasets can be downloaded via:
 ```>python3 src/datasets/download_uea_data.py``` and can then be found in data/Multivariate_ts
 
 ## Hypersearch Commands
-Below commands for training a model assume that a GPU is available, however CPU-only execution is also possible (see argparse).
+Below commands for training a model assume that a GPU is available, however CPU-only execution is also possible by setting device=cpu (note that GP-based models then also need model.parameters.output_device=cpu) 
 
 ### gpu scheduler
 if you want to use a gpu scheduler, simply install this one via:
@@ -59,6 +59,10 @@ Again, as with the hyperparameter search:
 ```> python exp/train_model.py with model.GPSignatureModel dataset.Physionet2012 model.parameters.sampling_type=moments model.parameters.sig_depth=3```  
 ```> python exp/train_model.py with model.GPSignatureModel dataset.Physionet2012 model.parameters.sampling_type=monte_carlo model.parameters.sig_depth=2```  
 ```> python exp/train_model.py with model.GPGRUSignatureModel dataset.Physionet2012 model.parameters.sampling_type=moments model.parameters.sig_depth=2```  
+
+For training one of the subsampled datasets (PenDigirts, CharacterTrajectories, LSST), a subsampler has to be provided. Here, an example command for training a GP-PoM-RNN model on PenDigits using CPU:  
+```>python exp/train_model.py with model.GPRNNModel dataset.PenDigits device=cpu model.parameters.output_device=cpu subsampler_name=MissingatRandomSubsampler model.parameters.sampling_type=moments```   
+
 
 ### Manually start one hyperparameter search: for the hypersearches, the models and datasets are defined (and extended with hyperparameter spaces) in /exp/hypersearch_configs.py
 
