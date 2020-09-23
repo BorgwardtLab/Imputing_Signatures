@@ -8,19 +8,16 @@ def download_and_extract_dataset(url, data_dir, database_name, pwd=None):
     """
     #Concatenate data directory with database name:
     database_dir = os.path.join(data_dir, database_name)
-    if not os.path.exists(database_dir): # check if database directory exists, if not proceed
-        if not os.path.exists(data_dir):
-            print('Creating data diretory..')
-            os.makedirs(data_dir)
-        print('Data directory available..')
-        print('Downloading the data..')
-        r = requests.get(url)
-        print(f'request ok: {r.ok}')
-        print('Unzipping data files')
-        z = zipfile.ZipFile(io.BytesIO(r.content))
-        z.extractall(data_dir, pwd=pwd)
-    else: 
-        print('data base directory already exists')
+    if not os.path.exists(data_dir):
+        print('Creating data diretory..')
+        os.makedirs(data_dir)
+    print('Data directory available..')
+    print('Downloading the data..')
+    r = requests.get(url)
+    print(f'request ok: {r.ok}')
+    print('Unzipping data files')
+    z = zipfile.ZipFile(io.BytesIO(r.content))
+    z.extractall(data_dir, pwd=pwd)
     return 
 
 def main():
