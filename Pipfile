@@ -6,7 +6,6 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-#ipykernel = "*"
 torch = "==1.2.0"
 gpytorch = "==1.0.1"
 matplotlib = "==3.2.1"
@@ -18,7 +17,6 @@ pandas = "==1.0.3"
 sacred = "==0.8.1"
 requests = "==2.23.0"
 scikit-optimize = "==0.7.4"
-#ipython = "*"
 tabulate = "==0.8.7"
 
 [requires]
