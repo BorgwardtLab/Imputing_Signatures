@@ -61,7 +61,7 @@ Again, as with the hyperparameter search:
 ```> python exp/train_model.py with model.GPGRUSignatureModel dataset.Physionet2012 model.parameters.sampling_type=moments model.parameters.sig_depth=2```  
 
 For training one of the subsampled datasets (PenDigits, CharacterTrajectories, LSST), a subsampler has to be provided. Here, an example command for training a GP-PoM-RNN model on PenDigits using CPU:  
-```>python exp/train_model.py with model.GPRNNModel dataset.PenDigits device=cpu model.parameters.output_device=cpu subsampler_name=MissingatRandomSubsampler model.parameters.sampling_type=moments```   
+```>python exp/train_model.py with model.GPRNNModel dataset.PenDigits device=cpu model.parameters.output_device=cpu subsampler_name=MissingAtRandomSubsampler model.parameters.sampling_type=moments```   
 
 
 ### Manually start one hyperparameter search: for the hypersearches, the models and datasets are defined (and extended with hyperparameter spaces) in /exp/hypersearch_configs.py
