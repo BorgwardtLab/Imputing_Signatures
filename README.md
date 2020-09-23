@@ -73,7 +73,7 @@ For training one of the subsampled datasets (PenDigits, CharacterTrajectories, L
 ```> python exp/train_model.py print_config with model.GPSignatureModel dataset.Physionet2012 model.parameters.sampling_type=moments model.parameters.sig_depth=3```
 
 # Paper configurations  
-The configurations used in the paper (repetition configs as determined by hyperparameter search), are accessible in the path `experiments/train_model`  
+The configurations used in the paper (repetition configs as determined by hyperparameter search), are accessible in the path `repe_configs/train_model`  
 Train a model with a stored ```config.json```:  
 ```> python exp/train_model.py with path/to/config.json```
 
